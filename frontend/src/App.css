@@ -1,0 +1,1610 @@
+/* D:\Projects\DoctorBooking\frontend\src\App.css - COMPLETE FIXED VERSION */
+/* ========================================
+   TABLE OF CONTENTS:
+   1. RESET & BASE STYLES
+   2. HEADER & NAVIGATION
+   3. APPOINTMENT STATUS BADGES
+   4. APPOINTMENT CARDS
+   5. MOBILE MENU
+   6. MAIN CONTAINER
+   7. PROGRESS STEPS
+   8. STEP CONTENT
+   9. DOCTORS GRID & CARDS
+   10. BOOKING FORM
+   11. DOCTOR SUMMARY
+   12. BUTTONS
+   13. PAYMENT PAGE (FULLY RESPONSIVE)
+   14. UPI PAYMENT
+   15. CONFIRMATION PAGE
+   16. FOOTER
+   17. ANIMATIONS
+   18. RESPONSIVE STYLES (ALL DEVICES)
+   19. MOBILE PAYMENT PAGE FIXES (ALL SCREEN SIZES)
+   20. WAITING CARD - MINIMAL VERSION (MODI)
+   ======================================== */
+
+/* ========================================
+   1. RESET & BASE STYLES
+   ======================================== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #0a1929;
+  min-height: 100vh;
+}
+
+/* ========================================
+   2. HEADER & NAVIGATION
+   ======================================== */
+.app-header {
+  background: linear-gradient(135deg, #1e40af, #2563eb);
+  color: white;
+  padding: 0.8rem 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  width: 100%;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.logo-section {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 150px;
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #fff, #e0f2fe);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+}
+
+.tagline {
+  font-size: 0.8rem;
+  opacity: 0.9;
+  font-weight: 400;
+}
+
+/* Desktop Navigation */
+.desktop-nav {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.nav-btn {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 0.4rem 1.2rem;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+
+.nav-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.nav-btn.home-btn { background: rgba(59, 130, 246, 0.2); border-color: rgba(59, 130, 246, 0.4); }
+.nav-btn.home-btn:hover { background: rgba(59, 130, 246, 0.3); }
+.nav-btn.admin-btn { background: rgba(245, 158, 11, 0.2); border-color: rgba(245, 158, 11, 0.4); }
+.nav-btn.doctor-btn { background: rgba(16, 185, 129, 0.2); border-color: rgba(16, 185, 129, 0.4); }
+
+/* ========================================
+   3. APPOINTMENT STATUS BADGES
+   ======================================== */
+.appointment-status-badge {
+  padding: 4px 10px;
+  border-radius: 30px;
+  font-size: 11px;
+  font-weight: 600;
+  display: inline-block;
+  text-transform: capitalize;
+  min-width: 70px;
+  text-align: center;
+}
+
+.appointment-status-badge.pending_verification { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+.appointment-status-badge.confirmed { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+.appointment-status-badge.completed { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
+.appointment-status-badge.cancelled { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+
+/* ========================================
+   4. APPOINTMENT CARDS
+   ======================================== */
+.appointments-view {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.appointments-view h2 {
+  color: #111827;
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.appointment-card {
+  background: white;
+  border-radius: 16px;
+  padding: 1.2rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+  transition: all 0.3s;
+}
+
+.appointment-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.appointment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.8rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.appointment-id {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  font-family: monospace;
+}
+
+.appointment-body {
+  display: flex;
+  gap: 1rem;
+}
+
+.doctor-info {
+  display: flex;
+  gap: 1rem;
+  flex: 1;
+}
+
+.doctor-icon { font-size: 2rem; }
+.patient-info { flex: 1; }
+.patient-info p { margin: 0.3rem 0; font-size: 0.9rem; color: #475569; }
+.patient-info strong { color: #1f2937; min-width: 70px; display: inline-block; }
+
+.view-records-btn {
+  background: #f1f5f9;
+  border: none;
+  padding: 0.4rem 1rem;
+  border-radius: 30px;
+  font-size: 0.8rem;
+  color: #2563eb;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  transition: all 0.2s;
+}
+
+.view-records-btn:hover { background: #dbeafe; }
+
+/* ========================================
+   5. MOBILE MENU
+   ======================================== */
+.mobile-menu-btn {
+  display: none;
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 2rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  line-height: 1;
+  transition: all 0.3s ease;
+  width: 48px;
+  height: 48px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  z-index: 1001;
+}
+
+.mobile-menu-btn:hover { background: rgba(255, 255, 255, 0.1); transform: scale(1.1); }
+.mobile-menu-btn:active { transform: scale(0.95); }
+.mobile-menu-btn .menu-icon { transition: transform 0.3s ease; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+.mobile-menu-btn.open .menu-icon { transform: rotate(90deg); }
+
+.mobile-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: white;
+  padding: 1rem;
+  box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.15);
+  animation: slideIn 0.3s ease;
+  overflow-y: auto;
+  z-index: 2000;
+  width: 100%;
+  height: 100vh;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(100%); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.mobile-menu-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+  border-bottom: 2px solid #f1f5f9;
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 10;
+}
+
+.mobile-menu-title { font-size: 1.3rem; font-weight: 700; color: #0f172a; }
+.mobile-menu-close { background: #f1f5f9; border: none; width: 36px; height: 36px; border-radius: 50%; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; color: #64748b; cursor: pointer; transition: all 0.2s; }
+.mobile-menu-close:hover { background: #e2e8f0; color: #0f172a; }
+
+.mobile-menu-section { margin-bottom: 1.5rem; }
+.mobile-menu-section-title { font-size: 0.8rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem; padding-left: 0.5rem; }
+
+.mobile-menu-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.5rem 0.5rem 0;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.mobile-menu-section-header:hover { background: #f8fafc; }
+.mobile-menu-arrow { font-size: 0.8rem; color: #64748b; margin-right: 0.5rem; }
+
+.mobile-doctors-list { animation: slideDown 0.3s ease; margin-top: 0.5rem; }
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.mobile-nav-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border: none;
+  background: none;
+  border-radius: 12px;
+  color: #1e293b;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 0.2rem;
+}
+
+.mobile-nav-item:hover { background: #f8fafc; }
+.mobile-nav-item:active { background: #f1f5f9; }
+
+.mobile-nav-icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f1f5f9;
+  border-radius: 10px;
+  margin-right: 1rem;
+  font-size: 1.1rem;
+}
+
+.mobile-nav-text { flex: 1; text-align: left; }
+.mobile-nav-badge { background: #2563eb; color: white; padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.7rem; font-weight: 600; }
+
+.mobile-nav-item.logout { color: #dc2626; }
+.mobile-nav-item.logout .mobile-nav-icon { background: #fee2e2; color: #dc2626; }
+
+.mobile-nav-item.doctor-item {
+  display: flex;
+  align-items: center;
+  padding: 0.6rem 0.8rem;
+  border-bottom: 1px solid #f1f5f9;
+  margin-bottom: 0;
+}
+
+.mobile-nav-item.doctor-item:last-child { border-bottom: none; }
+.mobile-nav-item.doctor-item:hover { background: #f8fafc; }
+.mobile-nav-item.doctor-item .mobile-nav-icon { width: 36px; height: 36px; font-size: 1.2rem; background: #e0f2fe; color: #0369a1; }
+.mobile-nav-item.doctor-item .mobile-nav-text { display: flex; flex-direction: column; gap: 0.2rem; }
+
+.mobile-doctor-name { font-weight: 600; color: #0f172a; font-size: 0.9rem; }
+.mobile-doctor-specialty { font-size: 0.7rem; color: #64748b; }
+.mobile-doctor-fee { background: #f0fdf4; color: #059669; padding: 0.2rem 0.5rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; white-space: nowrap; }
+
+.mobile-nav-item.admin-btn .mobile-nav-icon { background: #fef3c7; color: #d97706; }
+.mobile-nav-item.doctor-login-btn .mobile-nav-icon { background: #dbeafe; color: #2563eb; }
+.mobile-nav-item.admin-btn:hover, .mobile-nav-item.doctor-login-btn:hover { background: #f8fafc; }
+
+.mobile-menu-footer {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e2e8f0;
+  text-align: center;
+}
+
+.mobile-version { font-size: 0.7rem; color: #94a3b8; margin-top: 0.3rem; }
+.mobile-status { margin-top: 0.8rem; padding: 0.6rem; background: #f1f5f9; border-radius: 8px; color: #64748b; font-size: 0.8rem; text-align: center; }
+.connection-status { max-width: 1400px; margin: 0.5rem auto 0; font-size: 0.7rem; opacity: 0.8; text-align: center; }
+
+/* ========================================
+   6. MAIN CONTAINER
+   ======================================== */
+.app-main {
+  width: 95%;
+  max-width: 1400px;
+  margin: 1rem auto;
+  padding: clamp(0.5rem, 3vw, 2rem);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: clamp(16px, 4vw, 32px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+/* ========================================
+   7. PROGRESS STEPS
+   ======================================== */
+.booking-flow .progress-steps {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 20px 0 30px;
+  padding: 0;
+  width: 100%;
+  background: transparent;
+}
+
+.booking-flow .step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  flex: 1;
+  text-align: center;
+}
+
+.booking-flow .step:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 20px;
+  right: -30%;
+  width: 60%;
+  height: 2px;
+  background: #e2e8f0;
+  z-index: 1;
+}
+
+.booking-flow .step.active:not(:last-child)::after { background: #2563eb; }
+.booking-flow .step.completed:not(:last-child)::after { background: #10b981; }
+
+.booking-flow .step-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 1rem;
+  margin-bottom: 8px;
+  border: 2px solid #e2e8f0;
+  z-index: 2;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.booking-flow .step.active .step-circle { background: #2563eb; color: white; border-color: #2563eb; }
+.booking-flow .step.completed .step-circle { background: #10b981; color: white; border-color: #10b981; }
+
+.booking-flow .step-label {
+  font-size: 0.85rem;
+  color: #64748b;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.booking-flow .step.active .step-label { color: #2563eb; font-weight: 600; }
+.booking-flow .step.completed .step-label { color: #10b981; }
+
+/* ========================================
+   8. STEP CONTENT
+   ======================================== */
+.step-content {
+  background: white;
+  border-radius: 20px;
+  padding: 1.5rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(226, 232, 240, 0.6);
+  margin-top: 1rem;
+}
+
+.step-content h2 {
+  font-size: clamp(1.5rem, 5vw, 2rem);
+  margin-bottom: 0.5rem;
+  background: linear-gradient(135deg, #1e293b, #2563eb);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  font-weight: 800;
+}
+
+.step-description {
+  color: #64748b;
+  margin-bottom: 1.5rem;
+  font-size: clamp(0.9rem, 3vw, 1.1rem);
+}
+
+/* ========================================
+   9. DOCTORS GRID & CARDS
+   ======================================== */
+.home-doctors-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  gap: clamp(0.8rem, 2vw, 1.5rem);
+  width: 100%;
+}
+
+.home-doctor-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: clamp(12px, 3vw, 20px);
+  padding: clamp(0.8rem, 2vw, 1.5rem);
+  width: 100%;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.home-doctor-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 30px -10px rgba(37, 99, 235, 0.2);
+  border-color: transparent;
+}
+
+.home-doctor-image-section {
+  display: flex;
+  justify-content: center;
+  margin-bottom: clamp(0.5rem, 1.5vw, 1rem);
+}
+
+.home-doctor-image-container {
+  width: clamp(140px, 28vw, 200px);
+  height: clamp(140px, 28vw, 200px);
+  border-radius: clamp(10px, 3vw, 20px);
+  overflow: hidden;
+  border: 3px solid #2563eb30;
+  box-shadow: 0 8px 16px rgba(37, 99, 235, 0.15);
+}
+
+.home-doctor-image-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s;
+}
+
+.home-doctor-card:hover .home-doctor-image-container img { transform: scale(1.1); }
+
+.home-doctor-content {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.3rem, 1vw, 0.8rem);
+}
+
+.home-doctor-name {
+  font-size: clamp(1rem, 5vw, 1.5rem);
+  font-weight: 700;
+  color: #0f172a;
+  text-align: center;
+  word-break: break-word;
+  line-height: 1.2;
+}
+
+.home-doctor-specialty {
+  font-size: clamp(0.7rem, 3vw, 0.95rem);
+  color: #059669;
+  background: #f0fdf4;
+  padding: clamp(0.15rem, 0.8vw, 0.3rem) clamp(0.5rem, 2vw, 1rem);
+  border-radius: 30px;
+  display: inline-block;
+  margin: 0 auto;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.home-info-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(0.2rem, 1vw, 0.5rem);
+  justify-content: center;
+}
+
+.home-info-badge {
+  background: #f1f5f9;
+  padding: clamp(0.15rem, 1vw, 0.3rem) clamp(0.4rem, 2vw, 1rem);
+  border-radius: 30px;
+  font-size: clamp(0.6rem, 2.5vw, 0.85rem);
+  color: #334155;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  white-space: nowrap;
+}
+
+.home-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(0.2rem, 1vw, 0.5rem);
+  justify-content: center;
+}
+
+.home-tag {
+  background: #f1f5f9;
+  padding: clamp(0.15rem, 1vw, 0.3rem) clamp(0.4rem, 2vw, 1rem);
+  border-radius: 30px;
+  font-size: clamp(0.55rem, 2.5vw, 0.8rem);
+  color: #334155;
+  white-space: nowrap;
+}
+
+.home-tag.more { background: #e0f2fe; color: #0369a1; cursor: pointer; }
+
+.home-doctor-languages {
+  font-size: clamp(0.6rem, 2.5vw, 0.85rem);
+  color: #64748b;
+  text-align: center;
+  padding: clamp(0.2rem, 1vw, 0.5rem) 0;
+  border-top: 1px dashed #e2e8f0;
+  border-bottom: 1px dashed #e2e8f0;
+  word-break: break-word;
+  width: 100%;
+}
+
+.home-doctor-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(0.3rem, 2vw, 1rem);
+  justify-content: center;
+  align-items: center;
+}
+
+.home-fee-badge {
+  background: #f0fdf4;
+  color: #059669;
+  padding: clamp(0.15rem, 1vw, 0.4rem) clamp(0.5rem, 3vw, 1.2rem);
+  border-radius: 30px;
+  font-size: clamp(0.65rem, 3vw, 1rem);
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  white-space: nowrap;
+}
+
+.home-fee-badge::before { content: "💰"; margin-right: 0.2rem; }
+
+.home-rating-badge {
+  background: #fffbeb;
+  color: #f59e0b;
+  padding: clamp(0.15rem, 1vw, 0.4rem) clamp(0.5rem, 3vw, 1.2rem);
+  border-radius: 30px;
+  font-size: clamp(0.65rem, 3vw, 1rem);
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  white-space: nowrap;
+}
+
+.home-rating-badge::before { content: "⭐"; margin-right: 0.2rem; }
+
+.home-book-btn {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: clamp(0.4rem, 2vw, 0.8rem) clamp(0.8rem, 4vw, 2rem);
+  border-radius: 40px;
+  font-weight: 600;
+  font-size: clamp(0.7rem, 3vw, 0.95rem);
+  cursor: pointer;
+  width: fit-content;
+  min-width: min(200px, 100%);
+  margin: 0.5rem auto 0;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
+  transition: all 0.3s;
+}
+
+.home-book-btn:hover {
+  background: #1d4ed8;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
+}
+
+/* ========================================
+   10. BOOKING FORM
+   ======================================== */
+.booking-form {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.form-section {
+  background: #f8fafc;
+  border-radius: 20px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+.form-section h3 {
+  font-size: 1.2rem;
+  color: #0f172a;
+  margin-bottom: 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+}
+
+.form-section h3::before { content: "📋"; font-size: 1.2rem; }
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+}
+
+.form-group label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #334155;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.form-group label::before { content: "•"; color: #2563eb; font-weight: bold; }
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 0.8rem 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: all 0.2s;
+  background: white;
+  width: 100%;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.form-group textarea { resize: vertical; min-height: 100px; }
+
+.form-group select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1rem;
+  padding-right: 2.5rem;
+}
+
+.slot-warning {
+  background: #fee2e2;
+  color: #b91c1c;
+  padding: 0.6rem 1rem;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+  border-left: 4px solid #dc2626;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.slot-warning::before { content: "⚠️"; font-size: 1rem; }
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 2px solid #e2e8f0;
+}
+
+/* ========================================
+   11. DOCTOR SUMMARY
+   ======================================== */
+.home-doctor-summary {
+  background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+  border-radius: 16px;
+  padding: 1.2rem 1.5rem;
+  margin-bottom: 1.5rem;
+  border-left: 4px solid #2563eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.home-doctor-summary-info { flex: 1; }
+.home-doctor-summary-info h2 { font-size: 1rem; color: #475569; font-weight: 500; margin-bottom: 0.2rem; }
+.home-doctor-summary-info h3 { font-size: 1.5rem; color: #1d4ed8; font-weight: 700; margin-bottom: 0.3rem; line-height: 1.2; }
+.home-doctor-summary-info p { color: #475569; font-size: 0.95rem; }
+
+.home-consultation-fee {
+  background: #2563eb;
+  color: white;
+  padding: 0.5rem 1.2rem;
+  border-radius: 40px;
+  font-weight: 700;
+  font-size: 1.2rem;
+  white-space: nowrap;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
+}
+
+/* ========================================
+   12. BUTTONS
+   ======================================== */
+.primary-btn {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 0.7rem 1.5rem;
+  border-radius: 40px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
+}
+
+.primary-btn:hover:not(:disabled) {
+  background: #1d4ed8;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
+}
+
+.primary-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.secondary-btn {
+  background: white;
+  color: #475569;
+  border: 2px solid #e2e8f0;
+  padding: 0.7rem 1.5rem;
+  border-radius: 40px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.secondary-btn:hover { background: #f8fafc; border-color: #94a3b8; }
+
+/* ========================================
+   13. PAYMENT PAGE - FULLY RESPONSIVE
+   ======================================== */
+.home-payment-container {
+  max-width: 900px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 2rem;
+  padding: 1rem;
+}
+
+/* Payment Summary Card */
+.home-payment-summary {
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+  border-radius: 24px;
+  padding: 2rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+}
+
+.home-payment-summary h3 {
+  font-size: 1.5rem;
+  color: #0f172a;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+}
+
+.home-payment-summary h3::before { content: "💰"; font-size: 1.5rem; }
+
+.home-summary-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem 0;
+  border-bottom: 1px solid #e2e8f0;
+  color: #475569;
+  font-size: 1rem;
+}
+
+.home-summary-item:last-of-type { border-bottom: none; }
+
+.home-summary-item.total {
+  border-top: 2px solid #2563eb;
+  margin-top: 1rem;
+  padding-top: 1.5rem;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.home-summary-item.total span:last-child { color: #2563eb; font-size: 1.3rem; }
+
+.commission-note {
+  font-size: 0.9rem;
+  color: #64748b;
+  margin-top: 1rem;
+  padding: 0.5rem;
+  background: #f1f5f9;
+  border-radius: 8px;
+  text-align: center;
+}
+
+/* Patient Information Card */
+.home-patient-summary {
+  background: white;
+  border-radius: 20px;
+  padding: 1.5rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+  margin-bottom: 1.5rem;
+}
+
+.home-patient-summary h4 {
+  font-size: 1.2rem;
+  color: #0f172a;
+  margin-bottom: 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+}
+
+.home-patient-summary h4::before { content: "👤"; font-size: 1.2rem; }
+
+.home-patient-info-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.7rem 0;
+  border-bottom: 1px dashed #e2e8f0;
+}
+
+.home-patient-info-item:last-child { border-bottom: none; }
+.home-patient-info-item strong { min-width: 80px; color: #475569; font-size: 0.9rem; font-weight: 600; }
+.home-patient-info-item span { color: #0f172a; font-size: 0.95rem; font-weight: 500; word-break: break-word; }
+
+/* Payment Actions */
+.payment-actions { 
+  display: flex; 
+  gap: 1rem; 
+  margin-top: 1.5rem; 
+  width: 100%;
+}
+
+.payment-btn {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
+}
+
+.payment-btn:hover {
+  background: linear-gradient(135deg, #059669, #047857);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+}
+
+.payment-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.payment-btn::before { content: "💳"; font-size: 1.2rem; }
+
+/* ========================================
+   14. UPI PAYMENT
+   ======================================== */
+.upi-payment-container {
+  background: white;
+  border-radius: 24px;
+  padding: 30px;
+  max-width: 600px;
+  margin: 0 auto;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  animation: slideUp 0.3s ease;
+}
+
+.upi-payment-header { text-align: center; margin-bottom: 30px; }
+.upi-payment-header h2 { color: #2563eb; font-size: 28px; margin-bottom: 10px; }
+
+.doctor-payment-info {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 20px;
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+  border-radius: 16px;
+  margin-bottom: 25px;
+}
+
+.qr-section {
+  text-align: center;
+  padding: 20px;
+  border: 2px dashed #cbd5e1;
+  border-radius: 16px;
+  margin-bottom: 20px;
+}
+
+.qr-code-image {
+  width: 200px;
+  height: 200px;
+  margin: 0 auto 15px;
+  border: 1px solid #e2e8f0;
+  padding: 10px;
+  border-radius: 16px;
+}
+
+.upi-id-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: #f1f5f9;
+  padding: 12px;
+  border-radius: 12px;
+}
+
+.upi-id-box code { font-size: 16px; color: #2563eb; font-weight: 600; }
+
+.copy-btn {
+  background: white;
+  border: 1px solid #2563eb;
+  color: #2563eb;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.copy-btn:hover { background: #2563eb; color: white; }
+
+.payment-instructions {
+  background: #f0f9ff;
+  padding: 20px;
+  border-radius: 16px;
+  border-left: 4px solid #2563eb;
+  margin-bottom: 20px;
+}
+
+.transaction-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 16px;
+}
+
+.transaction-input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.input-hint { color: #94a3b8; font-size: 12px; margin-top: 4px; }
+
+/* ========================================
+   15. CONFIRMATION PAGE
+   ======================================== */
+.confirmation-card {
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 24px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.success-icon { font-size: 3rem; text-align: center; margin-bottom: 1rem; animation: bounce 1s ease infinite; }
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.8rem;
+  margin: 1.5rem 0;
+}
+
+.detail-item {
+  background: #f8fafc;
+  padding: 0.8rem;
+  border-radius: 12px;
+}
+
+.detail-label {
+  font-size: 0.65rem;
+  color: #64748b;
+  text-transform: uppercase;
+  margin-bottom: 0.2rem;
+  display: block;
+  font-weight: 600;
+}
+
+.detail-value {
+  font-size: 0.9rem;
+  font-weight: 600;
+  word-break: break-word;
+  color: #0f172a;
+}
+
+/* ========================================
+   16. FOOTER
+   ======================================== */
+.app-footer {
+  background: #0f172a;
+  color: #94a3b8;
+  padding: 2.5rem 1rem 1.5rem;
+  margin-top: 3rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  width: 100%;
+}
+
+.footer-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 2rem;
+  padding: 0 1rem;
+}
+
+.footer-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.footer-section h3 { color: white; margin-bottom: 0.5rem; font-size: 1.2rem; font-weight: 600; }
+.footer-section h4 { color: white; margin-bottom: 0.5rem; font-size: 1rem; font-weight: 600; }
+.footer-section p { line-height: 1.6; font-size: 0.85rem; margin-bottom: 0.3rem; }
+
+.footer-links { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+.footer-section button {
+  background: rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.3rem 0.8rem;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 0.8rem;
+}
+
+.footer-section button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  transform: translateY(-2px);
+}
+
+.footer-bottom {
+  max-width: 1400px;
+  margin: 2rem auto 0;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: center;
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.tech-info { margin-top: 0.5rem; font-family: monospace; font-size: 0.7rem; color: #475569; }
+
+/* ========================================
+   17. ANIMATIONS
+   ======================================== */
+@keyframes shimmer {
+  0% { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
+}
+
+.loading {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* ========================================
+   18. RESPONSIVE STYLES - ALL DEVICES
+   ======================================== */
+
+/* Tablet (768px - 1024px) */
+@media (max-width: 1024px) {
+  .home-payment-container {
+    gap: 1.5rem;
+    padding: 0.8rem;
+  }
+}
+
+/* Mobile Menu Breakpoint (up to 767px) */
+@media (max-width: 767px) {
+  .desktop-nav { display: none; }
+  .mobile-menu-btn { display: flex; }
+  .header-content { justify-content: space-between; }
+  .logo { font-size: 1.2rem; }
+  .tagline { font-size: 0.6rem; }
+  .app-main { padding: 0.5rem; }
+  
+  .form-row { grid-template-columns: 1fr; gap: 0.8rem; }
+  .form-section { padding: 1.2rem; }
+  .form-actions { flex-direction: column; }
+  
+  .home-doctor-summary {
+    flex-direction: column;
+    text-align: center;
+  }
+  .home-doctor-summary-info h3 { font-size: 1.3rem; }
+  .home-consultation-fee { align-self: center; font-size: 1.1rem; }
+  
+  .footer-content {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    text-align: center;
+  }
+  .footer-section { align-items: center; }
+  .footer-links { justify-content: center; }
+  .app-footer { padding: 1.5rem 0.5rem 1rem; }
+  
+  .appointment-body { flex-direction: column; }
+  .doctor-info { justify-content: center; }
+  .patient-info p { text-align: center; }
+  .patient-info strong { min-width: auto; margin-right: 0.5rem; }
+}
+
+/* ========================================
+   19. MOBILE PAYMENT PAGE FIXES (ALL SCREEN SIZES)
+   ======================================== */
+
+/* Large Mobile Devices (up to 768px) - iPhone Plus, Samsung Note */
+@media (max-width: 768px) {
+  .home-payment-container {
+    grid-template-columns: 1fr !important;
+    gap: 1.5rem !important;
+    padding: 0.5rem !important;
+    width: 100% !important;
+  }
+
+  .home-payment-summary,
+  .home-patient-summary {
+    padding: 1.5rem !important;
+    width: 100% !important;
+    border-radius: 20px !important;
+    box-sizing: border-box !important;
+  }
+
+  .home-payment-summary h3 {
+    font-size: 1.4rem !important;
+  }
+
+  .home-summary-item {
+    padding: 0.8rem 0 !important;
+    font-size: 1rem !important;
+  }
+
+  .home-patient-info-item {
+    gap: 1rem !important;
+  }
+
+  .home-patient-info-item strong {
+    min-width: 75px !important;
+  }
+
+  .payment-btn {
+    padding: 0.9rem 1.5rem !important;
+    font-size: 1rem !important;
+  }
+}
+
+/* Medium Mobile Devices (481px - 600px) - iPhone, Samsung, Pixel */
+@media (max-width: 600px) {
+  .app-main {
+    padding: 0.8rem !important;
+  }
+
+  .step-content {
+    padding: 1.2rem !important;
+  }
+
+  .home-payment-summary,
+  .home-patient-summary {
+    padding: 1.2rem !important;
+  }
+
+  .home-payment-summary h3 {
+    font-size: 1.3rem !important;
+    margin-bottom: 1rem !important;
+  }
+
+  .home-summary-item {
+    padding: 0.7rem 0 !important;
+    font-size: 0.95rem !important;
+  }
+
+  .home-summary-item.total {
+    padding-top: 1rem !important;
+    margin-top: 0.5rem !important;
+  }
+
+  .commission-note {
+    padding: 0.7rem !important;
+    font-size: 0.85rem !important;
+  }
+
+  .home-patient-summary h4 {
+    font-size: 1.1rem !important;
+    margin-bottom: 0.8rem !important;
+  }
+
+  .home-patient-info-item {
+    gap: 0.8rem !important;
+    padding: 0.6rem 0 !important;
+  }
+
+  .home-patient-info-item strong {
+    min-width: 70px !important;
+    font-size: 0.9rem !important;
+  }
+
+  .home-patient-info-item span {
+    font-size: 0.9rem !important;
+  }
+
+  .payment-actions {
+    margin-top: 1.2rem !important;
+  }
+
+  .payment-btn {
+    padding: 0.8rem 1.2rem !important;
+    font-size: 0.95rem !important;
+  }
+}
+
+/* Small Mobile Devices (361px - 480px) - iPhone SE, older Androids */
+@media (max-width: 480px) {
+  .booking-flow .step:not(:last-child)::after {
+    top: 14px !important;
+    right: -20% !important;
+    width: 40% !important;
+  }
+  
+  .booking-flow .step-circle {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 0.75rem !important;
+  }
+  
+  .booking-flow .step-label { 
+    font-size: 0.6rem !important; 
+  }
+
+  .app-main {
+    padding: 0.5rem !important;
+    width: 98% !important;
+  }
+
+  .step-content {
+    padding: 1rem !important;
+  }
+
+  .home-payment-summary,
+  .home-patient-summary {
+    padding: 1rem !important;
+  }
+
+  .home-payment-summary h3 {
+    font-size: 1.2rem !important;
+  }
+
+  .home-summary-item {
+    padding: 0.6rem 0 !important;
+    font-size: 0.9rem !important;
+  }
+
+  .home-summary-item.total {
+    font-size: 1rem !important;
+  }
+
+  .home-summary-item.total span:last-child { 
+    font-size: 1.1rem !important; 
+  }
+
+  .commission-note {
+    padding: 0.6rem !important;
+    font-size: 0.8rem !important;
+  }
+
+  .home-patient-summary h4 {
+    font-size: 1rem !important;
+  }
+
+  .home-patient-info-item {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.3rem !important;
+    padding: 0.5rem 0 !important;
+  }
+
+  .home-patient-info-item strong { 
+    min-width: auto !important;
+    margin-bottom: 0.2rem !important;
+  }
+
+  .home-patient-info-item span {
+    width: 100% !important;
+    font-size: 0.85rem !important;
+    word-break: break-word !important;
+  }
+
+  .payment-actions {
+    margin-top: 1rem !important;
+  }
+
+  .payment-btn {
+    padding: 0.7rem 1rem !important;
+    font-size: 0.9rem !important;
+  }
+  
+  .payment-btn::before { 
+    font-size: 1rem !important; 
+  }
+}
+
+/* Extra Small Mobile Devices (320px - 360px) - iPhone 5/SE, small Androids */
+@media (max-width: 360px) {
+  .booking-flow .step:not(:last-child)::after {
+    top: 12px !important;
+    right: -15% !important;
+    width: 30% !important;
+  }
+  
+  .booking-flow .step-circle {
+    width: 24px !important;
+    height: 24px !important;
+    font-size: 0.7rem !important;
+  }
+  
+  .booking-flow .step-label { 
+    font-size: 0.5rem !important; 
+  }
+  
+  .app-main {
+    padding: 0.3rem !important;
+    margin: 0.3rem auto !important;
+  }
+
+  .step-content {
+    padding: 0.8rem !important;
+  }
+
+  .home-payment-summary,
+  .home-patient-summary {
+    padding: 0.8rem !important;
+    border-radius: 16px !important;
+  }
+
+  .home-payment-summary h3 {
+    font-size: 1.1rem !important;
+    margin-bottom: 0.8rem !important;
+  }
+
+  .home-summary-item {
+    padding: 0.5rem 0 !important;
+    font-size: 0.85rem !important;
+  }
+
+  .home-summary-item.total {
+    padding-top: 0.8rem !important;
+  }
+
+  .commission-note {
+    padding: 0.5rem !important;
+    font-size: 0.75rem !important;
+  }
+
+  .home-patient-summary h4 {
+    font-size: 0.95rem !important;
+    margin-bottom: 0.6rem !important;
+  }
+
+  .home-patient-info-item {
+    padding: 0.4rem 0 !important;
+  }
+
+  .home-patient-info-item strong,
+  .home-patient-info-item span {
+    font-size: 0.8rem !important;
+  }
+
+  .payment-btn {
+    padding: 0.6rem 0.8rem !important;
+    font-size: 0.85rem !important;
+    border-radius: 30px !important;
+  }
+
+  .payment-btn::before {
+    font-size: 0.9rem !important;
+  }
+}
+
+/* Small height adjustments */
+@media (max-height: 600px) {
+  .app-header { padding: 0.5rem 1rem; }
+  .app-main { margin: 0.5rem auto; }
+}
+
+/* Form specific small screens */
+@media (max-width: 380px) {
+  .form-section h3 { font-size: 1rem; }
+  .home-doctor-summary-info h2 { font-size: 0.9rem; }
+  .home-doctor-summary-info h3 { font-size: 1.2rem; }
+  .slot-warning { font-size: 0.75rem; }
+}
+
+/* Ultra-wide screens */
+@media (min-width: 1400px) {
+  .app-main {
+    max-width: 1600px;
+  }
+  
+  .home-payment-container {
+    max-width: 1200px;
+  }
+}
+
+/* ========================================
+   20. WAITING CARD - MINIMAL VERSION (MODI)
+   ======================================== */
+.waiting-card.minimal {
+  max-width: 320px;
+  margin: 0 auto;
+  text-align: center;
+  padding: 2rem 1rem;
+}
+
+.waiting-icon {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+}
+
+.waiting-card.minimal h3 {
+  color: #1e293b;
+  font-size: 1.3rem;
+  margin-bottom: 0.8rem;
+}
+
+.small-msg {
+  color: #221b0f;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  background: #fef9e7;
+  padding: 0.5rem 1rem;
+  border-radius: 30px;
+  display: inline-block;
+  font-weight: 500;
+}
+
+.amount-chip {
+  background: #e2e8f0;
+  padding: 0.6rem 1.2rem;
+  border-radius: 30px;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 1.5rem;
+  display: inline-block;
+}
+
+.home-btn.small {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 0.7rem 1.5rem;
+  border-radius: 30px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.3s;
+}
+
+.home-btn.small:hover {
+  background: #1d4ed8;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
+}

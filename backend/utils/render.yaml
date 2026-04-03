@@ -1,0 +1,16 @@
+# backend/render.yaml
+services:
+  - type: web
+    name: doctorbooking-api
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: RAZORPAY_KEY_ID
+        value: rzp_test_SEUDb9EscZ5Y4C
+      - key: RAZORPAY_KEY_SECRET
+        value: ySdT6L533TvHgtavpbw3lWgP
+      - key: PORT
+        value: 10000
+      - key: NODE_ENV
+        value: production
