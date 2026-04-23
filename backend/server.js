@@ -1,11 +1,17 @@
-// D:\Projects\DoctorBooking\backend\server.js
+// Disable console.log in production
+if (process.env.NODE_ENV === 'production') {
+    console.log = function() {};
+}
+
 require("dotenv").config();
 const express = require("express");
 const app = express();
 const path = require("path");
+const cookieParser = require("cookie-parser");
+const cors = require("cors");
 
 // ✅ ADD CRON JOB FOR COMMISSION REMINDERS
-const cron = require('node-cron');
+const cron = require("node-cron");
 
 // ✅ IMPORT MONGODB CONNECTION AND MODELS
 const connectDB = require("./config/database");
@@ -18,8 +24,7 @@ const adminRoutes = require("./routes/adminRoutes").router;
 const doctorRoutes = require("./routes/doctorRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
-const availabilityRoutes = require("./routes/availabilityRoutes");  // ← ADD THIS
-
+const availabilityRoutes = require("./routes/availabilityRoutes");
 
 // ✅ IMPORT ENHANCED EMAIL SERVICE
 const emailService = require("./utils/emailService");
@@ -27,34 +32,32 @@ const emailService = require("./utils/emailService");
 // ✅ CONNECT TO MONGODB
 connectDB().catch(async (error) => {
   console.error("❌ Database connection failed:", error);
-  
-  // 🔔 SEND CRITICAL ALERT - #3 ADDED
+
+  // 🔔 SEND CRITICAL ALERT
   await emailService.sendAdminAlert({
     type: "critical",
     title: "⚠️ Database Connection Lost",
     message: error.message,
-    link: "http://localhost:3000/admin/status"
+    link: "http://localhost:3000/admin/status",
   });
 });
 
-// ✅ CORS - Allow all requests
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header(
-    "Access-Control-Allow-Methods",
-    "GET, POST, PUT, PATCH, DELETE, OPTIONS",
-  );
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+// ✅ CORS - Allow credentials for cookies
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
+  }),
+);
 
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(200);
-  }
-  next();
-});
+// ✅ Body parsing middleware with increased limit
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// ✅ Body parsing middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// ✅ Cookie parser middleware (IMPORTANT for HttpOnly cookies)
+app.use(cookieParser());
 
 // ✅ Serve static files from uploads directory
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
@@ -77,11 +80,10 @@ console.log("✅ Upload routes registered");
 // ✅ REGISTER PAYMENT ROUTES
 console.log("📝 Registering payment routes...");
 app.use("/api/payment", paymentRoutes);
-app.use("/api/availability", availabilityRoutes);  // ← ADD THIS
-
+app.use("/api/availability", availabilityRoutes);
 console.log("✅ Payment routes registered");
 
-// ✅ REGISTER STATEMENT ROUTES - MOVED HERE (BEFORE 404 HANDLER)
+// ✅ REGISTER STATEMENT ROUTES
 console.log("📝 Registering statement routes...");
 app.use("/api/statements", require("./routes/statementRoutes"));
 console.log("✅ Statement routes registered");
@@ -89,7 +91,7 @@ console.log("✅ Statement routes registered");
 // ✅ IMPORT CRON JOBS
 require("./cron/monthlyStatements");
 
-// ✅ Verify Email Configuration on startup - FIXED
+// ✅ Verify Email Configuration on startup
 emailService.verifyEmailConfig().then((result) => {
   if (result && result.success) {
     console.log("✅ Email service ready");
@@ -99,7 +101,6 @@ emailService.verifyEmailConfig().then((result) => {
     if (result.sendgrid?.configured) console.log("   📧 SendGrid: Configured");
     if (result.gmail?.configured) console.log("   📧 Gmail SMTP: Configured");
   } else {
-    // Only show warning if there's an actual error
     const errorMsg = result?.error || "Unknown configuration issue";
     console.warn("⚠️ Email service issues:", errorMsg);
   }
@@ -115,147 +116,158 @@ app.get("/ping", (req, res) => {
 // ===========================================
 
 // ✅ Commission Reminder Cron Job - Runs on 1st and 15th at 9 AM
-cron.schedule('0 9 1,15 * *', async () => {
-  console.log('\n' + '='.repeat(60));
-  console.log('⏰ CRON JOB: Monthly commission check (1st & 15th)');
-  console.log('='.repeat(60));
-  
+cron.schedule("0 9 1,15 * *", async () => {
+  console.log("\n" + "=".repeat(60));
+  console.log("⏰ CRON JOB: Monthly commission check (1st & 15th)");
+  console.log("=".repeat(60));
+
   try {
     const doctors = await Doctor.find({});
     let remindersSent = 0;
     let totalSystemCommission = 0;
-    
+
     for (const doctor of doctors) {
-      // Calculate commission due for this doctor
       const confirmedAppointments = await Appointment.find({
         $or: [
           { "doctor.name": doctor.name },
           { "doctor.email": doctor.email },
-          { "doctor.doctorId": doctor.doctorId }
+          { "doctor.doctorId": doctor.doctorId },
         ],
-        status: { $in: ["confirmed", "completed"] }
+        status: { $in: ["confirmed", "completed"] },
       });
-      
+
       const totalCommission = confirmedAppointments.reduce(
-        (sum, apt) => sum + (apt.amount * 0.04), 
-        0
+        (sum, apt) => sum + apt.amount * 0.01,
+        0,
       );
-      
+
       totalSystemCommission += totalCommission;
-      
-      // If commission due > 500, send reminder
+
       if (totalCommission > 500) {
-        // Get pending payments for last 30 days
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        
+
         const recentAppointments = confirmedAppointments.filter(
-          apt => apt.verifiedAt && new Date(apt.verifiedAt) > thirtyDaysAgo
+          (apt) => apt.verifiedAt && new Date(apt.verifiedAt) > thirtyDaysAgo,
         );
-        
-        const pendingPayments = recentAppointments.slice(0, 10).map(apt => ({
+
+        const pendingPayments = recentAppointments.slice(0, 10).map((apt) => ({
           patientName: apt.patient.name,
           date: apt.appointmentDate,
-          amount: apt.amount
+          amount: apt.amount,
         }));
-        
-        // Send email
+
         await emailService.sendCommissionReminder({
           doctorEmail: doctor.email,
           doctorName: doctor.name,
           pendingPayments,
           totalDue: totalCommission,
-          doctorId: doctor.doctorId
+          doctorId: doctor.doctorId,
         });
-        
-        console.log(`✅ Reminder sent to ${doctor.name} (${doctor.email}) for ₹${totalCommission}`);
+
+        console.log(
+          `✅ Reminder sent to ${doctor.name} (${doctor.email}) for ₹${totalCommission}`,
+        );
         remindersSent++;
       } else if (totalCommission > 0) {
-        console.log(`ℹ️ ${doctor.name} has ₹${totalCommission} due (below ₹500 threshold)`);
+        console.log(
+          `ℹ️ ${doctor.name} has ₹${totalCommission} due (below ₹500 threshold)`,
+        );
       }
     }
-    
-    console.log(`✅ Commission reminder check completed. Sent ${remindersSent} reminders.`);
-    
-    // 🔔 #2 ADDED - High Commission Alert
+
+    console.log(
+      `✅ Commission reminder check completed. Sent ${remindersSent} reminders.`,
+    );
+
     if (totalSystemCommission > 10000) {
       await emailService.sendAdminAlert({
         type: "info",
         title: "💰 High Commission Due",
         message: `Total pending commission: ₹${totalSystemCommission} from ${doctors.length} doctors`,
-        link: "http://localhost:3000/admin/commission"
+        link: "http://localhost:3000/admin/commission",
       });
-      console.log(`🔔 Admin alert sent: High commission (₹${totalSystemCommission})`);
+      console.log(
+        `🔔 Admin alert sent: High commission (₹${totalSystemCommission})`,
+      );
     }
-    
   } catch (error) {
-    console.error('❌ Error in commission reminder cron:', error);
-    
-    // 🔔 #2 ADDED - Error Alert
+    console.error("❌ Error in commission reminder cron:", error);
+
     await emailService.sendAdminAlert({
       type: "critical",
       title: "⚠️ Commission Cron Job Failed",
       message: error.message,
-      link: "http://localhost:3000/admin/logs"
+      link: "http://localhost:3000/admin/logs",
     });
   }
 });
 
-console.log('⏰ Commission reminder cron job scheduled - will run on 1st & 15th at 9 AM');
+console.log(
+  "⏰ Commission reminder cron job scheduled - will run on 1st & 15th at 9 AM",
+);
 
-// ✅ #5 ADDED - Weekly Report Cron Job - Every Monday at 10 AM
-cron.schedule('0 10 * * 1', async () => {
-  console.log('\n' + '='.repeat(60));
-  console.log('📊 WEEKLY REPORT CRON: Generating weekly stats');
-  console.log('='.repeat(60));
-  
+// ✅ Weekly Report Cron Job - Every Monday at 10 AM
+cron.schedule("0 10 * * 1", async () => {
+  console.log("\n" + "=".repeat(60));
+  console.log("📊 WEEKLY REPORT CRON: Generating weekly stats");
+  console.log("=".repeat(60));
+
   try {
-    // Get appointments from last 7 days
     const lastWeek = new Date();
     lastWeek.setDate(lastWeek.getDate() - 7);
-    
+
     const appointments = await Appointment.find({
-      createdAt: { $gte: lastWeek }
+      createdAt: { $gte: lastWeek },
     });
-    
+
     const totalRevenue = appointments.reduce((sum, apt) => sum + apt.amount, 0);
-    const totalCommission = appointments.reduce((sum, apt) => sum + (apt.amount * 0.04), 0);
-    
-    const confirmedCount = appointments.filter(a => a.status === 'confirmed').length;
-    const completedCount = appointments.filter(a => a.status === 'completed').length;
-    const pendingCount = appointments.filter(a => a.status === 'pending_verification').length;
-    
-    console.log(`📊 Weekly stats: ${appointments.length} appointments, ₹${totalRevenue} revenue`);
-    
-    // 🔔 SEND WEEKLY REPORT
+    const totalCommission = appointments.reduce(
+      (sum, apt) => sum + apt.amount * 0.01,
+      0,
+    );
+
+    const confirmedCount = appointments.filter(
+      (a) => a.status === "confirmed",
+    ).length;
+    const completedCount = appointments.filter(
+      (a) => a.status === "completed",
+    ).length;
+    const pendingCount = appointments.filter(
+      (a) => a.status === "pending_verification",
+    ).length;
+
+    console.log(
+      `📊 Weekly stats: ${appointments.length} appointments, ₹${totalRevenue} revenue`,
+    );
+
     await emailService.sendAdminAlert({
       type: "info",
       title: "📊 Weekly Report",
-      message: `${appointments.length} total appointments\n` +
-               `✅ Confirmed: ${confirmedCount}\n` +
-               `✓ Completed: ${completedCount}\n` +
-               `⏳ Pending: ${pendingCount}\n` +
-               `💰 Revenue: ₹${totalRevenue}\n` +
-               `💳 Commission: ₹${totalCommission}`,
-      link: "http://localhost:3000/admin/reports"
+      message:
+        `${appointments.length} total appointments\n` +
+        `✅ Confirmed: ${confirmedCount}\n` +
+        `✓ Completed: ${completedCount}\n` +
+        `⏳ Pending: ${pendingCount}\n` +
+        `💰 Revenue: ₹${totalRevenue}\n` +
+        `💳 Commission: ₹${totalCommission}`,
+      link: "http://localhost:3000/admin/reports",
     });
-    
+
     console.log(`✅ Weekly report sent to admin`);
-    
   } catch (error) {
     console.error("❌ Weekly report error:", error);
-    
-    // Send error alert
+
     await emailService.sendAdminAlert({
       type: "critical",
       title: "⚠️ Weekly Report Failed",
       message: error.message,
-      link: "http://localhost:3000/admin/logs"
+      link: "http://localhost:3000/admin/logs",
     });
   }
 });
 
-console.log('📊 Weekly report cron scheduled - Every Monday at 10 AM');
+console.log("📊 Weekly report cron scheduled - Every Monday at 10 AM");
 
 // ===========================================
 // 📧 ENHANCED EMAIL ROUTES
@@ -309,7 +321,7 @@ app.post("/api/email/test-all", async (req, res) => {
       patientEmail: email,
       patientName: "Test Patient",
       patientPhone: "9876543210",
-      doctorName: "Sharma",
+      doctorName: "Dr. Sharma",
       doctorEmail: email,
       doctorId: "DOC123",
       specialization: "Cardiologist",
@@ -318,10 +330,10 @@ app.post("/api/email/test-all", async (req, res) => {
       amount: "500",
       paymentId: "PAY_" + Date.now().toString().slice(-8),
       pendingPayments: [
-        { patientName: "John Doe", date: "2024-03-15", amount: 40 },
-        { patientName: "Jane Smith", date: "2024-03-16", amount: 40 },
+        { patientName: "John Doe", date: "2024-03-15", amount: 500 },
+        { patientName: "Jane Smith", date: "2024-03-16", amount: 500 },
       ],
-      totalDue: 80,
+      totalDue: 1000,
     };
 
     const results = {
@@ -329,7 +341,7 @@ app.post("/api/email/test-all", async (req, res) => {
       verified: await emailService.sendPaymentVerified(testData),
       commission: await emailService.sendCommissionReminder({
         doctorEmail: email,
-        doctorName: "Sharma",
+        doctorName: "Dr. Sharma",
         doctorId: "DOC123",
         pendingPayments: testData.pendingPayments,
         totalDue: testData.totalDue,
@@ -341,8 +353,9 @@ app.post("/api/email/test-all", async (req, res) => {
       }),
     };
 
-    // Count successes
-    const successCount = Object.values(results).filter((r) => r && r.success).length;
+    const successCount = Object.values(results).filter(
+      (r) => r && r.success,
+    ).length;
 
     res.json({
       success: true,
@@ -459,7 +472,6 @@ app.post("/api/email/commission-reminder/:doctorId", async (req, res) => {
 
     console.log("💰 Sending commission reminder to doctor:", doctorId);
 
-    // Fetch doctor's pending commissions from database
     const doctor = await Doctor.findOne({ doctorId });
 
     if (!doctor) {
@@ -473,9 +485,9 @@ app.post("/api/email/commission-reminder/:doctorId", async (req, res) => {
       $or: [
         { "doctor.name": doctor.name },
         { "doctor.email": doctor.email },
-        { "doctor.doctorId": doctorId }
+        { "doctor.doctorId": doctorId },
       ],
-      status: { $in: ["confirmed", "completed"] }
+      status: { $in: ["confirmed", "completed"] },
     });
 
     const pendingPayments = appointments.slice(0, 10).map((apt) => ({
@@ -485,8 +497,8 @@ app.post("/api/email/commission-reminder/:doctorId", async (req, res) => {
     }));
 
     const totalDue = appointments.reduce(
-      (sum, apt) => sum + (apt.amount * 0.04), 
-      0
+      (sum, apt) => sum + apt.amount * 0.01,
+      0,
     );
 
     if (pendingPayments.length === 0 || totalDue === 0) {
@@ -549,7 +561,7 @@ app.post("/api/email/admin-alert", async (req, res) => {
   }
 });
 
-// ✅ Check email configuration status - FIXED
+// ✅ Check email configuration status
 app.get("/api/email/status", async (req, res) => {
   try {
     const verification = await emailService.verifyEmailConfig();
@@ -577,7 +589,7 @@ app.get("/api/email/status", async (req, res) => {
 // 📅 APPOINTMENT ROUTES (Updated with emails)
 // ===========================================
 
-// ✅ FIXED: SAVE APPOINTMENT TO DATABASE WITH EMAIL
+// ✅ SAVE APPOINTMENT TO DATABASE WITH EMAIL
 app.post("/api/appointments", async (req, res) => {
   try {
     const {
@@ -598,7 +610,6 @@ app.post("/api/appointments", async (req, res) => {
     console.log("💳 Payment Method:", paymentMethod);
     console.log("📊 Status:", status);
 
-    // Check if slot is already booked
     const existingAppointment = await Appointment.findOne({
       "doctor.name": doctor.name,
       appointmentDate: appointmentDate,
@@ -618,12 +629,10 @@ app.post("/api/appointments", async (req, res) => {
 
     console.log("✅ Slot available, proceeding with booking...");
 
-    // Get doctor details for commission calculation
     const doctorDetails = await Doctor.findOne({ email: doctor.email });
-    const commissionPercentage = doctorDetails?.commissionPercentage || 4;
+    const commissionPercentage = doctorDetails?.commissionPercentage || 1;
     const commission = (amount * commissionPercentage) / 100;
 
-    // Create or update patient
     let existingPatient = await Patient.findOne({ email: patient.email });
 
     if (!existingPatient) {
@@ -671,7 +680,6 @@ app.post("/api/appointments", async (req, res) => {
     console.log("📊 Appointment status:", appointment.status);
     console.log(`💰 Commission (${commissionPercentage}%): ₹${commission}`);
 
-    // 📧 Send email notification - Payment Pending
     const emailResult = await emailService.sendPaymentPending({
       patientEmail: patient.email,
       patientName: patient.name,
@@ -729,7 +737,6 @@ app.patch("/api/appointments/:appointmentId/status", async (req, res) => {
 
     await appointment.save();
 
-    // 📧 Send email based on new status
     let emailResult = null;
 
     if (status === "confirmed" && oldStatus !== "confirmed") {
@@ -766,7 +773,7 @@ app.get("/api/appointments", async (req, res) => {
     console.log(`📊 Found ${appointments.length} appointments`);
 
     const totalCommission = appointments.reduce((sum, apt) => {
-      return sum + (apt.amount * 0.04);
+      return sum + apt.amount * 0.01;
     }, 0);
 
     res.json({
@@ -804,7 +811,7 @@ app.get("/api/appointments/:email", async (req, res) => {
   }
 });
 
-// ✅ GET AVAILABLE TIME SLOTS - 30 slots with 15-min intervals
+// ✅ GET AVAILABLE TIME SLOTS - FIXED WITH 12:45 PM
 app.get("/api/available-slots", async (req, res) => {
   try {
     const { doctorName, date } = req.query;
@@ -819,52 +826,22 @@ app.get("/api/available-slots", async (req, res) => {
 
     const bookedTimes = bookedAppointments.map((apt) => apt.appointmentTime);
 
-    // 30 slots with 15-minute intervals (15 morning + 15 afternoon)
-    const allSlots = [
-      // MORNING (9:00 AM - 12:30 PM) - 15 slots
-      "9:00 AM",
-      "9:15 AM",
-      "9:30 AM",
-      "9:45 AM",
-      "10:00 AM",
-      "10:15 AM",
-      "10:30 AM",
-      "10:45 AM",
-      "11:00 AM",
-      "11:15 AM",
-      "11:30 AM",
-      "11:45 AM",
-      "12:00 PM",
-      "12:15 PM",
-      "12:30 PM",
-
-      // LUNCH BREAK (12:45 PM - 1:45 PM) - NO SLOTS
-
-      // AFTERNOON (2:00 PM - 5:30 PM) - 15 slots
-      "2:00 PM",
-      "2:15 PM",
-      "2:30 PM",
-      "2:45 PM",
-      "3:00 PM",
-      "3:15 PM",
-      "3:30 PM",
-      "3:45 PM",
-      "4:00 PM",
-      "4:15 PM",
-      "4:30 PM",
-      "4:45 PM",
-      "5:00 PM",
-      "5:15 PM",
-      "5:30 PM",
-    ];
+   const allSlots = [
+  "9:00 AM", "9:15 AM", "9:30 AM", "9:45 AM",
+  "10:00 AM", "10:15 AM", "10:30 AM", "10:45 AM",
+  "11:00 AM", "11:15 AM", "11:30 AM", "11:45 AM",
+  "12:00 PM", "12:15 PM", "12:30 PM", "12:45 PM",
+  "2:00 PM", "2:15 PM", "2:30 PM", "2:45 PM",
+  "3:00 PM", "3:15 PM", "3:30 PM", "3:45 PM",
+  "4:00 PM", "4:15 PM", "4:30 PM", "4:45 PM",
+  "5:00 PM", "5:15 PM"
+];
 
     const availableSlots = allSlots.filter(
       (slot) => !bookedTimes.includes(slot),
     );
 
-    console.log("✅ Total slots:", allSlots.length); // Should be 30
     console.log("✅ Available slots:", availableSlots.length);
-    console.log("✅ Booked slots:", bookedTimes.length);
 
     res.json({
       success: true,
@@ -900,8 +877,8 @@ app.get("/api/commission/summary", async (req, res) => {
 
     const totalRevenue = appointments.reduce((sum, apt) => sum + apt.amount, 0);
     const totalCommission = appointments.reduce(
-      (sum, apt) => sum + (apt.amount * 0.04), 
-      0
+      (sum, apt) => sum + apt.amount * 0.01,
+      0,
     );
 
     res.json({
@@ -917,7 +894,7 @@ app.get("/api/commission/summary", async (req, res) => {
         doctor: apt.doctor.name,
         patient: apt.patient.name,
         amount: apt.amount,
-        commission: apt.amount * 0.04,
+        commission: apt.amount * 0.01,
       })),
     });
   } catch (error) {
@@ -958,6 +935,8 @@ app.listen(PORT, () => {
   console.log("=".repeat(60));
   console.log("👨‍⚕️ DOCTOR ROUTES:");
   console.log("   POST   /api/doctor/login");
+  console.log("   GET    /api/doctor/me");
+  console.log("   POST   /api/doctor/logout");
   console.log("   GET    /api/doctor/dashboard/:doctorId");
   console.log("   GET    /api/doctor/appointments/:doctorId");
   console.log("   GET    /api/doctor/patients/:doctorId");
@@ -988,19 +967,13 @@ app.listen(PORT, () => {
   console.log("   GET    /api/commission/summary");
   console.log("=".repeat(60));
   console.log("📧 ENHANCED EMAIL ROUTES:");
-  console.log(
-    "   POST   /api/email-test-direct           (Send single test email)",
-  );
-  console.log(
-    "   POST   /api/email/test-all              (Test all templates)",
-  );
-  console.log("   POST   /api/send-payment-message        (Payment pending)");
-  console.log("   POST   /api/send-payment-verified       (Payment verified)");
+  console.log("   POST   /api/email-test-direct");
+  console.log("   POST   /api/email/test-all");
+  console.log("   POST   /api/send-payment-message");
+  console.log("   POST   /api/send-payment-verified");
   console.log("   POST   /api/email/commission-reminder/:doctorId");
   console.log("   POST   /api/email/admin-alert");
-  console.log(
-    "   GET    /api/email/status                (Check email config)",
-  );
+  console.log("   GET    /api/email/status");
   console.log("=".repeat(60));
   console.log("📊 STATEMENT ROUTES:");
   console.log("   GET    /api/statements/monthly-summary/:month/:year");

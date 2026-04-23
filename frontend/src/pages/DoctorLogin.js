@@ -1,14 +1,17 @@
 // D:\Projects\DoctorBooking\frontend\src\pages\DoctorLogin.js
 import React, { useState } from "react";
-import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import "./Doctor.css";
 
-function DoctorLogin({ onLogin }) {
+function DoctorLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const { doctorLogin } = useAuth();  // ← FIXED: Changed from "login" to "doctorLogin"
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -16,36 +19,26 @@ function DoctorLogin({ onLogin }) {
     setError("");
 
     try {
-      // Clean the password by trimming
       const cleanedPassword = password.trim();
       
       console.log("🔐 Doctor login attempt:", email);
       console.log("Password length:", cleanedPassword.length);
 
-      const response = await axios.post(
-        "http://localhost:5000/api/doctor/login",
-        {
-          email: email.trim(),
-          password: cleanedPassword,
-        },
-      );
+      const result = await doctorLogin(email.trim(), cleanedPassword);  // ← FIXED
 
-      console.log("✅ Login response:", response.data);
-
-      if (response.data.success) {
-        onLogin(response.data.doctor);
+      if (result.success) {
+        navigate("/doctor-dashboard");
       } else {
-        setError("Invalid email or password");
+        setError(result.message || "Invalid email or password");
       }
     } catch (error) {
-      console.error("❌ Login error:", error.response?.data || error.message);
-      setError(error.response?.data?.message || "Invalid email or password");
+      console.error("❌ Login error:", error);
+      setError("Invalid email or password");
     } finally {
       setLoading(false);
     }
   };
 
-  // Toggle password visibility
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
@@ -102,7 +95,6 @@ function DoctorLogin({ onLogin }) {
           </button>
         </form>
 
-        {/* Back to Home Link */}
         <div className="back-to-home">
           <a href="/">← Back to Patient Booking</a>
         </div>

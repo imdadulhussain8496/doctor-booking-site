@@ -231,9 +231,10 @@ body.dark-theme {
   cursor: pointer;
   border: none;
   position: relative;
-  background: #ebebe5;
+  background: #f7f4f3;
   color: #334155;
   box-shadow: none;
+
 }
 
 .payment-enforcement-btn:hover,
@@ -327,7 +328,7 @@ body.dark-theme {
   right: -280px;
   width: 280px;
   height: 100%;
-  background: white;
+  background: rgb(27, 10, 10);
   z-index: 1000;
   box-shadow: -2px 0 20px rgba(0, 0, 0, 0.1);
   transition: right 0.3s ease;
@@ -424,24 +425,7 @@ body.dark-theme {
   background: #f1f5f9;
 }
 
-.refresh-indicator {
-  text-align: right;
-  padding: 8px 24px;
-  color: #94a3b8;
-  font-size: 11px;
-  background: #f9fafb;
-  border-bottom: 1px solid #eef2f6;
-  font-family: monospace;
-}
 
-.refresh-indicator small {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: white;
-  padding: 2px 8px;
-  border-radius: 30px;
-}
 
 /* ============================================ */
 /* HEADER RESPONSIVE */
@@ -3792,6 +3776,33 @@ body.dark-theme {
   .doctor-commission-list td:last-child {
     min-width: 420px;
   }
+}
+
+
+
+/* ============================================ */
+/* 23. ADMIN STATUS TEXT BADGE (for doctor details) */
+/* ============================================ */
+
+.admin-status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 30px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-left: 8px;
+}
+
+.admin-status-badge.active {
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.admin-status-badge.inactive {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
 }
 
 /* ============================================ */

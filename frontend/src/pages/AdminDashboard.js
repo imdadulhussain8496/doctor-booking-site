@@ -1,14 +1,25 @@
-// D:\Projects\DoctorBooking\frontend\src\pages\AdminDashboard.js
 import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import axios from "axios";
 import { getDoctorImage } from "../utils/doctorImages";
 import "./Admin.css";
 
-function AdminDashboard({ admin, onLogout }) {
+function AdminDashboard() {
+  const { admin, adminLogout, loading } = useAuth();
+  const navigate = useNavigate();
+
+  // Redirect if not logged in - wait for loading to finish
+  useEffect(() => {
+    if (!loading && !admin) {
+      navigate("/admin");
+    }
+  }, [admin, loading, navigate]);
+
   const [stats, setStats] = useState(null);
   const [appointments, setAppointments] = useState([]);
   const [doctors, setDoctors] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [dataLoading, setDataLoading] = useState(true);
   const [filter, setFilter] = useState({
     doctor: "",
     status: "",
@@ -43,6 +54,7 @@ function AdminDashboard({ admin, onLogout }) {
   const [showAddDoctorModal, setShowAddDoctorModal] = useState(false);
   const [showEditDoctorModal, setShowEditDoctorModal] = useState(false);
   const [selectedDoctor, setSelectedDoctor] = useState(null);
+
   const [newDoctor, setNewDoctor] = useState({
     name: "",
     email: "",
@@ -55,6 +67,8 @@ function AdminDashboard({ admin, onLogout }) {
     imageUrl: "",
     paymentMethod: "both",
     commissionPercentage: 1,
+    clinicName: "",
+    address: "",
   });
 
   // ✅ Image Preview State
@@ -88,6 +102,16 @@ function AdminDashboard({ admin, onLogout }) {
     message: "",
     type: "",
   });
+
+  // Set axios defaults
+  axios.defaults.withCredentials = true;
+  axios.defaults.baseURL = "http://localhost:5000";
+
+  // ✅ Logout handler
+  const handleLogout = () => {
+    adminLogout();
+    navigate("/admin");
+  };
 
   // ✅ Show notification function
   const showNotification = (message, type = "success") => {
@@ -260,7 +284,7 @@ function AdminDashboard({ admin, onLogout }) {
         );
         await fetchCommissionDue();
         await fetchDashboardData();
-        await fetchRestrictedDoctors(); // Refresh restricted list
+        await fetchRestrictedDoctors();
 
         setPaymentTransactionId((prev) => ({ ...prev, [doctorId]: "" }));
       }
@@ -278,52 +302,41 @@ function AdminDashboard({ admin, onLogout }) {
   // ✅ Fetch all doctors with passwords
   const fetchAllDoctors = async (showLoader = true) => {
     try {
-      if (showLoader) setLoading(true);
+      if (showLoader) setDataLoading(true);
       console.log("🔵 Fetching doctors...");
-      const response = await axios.get(
-        "http://localhost:5000/api/admin/doctors",
-      );
+      const response = await axios.get("/api/admin/doctors?limit=50");
 
       if (response.data.success) {
         const doctorsData = response.data.doctors;
         console.log(`✅ Fetched ${doctorsData.length} doctors`);
-
-        if (doctorsData.length > 0) {
-          console.log("📋 Sample doctor data:", {
-            name: doctorsData[0].name,
-            hasPassword: !!doctorsData[0].password,
-            password: doctorsData[0].password,
-          });
-        }
-
         setDoctors(doctorsData);
       }
     } catch (error) {
       console.error("❌ Error fetching doctors:", error);
       showNotification("Failed to fetch doctors", "error");
     } finally {
-      if (showLoader) setLoading(false);
+      if (showLoader) setDataLoading(false);
     }
   };
 
   // ✅ Refresh doctors function
   const refreshDoctors = async () => {
     try {
-      setLoading(true);
+      setDataLoading(true);
       await fetchAllDoctors(true);
       showNotification("Doctors list refreshed", "success");
     } catch (error) {
       console.error("Error refreshing doctors:", error);
       showNotification("Failed to refresh doctors", "error");
     } finally {
-      setLoading(false);
+      setDataLoading(false);
     }
   };
 
   // ✅ Fetch dashboard data
   const fetchDashboardData = async (showLoader = true) => {
     try {
-      if (showLoader) setLoading(true);
+      if (showLoader) setDataLoading(true);
       const [statsRes, appointmentsRes, doctorsRes] = await Promise.all([
         axios.get("http://localhost:5000/api/admin/stats"),
         axios.get("http://localhost:5000/api/admin/appointments"),
@@ -336,7 +349,7 @@ function AdminDashboard({ admin, onLogout }) {
       console.error("Error fetching dashboard data:", error);
       showNotification("Failed to fetch dashboard data", "error");
     } finally {
-      if (showLoader) setLoading(false);
+      if (showLoader) setDataLoading(false);
     }
   };
 
@@ -360,7 +373,7 @@ function AdminDashboard({ admin, onLogout }) {
 
   // ✅ Handle filter
   const handleFilter = async () => {
-    setLoading(true);
+    setDataLoading(true);
     try {
       const params = new URLSearchParams();
       if (filter.doctor) params.append("doctor", filter.doctor);
@@ -377,7 +390,7 @@ function AdminDashboard({ admin, onLogout }) {
       console.error("Error filtering appointments:", error);
       showNotification("Failed to apply filters", "error");
     } finally {
-      setLoading(false);
+      setDataLoading(false);
     }
   };
 
@@ -448,80 +461,106 @@ function AdminDashboard({ admin, onLogout }) {
 
   // ✅ Handle show password
   const handleShowPassword = (doctor) => {
-    console.log("🔍 Showing password for:", doctor.name);
-    console.log("📋 Doctor data:", doctor);
-
     if (doctor.password) {
       alert(`🔑 Password for ${doctor.name}\n\nPassword: ${doctor.password}`);
     } else {
-      alert(
-        `❌ Password not found for ${doctor.name}\n\nTry refreshing the list first.`,
-      );
-      console.log("Doctor object without password:", doctor);
+      alert(`❌ Password not found for ${doctor.name}`);
     }
   };
 
   // ✅ Handle image upload for new doctor
-  const handleImageUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+const handleImageUpload = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
 
-    setPreviewImage(URL.createObjectURL(file));
+  // ✅ SIZE VALIDATION
+  const MAX_SIZE = 500 * 1024; // 500KB
+  const MIN_SIZE = 10 * 1024;   // 10KB
 
-    const formData = new FormData();
-    formData.append("image", file);
+  if (file.size > MAX_SIZE) {
+    showNotification(`Image too large! Maximum ${MAX_SIZE / 1024}KB. Your file: ${(file.size / 1024).toFixed(0)}KB`, "error");
+    e.target.value = ''; // Clear the input
+    return;
+  }
 
-    try {
-      setUploading(true);
-      const response = await axios.post(
-        "http://localhost:5000/api/upload/doctor-image",
-        formData,
-        { headers: { "Content-Type": "multipart/form-data" } },
-      );
+  if (file.size < MIN_SIZE) {
+    showNotification(`File too small! Minimum ${MIN_SIZE / 1024}KB. Your file: ${(file.size / 1024).toFixed(0)}KB`, "error");
+    e.target.value = '';
+    return;
+  }
 
-      setNewDoctor({
-        ...newDoctor,
-        imageUrl: response.data.imageUrl,
-      });
-      showNotification("Image uploaded successfully", "success");
-    } catch (error) {
-      console.error("Upload failed:", error);
-      showNotification("Failed to upload image", "error");
-    } finally {
-      setUploading(false);
-    }
-  };
+  setPreviewImage(URL.createObjectURL(file));
+
+  const formData = new FormData();
+  formData.append("image", file);
+
+  try {
+    setUploading(true);
+    const response = await axios.post(
+      "http://localhost:5000/api/upload/doctor-image",
+      formData,
+      { headers: { "Content-Type": "multipart/form-data" } },
+    );
+
+    setNewDoctor({
+      ...newDoctor,
+      imageUrl: response.data.imageUrl,
+    });
+    showNotification("Image uploaded successfully", "success");
+  } catch (error) {
+    console.error("Upload failed:", error);
+    showNotification("Failed to upload image", "error");
+  } finally {
+    setUploading(false);
+  }
+};
 
   // ✅ Handle image upload for edit doctor
-  const handleEditImageUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+const handleEditImageUpload = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
 
-    setEditPreviewImage(URL.createObjectURL(file));
+  // ✅ SIZE VALIDATION
+  const MAX_SIZE = 500 * 1024; // 500KB
+  const MIN_SIZE = 10 * 1024;   // 10KB
 
-    const formData = new FormData();
-    formData.append("image", file);
+  if (file.size > MAX_SIZE) {
+    showNotification(`Image too large! Maximum ${MAX_SIZE / 1024}KB. Your file: ${(file.size / 1024).toFixed(0)}KB`, "error");
+    e.target.value = ''; // Clear the input
+    return;
+  }
 
-    try {
-      setEditUploading(true);
-      const response = await axios.post(
-        "http://localhost:5000/api/upload/doctor-image",
-        formData,
-        { headers: { "Content-Type": "multipart/form-data" } },
-      );
+  if (file.size < MIN_SIZE) {
+    showNotification(`File too small! Minimum ${MIN_SIZE / 1024}KB. Your file: ${(file.size / 1024).toFixed(0)}KB`, "error");
+    e.target.value = '';
+    return;
+  }
 
-      setEditDoctorData({
-        ...editDoctorData,
-        imageUrl: response.data.imageUrl,
-      });
-      showNotification("Image uploaded successfully", "success");
-    } catch (error) {
-      console.error("Upload failed:", error);
-      showNotification("Failed to upload image", "error");
-    } finally {
-      setEditUploading(false);
-    }
-  };
+  setEditPreviewImage(URL.createObjectURL(file));
+
+  const formData = new FormData();
+  formData.append("image", file);
+
+  try {
+    setEditUploading(true);
+    const response = await axios.post(
+      "http://localhost:5000/api/upload/doctor-image",
+      formData,
+      { headers: { "Content-Type": "multipart/form-data" } },
+    );
+
+    setEditDoctorData({
+      ...editDoctorData,
+      imageUrl: response.data.imageUrl,
+    });
+    showNotification("Image uploaded successfully", "success");
+  } catch (error) {
+    console.error("Upload failed:", error);
+    showNotification("Failed to upload image", "error");
+  } finally {
+    setEditUploading(false);
+  }
+};
 
   // ✅ Handle add doctor
   const handleAddDoctor = async () => {
@@ -620,6 +659,9 @@ function AdminDashboard({ admin, onLogout }) {
         upiId: editDoctorData.upiId || "",
         imageUrl: editDoctorData.imageUrl || "",
         commissionPercentage: editDoctorData.commissionPercentage || 1,
+        clinicName: editDoctorData.clinicName || "",
+        address: editDoctorData.address || "",
+
       };
 
       const response = await axios.patch(
@@ -659,7 +701,7 @@ function AdminDashboard({ admin, onLogout }) {
 
     if (
       window.confirm(
-        `Are you sure you want to delete  ${doctor.name}? This action cannot be undone.`,
+        `Are you sure you want to delete ${doctor.name}? This action cannot be undone.`,
       )
     ) {
       try {
@@ -696,7 +738,13 @@ function AdminDashboard({ admin, onLogout }) {
       .reduce((sum, apt) => sum + apt.amount * 0.01, 0);
   };
 
-  if (loading && !doctors.length) {
+  // Handle logout
+  const onLogout = () => {
+    handleLogout();
+  };
+
+  // Loading check
+  if (dataLoading && !doctors.length) {
     return (
       <div className="admin-loading">
         <div className="spinner"></div>
@@ -707,13 +755,6 @@ function AdminDashboard({ admin, onLogout }) {
 
   return (
     <div className="admin-dashboard">
-      {/* Refresh Indicator */}
-      <div className="refresh-indicator">
-        <small>
-          Last updated: {new Date(lastRefresh).toLocaleTimeString()}
-        </small>
-      </div>
-
       {/* Notification */}
       {notification.show && (
         <div className={`notification ${notification.type}`}>
@@ -729,7 +770,6 @@ function AdminDashboard({ admin, onLogout }) {
 
         {/* Desktop Buttons */}
         <div className="admin-header-right">
-          {/* Payment Enforcement Button */}
           <button
             className="payment-enforcement-btn"
             onClick={() => setShowPaymentEnforcementModal(true)}
@@ -758,7 +798,11 @@ function AdminDashboard({ admin, onLogout }) {
           >
             💰 Commission Report
           </button>
-          <button onClick={onLogout} className="logout-btn">
+          <button
+            onClick={onLogout}
+            className=" logout-btn"
+            style={{ color: "#dc2626" }}
+          >
             Logout
           </button>
         </div>
@@ -775,15 +819,13 @@ function AdminDashboard({ admin, onLogout }) {
         onClick={toggleMobileMenu}
       ></div>
 
-      {/* Mobile Menu Drawer - WITHOUT HEADER */}
+      {/* Mobile Menu Drawer */}
       <div className={`mobile-menu-drawer ${mobileMenuOpen ? "open" : ""}`}>
         <div className="mobile-menu-items">
-          {/* Close button at top */}
           <button className="mobile-menu-close-top" onClick={toggleMobileMenu}>
             ✕
           </button>
 
-          {/* Payment Enforcement Menu Item */}
           <button
             className="mobile-menu-btn-item payment"
             onClick={() => {
@@ -800,7 +842,6 @@ function AdminDashboard({ admin, onLogout }) {
             )}
           </button>
 
-          {/* Commission Due Menu Item */}
           <button
             className="mobile-menu-btn-item due"
             onClick={() => {
@@ -812,7 +853,6 @@ function AdminDashboard({ admin, onLogout }) {
             Commission Due: ₹{totalCommissionDue}
           </button>
 
-          {/* Commission Report Menu Item */}
           <button
             className="mobile-menu-btn-item report"
             onClick={() => {
@@ -823,7 +863,6 @@ function AdminDashboard({ admin, onLogout }) {
             💰 Commission Report
           </button>
 
-          {/* Logout Menu Item */}
           <button
             className="mobile-menu-btn-item logout"
             onClick={() => {
@@ -924,7 +963,7 @@ function AdminDashboard({ admin, onLogout }) {
                     <tbody>
                       {restrictedDoctors.map((doc) => {
                         const commission =
-                          doc.paymentStats?.totalCommissionPaid || 0;
+                          doc.paymentStats?.pendingCommission || 0;
                         const lateFees = doc.lateFees || 0;
                         const total = commission + lateFees;
 
@@ -1026,7 +1065,7 @@ function AdminDashboard({ admin, onLogout }) {
                         <span>{doc.name}</span>
                         <span>
                           ₹
-                          {(doc.paymentStats?.totalCommissionPaid || 0) +
+                          {(doc.paymentStats?.pendingCommission || 0) +
                             (doc.lateFees || 0)}
                         </span>
                         <span className="days">
@@ -1072,9 +1111,8 @@ function AdminDashboard({ admin, onLogout }) {
 
               <div className="doctor-commission-list">
                 <h3>Doctor-wise Commission Due</h3>
-
                 <div className="table-wrapper">
-                  <table>
+                  <table className="commission-table">
                     <thead>
                       <tr>
                         <th>Doctor</th>
@@ -1294,7 +1332,7 @@ function AdminDashboard({ admin, onLogout }) {
               <div className="doctor-commission-list">
                 <h3>Doctor-wise Commission</h3>
                 <div className="table-wrapper">
-                  <table>
+                  <table className="commission-table">
                     <thead>
                       <tr>
                         <th>Doctor</th>
@@ -1560,6 +1598,38 @@ function AdminDashboard({ admin, onLogout }) {
                 </div>
               </div>
 
+              <div className="form-group">
+                <label>🏥 Clinic Name</label>
+                <input
+                  type="text"
+                  value={editDoctorData.clinicName || ""}
+                  onChange={(e) =>
+                    setEditDoctorData({
+                      ...editDoctorData,
+                      clinicName: e.target.value,
+                    })
+                  }
+                  placeholder="e.g., Ali Medical Center"
+                />
+                <small className="hint">
+                  Leave empty to auto-generate from doctor name
+                </small>
+              </div>
+              {/* 👇 ADD THIS AFTER CLINIC NAME 👇 */}
+              <div className="form-group">
+                <label>📍 Address / Location</label>
+                <input
+                  type="text"
+                  value={editDoctorData.address || ""}
+                  onChange={(e) =>
+                    setEditDoctorData({
+                      ...editDoctorData,
+                      address: e.target.value,
+                    })
+                  }
+                  placeholder="e.g., Downtown, Mumbai"
+                />
+              </div>
               <div className="form-group full-width">
                 <label>Commission Percentage</label>
                 <input
@@ -1780,6 +1850,35 @@ function AdminDashboard({ admin, onLogout }) {
                     />
                   </p>
                 </div>
+              </div>
+
+              <div className="form-group">
+                <label>🏥 Clinic Name</label>
+                <input
+                  type="text"
+                  value={newDoctor.clinicName}
+                  onChange={(e) =>
+                    setNewDoctor({ ...newDoctor, clinicName: e.target.value })
+                  }
+                  placeholder="e.g., Ali Medical Center"
+                />
+                <small className="hint">
+                  Leave empty to auto-generate from doctor name
+                </small>
+              </div>
+
+              {/* 👇 NEW ADDRESS FIELD - ADDED HERE 👇 */}
+              <div className="form-group">
+                <label>📍 Address / Location</label>
+                <input
+                  type="text"
+                  value={newDoctor.address}
+                  onChange={(e) =>
+                    setNewDoctor({ ...newDoctor, address: e.target.value })
+                  }
+                  placeholder="e.g., Downtown, Mumbai"
+                />
+                <small className="hint">Area, city or full address</small>
               </div>
 
               <div className="form-group full-width">
@@ -2012,7 +2111,7 @@ function AdminDashboard({ admin, onLogout }) {
           <div className="appointments-list">
             <h2>All Appointments ({appointments.length})</h2>
 
-            {/* Desktop Table - Hidden on Mobile */}
+            {/* Desktop Table */}
             <div className="appointments-table">
               <table>
                 <thead>
@@ -2060,7 +2159,7 @@ function AdminDashboard({ admin, onLogout }) {
               </table>
             </div>
 
-            {/* Mobile Cards - Shows only on mobile */}
+            {/* Mobile Cards */}
             <div className="appointments-cards">
               {appointments.map((apt) => (
                 <div key={apt.appointmentId} className="appointment-card">
@@ -2117,7 +2216,6 @@ function AdminDashboard({ admin, onLogout }) {
                 </div>
               ))}
 
-              {/* Empty State for Mobile */}
               {appointments.length === 0 && (
                 <div className="no-appointments-mobile">
                   <p>No appointments found</p>
@@ -2136,10 +2234,10 @@ function AdminDashboard({ admin, onLogout }) {
               <button
                 className="refresh-btn"
                 onClick={refreshDoctors}
-                disabled={loading}
+                disabled={dataLoading}
               >
                 <span>🔄</span>
-                {loading ? "Refreshing..." : "Refresh Doctors"}
+                {dataLoading ? "Refreshing..." : "Refresh Doctors"}
               </button>
               <button
                 className="add-doctor-btn"
@@ -2192,10 +2290,18 @@ function AdminDashboard({ admin, onLogout }) {
                       <strong>📊 Commission:</strong>{" "}
                       {doc.commissionPercentage || 1}%
                     </p>
-                    {doc.paymentStats?.totalCommissionPaid > 0 && (
+                    <p>
+                      <strong>🔵 Status:</strong>{" "}
+                      <span
+                        className={`admin-status-badge ${doc.isActive ? "active" : "inactive"}`}
+                      >
+                        {doc.isActive ? "🟢 Active" : "🔴 Inactive"}
+                      </span>
+                    </p>
+                    {doc.paymentStats?.pendingCommission > 0 && (
                       <p className="commission-due-badge">
                         <strong>💰 Commission Due:</strong>
-                        <span>₹{doc.paymentStats.totalCommissionPaid}</span>
+                        <span>₹{doc.paymentStats.pendingCommission}</span>
                         {doc.lateFees > 0 && (
                           <span className="late-fees">
                             {" "}
@@ -2228,21 +2334,21 @@ function AdminDashboard({ admin, onLogout }) {
 
                   <div className="doctor-card-actions">
                     <button
-                      className="action-btn qr-btn" // ✅ Added "action-btn"
+                      className="action-btn qr-btn"
                       onClick={() => handleViewQR(doc)}
                       title="View QR Code"
                     >
                       📱 QR
                     </button>
                     <button
-                      className="action-btn email-btn" // ✅ Added "action-btn"
+                      className="action-btn email-btn"
                       onClick={() => sendLoginEmail(doc)}
                       title="Send Login Details"
                     >
                       📧 Email
                     </button>
                     <button
-                      className="action-btn password-btn" // ✅ Added "action-btn"
+                      className="action-btn password-btn"
                       onClick={() => {
                         if (doc.password) {
                           navigator.clipboard
@@ -2260,20 +2366,20 @@ function AdminDashboard({ admin, onLogout }) {
                       <span>📋</span>C-PW
                     </button>
                     <button
-                      className="action-btn reset-btn" // ✅ Added "action-btn"
+                      className="action-btn reset-btn"
                       onClick={() => resetPassword(doc)}
                       title="Reset Password"
                     >
                       🔑 Reset
                     </button>
                     <button
-                      className="action-btn edit-btn" // ✅ Added "action-btn"
+                      className="action-btn edit-btn"
                       onClick={() => handleEditClick(doc)}
                     >
                       ✏️ Edit
                     </button>
                     <button
-                      className="action-btn delete-btn" // ✅ Added "action-btn"
+                      className="action-btn delete-btn"
                       onClick={() => handleDeleteDoctor(doc)}
                     >
                       🗑️ Delete

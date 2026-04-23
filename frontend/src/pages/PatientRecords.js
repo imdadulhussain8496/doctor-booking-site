@@ -52,7 +52,7 @@ function PatientRecords() {
     try {
       console.log("📅 Fetching appointments for email:", email);
       const response = await axios.get(
-        `http://localhost:5000/api/appointments?email=${encodeURIComponent(email)}`
+        `http://localhost:5000/api/appointments/${encodeURIComponent(email)}`
       );
       console.log("✅ Appointments response:", response.data);
       setAppointments(response.data.appointments || []);

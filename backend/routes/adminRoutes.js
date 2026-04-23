@@ -1,6 +1,6 @@
-// D:\Projects\DoctorBooking\backend\routes\adminRoutes.js
 const express = require("express");
 const router = express.Router();
+const jwt = require("jsonwebtoken");
 const Appointment = require("../models/Appointment");
 const Patient = require("../models/Patient");
 const Doctor = require("../models/Doctor");
@@ -27,7 +27,7 @@ const generateRandomPassword = () => {
   return password;
 };
 
-// ✅ Email sending function for doctor welcome - USING SHARED EMAIL SERVICE
+// ✅ Email sending function for doctor welcome
 const sendDoctorWelcomeEmail = async (doctorEmail, doctorName, password) => {
   try {
     console.log(`📧 Attempting to send welcome email to: ${doctorEmail}`);
@@ -64,7 +64,7 @@ const sendDoctorWelcomeEmail = async (doctorEmail, doctorName, password) => {
                     </div>
                     
                     <div class="content">
-                        <h2 style="color: #1e293b;">Welcome Dr. ${doctorName}!</h2>
+                        <h2 style="color: #1e293b;">Welcome ${doctorName}!</h2>
                         <p style="color: #475569;">Your account has been created successfully. You can now access the Doctor Portal.</p>
                         
                         <div class="credentials-box">
@@ -144,7 +144,7 @@ const sendDoctorWelcomeEmail = async (doctorEmail, doctorName, password) => {
   }
 };
 
-// ✅ Email reminder helper functions - UPDATED to use shared sendEmail
+// ✅ Email reminder helper functions
 async function sendGentleReminder(doctor, amountDue) {
   const html = `
         <!DOCTYPE html>
@@ -361,20 +361,44 @@ async function sendAccessRestoredEmail(doctor) {
   await sendEmail(doctor.email, "✅ Account Access Restored", html);
 }
 
-// ✅ ADMIN LOGIN
+// ✅ ADMIN LOGIN - With HttpOnly Cookie
 router.post("/login", (req, res) => {
   const { username, password } = req.body;
+
+  console.log("🔐 Admin login attempt:", username);
 
   if (
     username === ADMIN_CREDENTIALS.username &&
     password === ADMIN_CREDENTIALS.password
   ) {
+    console.log("✅ Admin login successful");
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { username: ADMIN_CREDENTIALS.username, role: "admin" },
+      process.env.JWT_SECRET,
+      { expiresIn: "8h" },
+    );
+
+    // Set HttpOnly Cookie
+    res.cookie("adminToken", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 8 * 60 * 60 * 1000,
+    });
+
     res.json({
       success: true,
       message: "Login successful",
-      admin: { username, role: "admin" },
+      admin: {
+        username: ADMIN_CREDENTIALS.username,
+        role: "admin",
+        name: "Administrator",
+      },
     });
   } else {
+    console.log("❌ Admin login failed");
     res.status(401).json({
       success: false,
       message: "Invalid credentials",
@@ -382,7 +406,39 @@ router.post("/login", (req, res) => {
   }
 });
 
-// ✅ GET DASHBOARD STATISTICS - Updated with restricted counts
+// ✅ ADMIN LOGOUT
+router.post("/logout", (req, res) => {
+  res.clearCookie("adminToken", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+  });
+  res.json({ success: true, message: "Logged out successfully" });
+});
+
+// ✅ VERIFY ADMIN TOKEN
+router.get("/verify", (req, res) => {
+  const token = req.cookies?.adminToken;
+
+  if (!token) {
+    return res.status(401).json({ success: false, message: "No token" });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    res.json({
+      success: true,
+      admin: {
+        username: decoded.username,
+        role: decoded.role,
+      },
+    });
+  } catch (error) {
+    res.status(401).json({ success: false, message: "Invalid token" });
+  }
+});
+
+// ✅ GET DASHBOARD STATISTICS
 router.get("/stats", async (req, res) => {
   try {
     const activeDoctors = await Doctor.countDocuments({ isActive: true });
@@ -417,10 +473,7 @@ router.get("/stats", async (req, res) => {
       { $group: { _id: "$status", count: { $sum: 1 } } },
     ]);
 
-    // Platform commission calculation - only from active doctors
     const activeDoctorsList = await Doctor.find({ isActive: true });
-    const activeDoctorEmails = activeDoctorsList.map((d) => d.email);
-
     const commissionAppointments = await Appointment.find({
       status: { $in: ["confirmed", "completed"] },
       paymentStatus: "verified",
@@ -428,18 +481,17 @@ router.get("/stats", async (req, res) => {
 
     const totalPlatformCommission = commissionAppointments.reduce(
       (sum, apt) => {
-        return sum + apt.amount * 0.01; // 1% commission
+        return sum + apt.amount * 0.01;
       },
       0,
     );
 
-    // Get total commission due from ALL doctors (including late fees)
     const allDoctors = await Doctor.find({});
     let totalCommissionDue = 0;
     let totalLateFees = 0;
 
     allDoctors.forEach((doc) => {
-      totalCommissionDue += doc.paymentStats?.totalCommissionPaid || 0;
+      totalCommissionDue += doc.paymentStats?.pendingCommission || 0;
       totalLateFees += doc.lateFees || 0;
     });
 
@@ -494,14 +546,14 @@ router.get("/restricted-doctors", async (req, res) => {
         restrictedAt: 1,
         restrictionReason: 1,
         lateFees: 1,
-        "paymentStats.totalCommissionPaid": 1,
+        "paymentStats.pendingCommission": 1,
       },
     ).sort({ restrictedAt: -1 });
 
     const doctorsWithTotal = doctors.map((doc) => ({
       ...doc.toObject(),
       totalDue:
-        (doc.paymentStats?.totalCommissionPaid || 0) + (doc.lateFees || 0),
+        (doc.paymentStats?.pendingCommission || 0) + (doc.lateFees || 0),
     }));
 
     res.json({
@@ -531,14 +583,14 @@ router.get("/overdue-doctors", async (req, res) => {
         paymentStatus: 1,
         totalOverdueDays: 1,
         lateFees: 1,
-        "paymentStats.totalCommissionPaid": 1,
+        "paymentStats.pendingCommission": 1,
       },
     ).sort({ totalOverdueDays: -1 });
 
     const doctorsWithTotal = doctors.map((doc) => ({
       ...doc.toObject(),
       totalDue:
-        (doc.paymentStats?.totalCommissionPaid || 0) + (doc.lateFees || 0),
+        (doc.paymentStats?.pendingCommission || 0) + (doc.lateFees || 0),
     }));
 
     res.json({
@@ -565,7 +617,6 @@ router.post("/doctors/unblock/:doctorId", async (req, res) => {
       });
     }
 
-    // Record the unblock
     doctor.paymentStatus = "current";
     doctor.restrictedAt = null;
     doctor.restrictionReason = null;
@@ -576,7 +627,6 @@ router.post("/doctors/unblock/:doctorId", async (req, res) => {
 
     await doctor.save();
 
-    // Send unblock email
     await sendAccessRestoredEmail(doctor);
 
     res.json({
@@ -594,7 +644,7 @@ router.post("/doctors/unblock/:doctorId", async (req, res) => {
   }
 });
 
-// ✅ MARK COMMISSION AS PAID - UPDATED to handle unblocking
+// ✅ MARK COMMISSION AS PAID
 router.post("/commission/mark-paid", async (req, res) => {
   try {
     const { doctorId, transactionId, amount } = req.body;
@@ -614,14 +664,15 @@ router.post("/commission/mark-paid", async (req, res) => {
       });
     }
 
-    if (doctor.paymentStats?.totalCommissionPaid !== amount) {
+    const pendingAmount = doctor.paymentStats?.pendingCommission || 0;
+
+    if (pendingAmount !== amount) {
       return res.status(400).json({
         success: false,
-        message: `Amount mismatch. Expected ₹${doctor.paymentStats?.totalCommissionPaid}`,
+        message: `Amount mismatch. Expected ₹${pendingAmount}, Received ₹${amount}`,
       });
     }
 
-    // ✅ SAVE TO PAYMENT HISTORY
     const paymentRecord = await PaymentHistory.create({
       doctorId: doctor.doctorId,
       doctorName: doctor.name,
@@ -631,14 +682,14 @@ router.post("/commission/mark-paid", async (req, res) => {
       paidAt: new Date(),
     });
 
-    // ✅ RESTORE ACCESS IF RESTRICTED
     const wasRestricted = doctor.paymentStatus === "restricted";
 
-    doctor.paymentStats.totalCommissionPaid = 0;
+    doctor.paymentStats.totalCommissionPaid =
+      (doctor.paymentStats.totalCommissionPaid || 0) + amount;
+    doctor.paymentStats.pendingCommission = 0;
     doctor.paymentStats.lastCommissionPaid = new Date();
     doctor.paymentStats.lastPaymentTransaction = transactionId;
 
-    // Reset payment status
     doctor.paymentStatus = "current";
     doctor.lateFees = 0;
     doctor.totalOverdueDays = 0;
@@ -697,7 +748,7 @@ router.post("/send-reminder/:doctorId/:type", async (req, res) => {
     }
 
     const totalDue =
-      (doctor.paymentStats?.totalCommissionPaid || 0) + (doctor.lateFees || 0);
+      (doctor.paymentStats?.pendingCommission || 0) + (doctor.lateFees || 0);
 
     let emailSent = false;
 
@@ -746,14 +797,14 @@ router.post("/send-reminder/:doctorId/:type", async (req, res) => {
   }
 });
 
-// ✅ GET ALL COMMISSION DUE - Updated with late fees
+// ✅ GET ALL COMMISSION DUE
 router.get("/commission-due", async (req, res) => {
   try {
     const doctors = await Doctor.find(
       {
         $or: [
           { isActive: true },
-          { "paymentStats.totalCommissionPaid": { $gt: 0 } },
+          { "paymentStats.pendingCommission": { $gt: 0 } },
         ],
       },
       {
@@ -765,6 +816,8 @@ router.get("/commission-due", async (req, res) => {
         lateFees: 1,
         totalOverdueDays: 1,
         restrictedAt: 1,
+        "paymentStats.pendingCommission": 1,
+        "paymentStats.totalCommissionEarned": 1,
         "paymentStats.totalCommissionPaid": 1,
         "paymentStats.lastCommissionPaid": 1,
         "paymentStats.lastPaymentTransaction": 1,
@@ -775,10 +828,12 @@ router.get("/commission-due", async (req, res) => {
       doctorId: doc.doctorId,
       name: doc.isActive ? doc.name : `${doc.name} (Deleted)`,
       email: doc.email,
-      commissionDue: doc.paymentStats?.totalCommissionPaid || 0,
+      commissionDue: doc.paymentStats?.pendingCommission || 0,
+      totalEarned: doc.paymentStats?.totalCommissionEarned || 0,
+      totalPaid: doc.paymentStats?.totalCommissionPaid || 0,
       lateFees: doc.lateFees || 0,
       totalDue:
-        (doc.paymentStats?.totalCommissionPaid || 0) + (doc.lateFees || 0),
+        (doc.paymentStats?.pendingCommission || 0) + (doc.lateFees || 0),
       lastPaid: doc.paymentStats?.lastCommissionPaid,
       lastTransaction: doc.paymentStats?.lastPaymentTransaction,
       isActive: doc.isActive,
@@ -811,7 +866,7 @@ router.get("/commission-due", async (req, res) => {
   }
 });
 
-// ✅ GET COMMISSION HISTORY (Appointment verification history)
+// ✅ GET COMMISSION HISTORY
 router.get("/commission-history", async (req, res) => {
   try {
     const { doctorId, startDate, endDate } = req.query;
@@ -841,7 +896,7 @@ router.get("/commission-history", async (req, res) => {
       doctorName: apt.doctor.name,
       patientName: apt.patient.name,
       amount: apt.amount,
-      commission: apt.amount * 0.01, // 1% commission
+      commission: apt.amount * 0.01,
       verifiedAt: apt.verifiedAt,
       date: apt.appointmentDate,
     }));
@@ -857,7 +912,7 @@ router.get("/commission-history", async (req, res) => {
   }
 });
 
-// ✅ GET PAYMENT HISTORY (When doctors paid)
+// ✅ GET PAYMENT HISTORY
 router.get("/payment-history", async (req, res) => {
   try {
     const { doctorId, startDate, endDate } = req.query;
@@ -873,10 +928,8 @@ router.get("/payment-history", async (req, res) => {
 
     const payments = await PaymentHistory.find(query).sort({ paidAt: -1 });
 
-    // Calculate totals
     const totalCollected = payments.reduce((sum, p) => sum + p.amount, 0);
 
-    // Group by doctor for summary
     const byDoctor = {};
     payments.forEach((p) => {
       if (!byDoctor[p.doctorName]) {
@@ -918,14 +971,13 @@ router.get("/payment-history", async (req, res) => {
   }
 });
 
-// ✅ GET PAYMENT SUMMARY (Admin dashboard view)
+// ✅ GET PAYMENT SUMMARY
 router.get("/payment-summary", async (req, res) => {
   try {
     const doctors = await Doctor.find({ isActive: true });
 
     const summary = await Promise.all(
       doctors.map(async (doctor) => {
-        // Get all verified appointments
         const appointments = await Appointment.find({
           $or: [
             { "doctor.name": doctor.name },
@@ -943,9 +995,8 @@ router.get("/payment-summary", async (req, res) => {
         const totalCommission = appointments.reduce(
           (sum, apt) => sum + apt.amount * 0.01,
           0,
-        ); // 1% commission
+        );
 
-        // Get payment history
         const payments = await PaymentHistory.find({
           doctorId: doctor.doctorId,
         });
@@ -1019,8 +1070,8 @@ router.get("/appointments", async (req, res) => {
       const aptObj = apt.toObject();
       return {
         ...aptObj,
-        commission: (apt.amount * 0.01).toFixed(2), // 1% commission
-        doctorGets: (apt.amount * 0.99).toFixed(2), // 99% to doctor
+        commission: (apt.amount * 0.01).toFixed(2),
+        doctorGets: (apt.amount * 0.99).toFixed(2),
         verificationStatus:
           apt.paymentStatus === "verified" ? "✅ Verified" : "⏳ Pending",
         verifiedBy: apt.verifiedBy || "-",
@@ -1089,15 +1140,21 @@ router.patch("/appointments/:id", async (req, res) => {
         if (!doctor.paymentStats) {
           doctor.paymentStats = {
             totalPaymentsViaPlatform: 0,
+            totalCommissionEarned: 0,
             totalCommissionPaid: 0,
+            pendingCommission: 0,
           };
         }
 
+        const commissionAmount =
+          (appointment.amount * (doctor.commissionPercentage || 1)) / 100;
+
         doctor.paymentStats.totalPaymentsViaPlatform =
           (doctor.paymentStats.totalPaymentsViaPlatform || 0) + 1;
-        doctor.paymentStats.totalCommissionPaid =
-          (doctor.paymentStats.totalCommissionPaid || 0) +
-          (appointment.amount * (doctor.commissionPercentage || 1)) / 100; // 1% commission
+        doctor.paymentStats.totalCommissionEarned =
+          (doctor.paymentStats.totalCommissionEarned || 0) + commissionAmount;
+        doctor.paymentStats.pendingCommission =
+          (doctor.paymentStats.pendingCommission || 0) + commissionAmount;
 
         await doctor.save();
       }
@@ -1193,11 +1250,6 @@ router.get("/verifications/stats", async (req, res) => {
   }
 });
 
-// ✅ Helper function (kept but not used)
-async function sendConfirmationEmail(appointment) {
-  return { success: true };
-}
-
 // ✅ Send payment received email
 router.post("/send-payment-message", async (req, res) => {
   try {
@@ -1250,10 +1302,10 @@ router.post("/send-payment-message", async (req, res) => {
                         <p>Your payment has been received and is being verified.</p>
                         <div class="payment-card">
                             <h3>💰 Payment Details</h3>
-                            <p><strong>Doctor:</strong> ${doctorName}</p>
-                            <p><strong>Date:</strong> ${formattedDate}</p>
-                            <p><strong>Time:</strong> ${appointmentTime}</p>
-                            <p><strong>Amount:</strong> ₹${amount}</p>
+                            <p><strong>Doctor: </strong> ${doctorName}</p>
+                            <p><strong>Date: </strong> ${formattedDate}</p>
+                            <p><strong>Time: </strong> ${appointmentTime}</p>
+                            <p><strong>Amount: </strong> ₹${amount}</p>
                         </div>
                         <div class="steps">
                             <h3>📋 Next Steps</h3>
@@ -1329,17 +1381,16 @@ router.get("/doctors/stats", async (req, res) => {
         totalEarnings: 1,
         paymentStatus: 1,
         lateFees: 1,
-        "paymentStats.totalCommissionPaid": 1,
+        "paymentStats.pendingCommission": 1,
         "paymentStats.lastCommissionPaid": 1,
         imageUrl: 1,
       },
     ).sort({ createdAt: -1 });
 
-    // Add total due calculation
     const doctorsWithTotal = doctors.map((doc) => {
       const docObj = doc.toObject();
       docObj.totalDue =
-        (doc.paymentStats?.totalCommissionPaid || 0) + (doc.lateFees || 0);
+        (doc.paymentStats?.pendingCommission || 0) + (doc.lateFees || 0);
       return docObj;
     });
 
@@ -1354,26 +1405,38 @@ router.get("/doctors/stats", async (req, res) => {
   }
 });
 
-// ✅ GET ALL ACTIVE DOCTORS
+// ✅ GET ALL ACTIVE DOCTORS WITH PAGINATION
 router.get("/doctors", async (req, res) => {
   try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+
     const doctors = await Doctor.find({ isActive: true })
       .select("+password")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit); // ← ONLY 20 DOCTORS AT A TIME
 
-    console.log(`📋 Found ${doctors.length} active doctors`);
+    const total = await Doctor.countDocuments({ isActive: true });
 
-    // Add total due to each doctor
+    console.log(
+      `📋 Found ${doctors.length} doctors (page ${page} of ${Math.ceil(total / limit)})`,
+    );
+
     const doctorsWithTotal = doctors.map((doc) => {
       const docObj = doc.toObject();
       docObj.totalDue =
-        (doc.paymentStats?.totalCommissionPaid || 0) + (doc.lateFees || 0);
+        (doc.paymentStats?.pendingCommission || 0) + (doc.lateFees || 0);
       return docObj;
     });
 
     res.json({
       success: true,
       count: doctors.length,
+      total: total,
+      page: page,
+      totalPages: Math.ceil(total / limit),
       doctors: doctorsWithTotal,
     });
   } catch (error) {
@@ -1382,18 +1445,17 @@ router.get("/doctors", async (req, res) => {
   }
 });
 
-// ✅ GET ALL DOCTORS (including deleted) for debugging
+// ✅ GET ALL DOCTORS (including deleted)
 router.get("/doctors/all", async (req, res) => {
   try {
     const doctors = await Doctor.find({})
       .select("+password")
       .sort({ createdAt: -1 });
 
-    // Add total due to each doctor
     const doctorsWithTotal = doctors.map((doc) => {
       const docObj = doc.toObject();
       docObj.totalDue =
-        (doc.paymentStats?.totalCommissionPaid || 0) + (doc.lateFees || 0);
+        (doc.paymentStats?.pendingCommission || 0) + (doc.lateFees || 0);
       return docObj;
     });
 
@@ -1421,7 +1483,7 @@ router.post("/doctors", async (req, res) => {
       upiId,
       imageUrl,
       paymentMethod = "both",
-      commissionPercentage = 1, // Changed to 1%
+      commissionPercentage = 1,
     } = req.body;
 
     console.log("👨‍⚕️ Adding new doctor:", email);
@@ -1460,6 +1522,15 @@ router.post("/doctors", async (req, res) => {
       imageUrl,
       paymentMethod,
       commissionPercentage,
+      clinicName:
+        req.body.clinicName ||
+        (() => {
+          const firstName = name.split(" ")[0];
+          // Remove "Dr." if present
+          const cleanName = firstName.replace(/^Dr\.?\s*/i, "");
+          return cleanName ? `${cleanName}'s Clinic` : "Healthcare Center";
+        })(),
+      address: req.body.address || "",  
       image: getDoctorImage(specialization),
       availability: "Mon-Sat, 9AM-5PM",
       rating: "4.5 ★",
@@ -1467,7 +1538,9 @@ router.post("/doctors", async (req, res) => {
       totalEarnings: 0,
       paymentStats: {
         totalPaymentsViaPlatform: 0,
+        totalCommissionEarned: 0,
         totalCommissionPaid: 0,
+        pendingCommission: 0,
       },
       isActive: true,
       paymentStatus: "current",
@@ -1527,7 +1600,6 @@ router.patch("/doctors/:id", async (req, res) => {
       });
     }
 
-    // Update fields
     if (updates.name !== undefined) doctor.name = updates.name;
     if (updates.email !== undefined) doctor.email = updates.email;
     if (updates.phone !== undefined) doctor.phone = updates.phone;
@@ -1540,6 +1612,8 @@ router.patch("/doctors/:id", async (req, res) => {
     if (updates.fee !== undefined) doctor.fee = parseInt(updates.fee);
     if (updates.commissionPercentage !== undefined)
       doctor.commissionPercentage = updates.commissionPercentage;
+    if (updates.clinicName !== undefined)doctor.clinicName = updates.clinicName;
+    if (updates.address !== undefined) doctor.address = updates.address;
 
     if (updates.upiId !== undefined || updates.fee !== undefined) {
       const newUpiId =
@@ -1736,7 +1810,7 @@ router.get("/commission/report", async (req, res) => {
 
     appointments.forEach((apt) => {
       const doctorName = apt.doctor.name;
-      const commission = apt.amount * 0.01; // 1% commission
+      const commission = apt.amount * 0.01;
 
       if (!commissionByDoctor[doctorName]) {
         commissionByDoctor[doctorName] = {

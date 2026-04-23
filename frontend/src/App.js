@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import "./App.css";
 import axios from "axios";
 import { getDoctorImage } from "./utils/doctorImages";
+import { AuthProvider } from "./context/AuthContext";
 
 // Import Admin Pages
 import AdminLogin from "./pages/AdminLogin";
@@ -12,12 +13,17 @@ import AdminDashboard from "./pages/AdminDashboard";
 import DoctorLogin from "./pages/DoctorLogin";
 import DoctorDashboard from "./pages/DoctorDashboard";
 
+// Set axios defaults
+axios.defaults.withCredentials = true;
+axios.defaults.baseURL = "http://localhost:5000";
+
 function App() {
   // State Management
   const [step, setStep] = useState(1);
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [bookingDetails, setBookingDetails] = useState({
     name: "",
+    age: "",
     email: "",
     phone: "",
     date: "",
@@ -30,32 +36,105 @@ function App() {
   );
   const [appointments, setAppointments] = useState([]);
   const [showAppointments, setShowAppointments] = useState(false);
-
-  // Admin State
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [adminUser, setAdminUser] = useState(null);
-
-  // Doctor State
-  const [isDoctor, setIsDoctor] = useState(false);
-  const [currentDoctor, setCurrentDoctor] = useState(null);
-
-  // Mobile Menu State
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  // Available slots state
   const [availableSlots, setAvailableSlots] = useState([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
-
-  // Show doctors list in mobile menu
   const [showDoctorsList, setShowDoctorsList] = useState(false);
-
-  // Database Doctors State
   const [dbDoctors, setDbDoctors] = useState([]);
   const [loadingDoctors, setLoadingDoctors] = useState(false);
-
-  // UPI Payment States
   const [showUPIPayment, setShowUPIPayment] = useState(false);
   const [paymentConfirmed, setPaymentConfirmed] = useState(false);
+  const [currentPath, setCurrentPath] = useState(window.location.pathname);
+
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [patientEmail, setPatientEmail] = useState("");
+
+  // 🆕 View All Slots Modal State
+  const [showAllSlotsModal, setShowAllSlotsModal] = useState(false);
+  const [selectedSlotDoctor, setSelectedSlotDoctor] = useState(null);
+  const [allDoctorSlots, setAllDoctorSlots] = useState([]);
+
+  // Helper function to convert 24-hour to 12-hour AM/PM format
+  const formatTo12Hour = (time24) => {
+    if (!time24) return "";
+    let timePart = time24.split(" ")[0];
+    let [hours, minutes] = timePart.split(":").map(Number);
+    if (isNaN(hours) || isNaN(minutes)) return time24;
+    const ampm = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12 || 12;
+    return `${hours}:${minutes.toString().padStart(2, "0")} ${ampm}`;
+  };
+
+  // 🆕 Fetch all slots for a doctor
+  const fetchAllSlotsForDoctor = async (doctor) => {
+    try {
+      const today = new Date();
+      const todayStr = today.toISOString().split("T")[0];
+      const currentTime = today.getHours() * 60 + today.getMinutes();
+
+      // Check if doctor's availableSlot shows "Tomorrow"
+      let dateToFetch = todayStr;
+      let dateLabel = "today";
+
+      if (doctor.availableSlot && doctor.availableSlot.startsWith("Tomorrow")) {
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        dateToFetch = tomorrow.toISOString().split("T")[0];
+        dateLabel = "tomorrow";
+      }
+
+      const response = await axios.get(
+        `/api/availability/${doctor.doctorId || doctor.id}/slots/${dateToFetch}`,
+      );
+
+      if (response.data.success && response.data.slots) {
+        let slotsToShow = response.data.slots;
+
+        // Only filter for today, show all for tomorrow
+        if (dateLabel === "today") {
+          slotsToShow = response.data.slots.filter((slot) => {
+            let hours = parseInt(slot.start.split(":")[0]);
+            const minutes = parseInt(slot.start.split(":")[1]);
+            const slotTimeMinutes = hours * 60 + minutes;
+            return slotTimeMinutes > currentTime + 15;
+          });
+        }
+
+        // Helper function to get time category
+        const getTimeCategory = (time12hr) => {
+          const timeStr = time12hr.toLowerCase();
+          if (timeStr.includes("am")) {
+            return "morning";
+          }
+          // For PM times
+          const hour = parseInt(time12hr.split(":")[0]);
+          if (hour >= 1 && hour <= 4) {
+            return "afternoon";
+          }
+          return "evening";
+        };
+
+        const formattedSlots = slotsToShow.map((slot) => {
+          const time12hr = formatTo12Hour(slot.start);
+          const category = getTimeCategory(time12hr);
+          return { time: time12hr, category };
+        });
+
+        if (formattedSlots.length > 0) {
+          setAllDoctorSlots(formattedSlots);
+          setSelectedSlotDoctor(doctor);
+          setShowAllSlotsModal(true);
+        } else {
+          alert(`No available slots for ${dateLabel}`);
+        }
+      } else {
+        alert(`No available slots for ${dateLabel}`);
+      }
+    } catch (error) {
+      console.error("Error fetching all slots:", error);
+      alert("Failed to fetch slots");
+    }
+  };
 
   // Doctors Data with images (fallback)
   const fallbackDoctors = [
@@ -66,10 +145,10 @@ function App() {
       fee: 500,
       experience: "10+ years",
       qualification: "MD, DM Cardiology",
-      rating: "4.8",
-      tags: ["Chest Pain", "High BP", "Heart Attack"],
-      languages: ["Hindi", "English", "Punjabi"],
-      availability: "Mon-Fri, 9AM-5PM",
+      rating: 4.8,
+      reviews: 1632,
+      clinic: "Downtown Medical Center",
+      availableSlot: "Today 4:00 PM, 5:00 PM",
       image: "👨‍⚕️",
       email: "sharma@doctor.com",
       upiId: "sharma@okhdfcbank",
@@ -83,10 +162,10 @@ function App() {
       fee: 400,
       experience: "8+ years",
       qualification: "MD Dermatology",
-      rating: "4.7",
-      tags: ["Acne", "Skin Care", "Eczema"],
-      languages: ["English", "Hindi", "Gujarati"],
-      availability: "Tue-Sat, 10AM-6PM",
+      rating: 4.7,
+      reviews: 1245,
+      clinic: "Skin Care Clinic",
+      availableSlot: "Today 3:30 PM, 4:30 PM",
       image: "👩‍⚕️",
       email: "patel@doctor.com",
       upiId: "patel@okhdfcbank",
@@ -100,10 +179,10 @@ function App() {
       fee: 300,
       experience: "12+ years",
       qualification: "MD Pediatrics",
-      rating: "4.9",
-      tags: ["Vaccination", "Child Care", "Growth"],
-      languages: ["Hindi", "English", "Punjabi"],
-      availability: "Mon-Sat, 8AM-4PM",
+      rating: 4.9,
+      reviews: 2100,
+      clinic: "Child Care Hospital",
+      availableSlot: "Today 2:00 PM, 3:00 PM",
       image: "👨‍⚕️",
       email: "kumar@doctor.com",
       upiId: "kumar@okhdfcbank",
@@ -117,10 +196,10 @@ function App() {
       fee: 600,
       experience: "15+ years",
       qualification: "MS Orthopedics",
-      rating: "4.8",
-      tags: ["Joint Pain", "Back Pain", "Fracture"],
-      languages: ["Hindi", "English", "Bengali"],
-      availability: "Wed-Sun, 11AM-7PM",
+      rating: 4.8,
+      reviews: 987,
+      clinic: "Ortho Care Center",
+      availableSlot: "Today 5:00 PM, 6:00 PM",
       image: "👩‍⚕️",
       email: "gupta@doctor.com",
       upiId: "gupta@okhdfcbank",
@@ -128,6 +207,34 @@ function App() {
         "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=gupta@okhdfcbank&pn=Doctor&cu=INR",
     },
   ];
+
+  // Listen for URL changes
+  useEffect(() => {
+    const handleLocationChange = () => {
+      setCurrentPath(window.location.pathname);
+    };
+
+    window.addEventListener("popstate", handleLocationChange);
+
+    const originalPushState = window.history.pushState;
+    const originalReplaceState = window.history.replaceState;
+
+    window.history.pushState = function (...args) {
+      originalPushState.apply(this, args);
+      window.dispatchEvent(new Event("popstate"));
+    };
+
+    window.history.replaceState = function (...args) {
+      originalReplaceState.apply(this, args);
+      window.dispatchEvent(new Event("popstate"));
+    };
+
+    return () => {
+      window.removeEventListener("popstate", handleLocationChange);
+      window.history.pushState = originalPushState;
+      window.history.replaceState = originalReplaceState;
+    };
+  }, []);
 
   // Fetch doctors from database
   useEffect(() => {
@@ -137,12 +244,81 @@ function App() {
   const fetchDoctors = async () => {
     setLoadingDoctors(true);
     try {
-      const response = await axios.get(
-        "http://localhost:5000/api/admin/doctors",
-      );
+      const response = await axios.get("/api/admin/doctors?limit=20");
       if (response.data.success) {
-        console.log("Fetched doctors:", response.data.doctors);
-        setDbDoctors(response.data.doctors);
+        const doctors = response.data.doctors;
+
+        const doctorsWithRealSlots = await Promise.all(
+          doctors.map(async (doctor) => {
+            try {
+              const today = new Date();
+              const todayStr = today.toISOString().split("T")[0];
+              const currentTime = today.getHours() * 60 + today.getMinutes();
+
+              // Try today's slots first
+              let slotsRes = await axios.get(
+                `/api/availability/${doctor.doctorId || doctor.id}/slots/${todayStr}`,
+              );
+              let targetDate = "Today";
+              let futureSlots = [];
+
+              if (
+                slotsRes.data.success &&
+                slotsRes.data.slots &&
+                slotsRes.data.slots.length > 0
+              ) {
+                futureSlots = slotsRes.data.slots.filter((slot) => {
+                  let hours = parseInt(slot.start.split(":")[0]);
+                  const minutes = parseInt(slot.start.split(":")[1]);
+                  const slotTimeMinutes = hours * 60 + minutes;
+                  return slotTimeMinutes > currentTime + 15;
+                });
+              }
+
+              // If no slots today, get tomorrow's slots
+              if (futureSlots.length === 0) {
+                const tomorrow = new Date(today);
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                const tomorrowStr = tomorrow.toISOString().split("T")[0];
+
+                slotsRes = await axios.get(
+                  `/api/availability/${doctor.doctorId || doctor.id}/slots/${tomorrowStr}`,
+                );
+                targetDate = "Tomorrow";
+
+                if (
+                  slotsRes.data.success &&
+                  slotsRes.data.slots &&
+                  slotsRes.data.slots.length > 0
+                ) {
+                  futureSlots = slotsRes.data.slots;
+                }
+              }
+
+              if (futureSlots.length > 0) {
+                const timeSlots = futureSlots
+                  .slice(0, 2)
+                  .map((slot) => {
+                    return formatTo12Hour(slot.start);
+                  })
+                  .join(", ");
+
+                doctor.availableSlot = `${targetDate} ${timeSlots}`;
+                doctor.allSlotsCount = futureSlots.length;
+              } else {
+                doctor.availableSlot = "No slots available";
+                doctor.allSlotsCount = 0;
+              }
+            } catch (error) {
+              console.error(`Error fetching slots for ${doctor.name}:`, error);
+              doctor.availableSlot = "No slots available";
+              doctor.allSlotsCount = 0;
+            }
+            return doctor;
+          }),
+        );
+
+        setDbDoctors(doctorsWithRealSlots);
       }
     } catch (error) {
       console.error("Error fetching doctors:", error);
@@ -158,19 +334,15 @@ function App() {
       if (selectedDoctor && bookingDetails.date) {
         setLoadingSlots(true);
         try {
-          const response = await axios.get(
-            `http://localhost:5000/api/available-slots`,
-            {
-              params: {
-                doctorName: selectedDoctor.name,
-                date: bookingDetails.date,
-              },
+          const response = await axios.get(`/api/available-slots`, {
+            params: {
+              doctorName: selectedDoctor.name,
+              date: bookingDetails.date,
             },
-          );
+          });
 
           let slots = response.data.availableSlots || [];
 
-          // If date is today, filter out past time slots
           const today = new Date();
           const todayStr = today.toISOString().split("T")[0];
 
@@ -183,21 +355,18 @@ function App() {
               const [time, period] = slot.split(" ");
               let [hours, minutes] = time.split(":").map(Number);
 
-              // Convert to 24-hour format
               if (period === "PM" && hours !== 12) hours += 12;
               if (period === "AM" && hours === 12) hours = 0;
 
               const slotTotalMinutes = hours * 60 + minutes;
               const currentTotalMinutes = currentHour * 60 + currentMinute;
 
-              // Only show slots that are at least 15 minutes in the future
               return slotTotalMinutes > currentTotalMinutes + 15;
             });
           }
 
           setAvailableSlots(slots);
 
-          // Clear selected time if it's no longer available
           if (bookingDetails.time && !slots.includes(bookingDetails.time)) {
             setBookingDetails((prev) => ({ ...prev, time: "" }));
           }
@@ -216,7 +385,7 @@ function App() {
   useEffect(() => {
     const checkBackend = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/ping");
+        const response = await axios.get("/ping");
         setBackendStatus(`✅ Connected to backend`);
       } catch (error) {
         setBackendStatus("🔴 Demo Mode");
@@ -241,29 +410,6 @@ function App() {
     }
   }, [appointments]);
 
-  // Admin Handlers
-  const handleAdminLogin = (admin) => {
-    setAdminUser(admin);
-    setIsAdmin(true);
-  };
-
-  const handleAdminLogout = () => {
-    setAdminUser(null);
-    setIsAdmin(false);
-  };
-
-  // Doctor Handlers
-  const handleDoctorLogin = (doctor) => {
-    console.log("✅ Doctor logged in:", doctor);
-    setCurrentDoctor(doctor);
-    setIsDoctor(true);
-  };
-
-  const handleDoctorLogout = () => {
-    setCurrentDoctor(null);
-    setIsDoctor(false);
-  };
-
   // Booking Handlers
   const handleBookDoctor = (doctor) => {
     setSelectedDoctor(doctor);
@@ -274,6 +420,7 @@ function App() {
     e.preventDefault();
     if (
       !bookingDetails.name ||
+      !bookingDetails.age ||
       !bookingDetails.email ||
       !bookingDetails.phone ||
       !bookingDetails.date ||
@@ -293,59 +440,63 @@ function App() {
     }));
   };
 
-  // Fetch appointments by email - ALWAYS from database
   const fetchAppointmentsByEmail = async (email) => {
+    // Email validation
+    if (!email || !email.includes("@") || !email.includes(".")) {
+      alert("❌ Please enter a valid email address");
+      return;
+    }
+
+    setLoading(true);
     try {
-      setLoading(true);
-      const response = await axios.get(
-        `http://localhost:5000/api/appointments/${email}`,
-      );
+      const response = await axios.get(`/api/appointments/${email}`);
 
       if (response.data.success) {
-        // Set from DATABASE, not localStorage
-        setAppointments(response.data.appointments || []);
-        setShowAppointments(true);
-
-        if (response.data.appointments.length === 0) {
-          alert("No appointments found for this email. Book one now!");
+        if (
+          response.data.appointments &&
+          response.data.appointments.length > 0
+        ) {
+          setAppointments(response.data.appointments);
+          setShowAppointments(true);
+        } else {
+          alert("📋 No appointments found for this email. Book one now!");
         }
       }
-      setLoading(false);
     } catch (error) {
       console.error("Error fetching appointments:", error);
-      alert("Error finding appointments. Please try again.");
+      alert("❌ Error finding appointments. Please try again.");
+    } finally {
       setLoading(false);
     }
   };
 
-  // ✅ UPDATED: Handle payment done with DOUBLE-BOOKING PROTECTION
   const handlePaymentDone = async () => {
     setLoading(true);
     try {
-      // ✅ EXTRA CHECK: Verify slot still available before booking
-      const checkSlotResponse = await axios.get(
-        `http://localhost:5000/api/available-slots`,
-        {
-          params: {
-            doctorName: selectedDoctor.name,
-            date: bookingDetails.date,
-          },
-        }
-      );
+      const checkSlotResponse = await axios.get(`/api/available-slots`, {
+        params: {
+          doctorName: selectedDoctor.name,
+          date: bookingDetails.date,
+        },
+      });
 
-      if (!checkSlotResponse.data.availableSlots.includes(bookingDetails.time)) {
-        alert("❌ Sorry! This slot was just taken. Please select another time.");
+      if (
+        !checkSlotResponse.data.availableSlots.includes(bookingDetails.time)
+      ) {
+        alert(
+          "❌ Sorry! This slot was just taken. Please select another time.",
+        );
         setAvailableSlots(checkSlotResponse.data.availableSlots);
         setStep(2);
         setLoading(false);
         return;
       }
 
-      // Save appointment with status = 'pending_verification'
       const appointmentData = {
         doctor: selectedDoctor,
         patient: {
           name: bookingDetails.name,
+          age: parseInt(bookingDetails.age),
           email: bookingDetails.email,
           phone: bookingDetails.phone,
           symptoms: bookingDetails.symptoms,
@@ -354,21 +505,17 @@ function App() {
         appointmentTime: bookingDetails.time,
         amount: selectedDoctor.fee,
         paymentMethod: "upi",
-        status: "pending_verification", // Waiting for clinic verification
+        status: "pending_verification",
         paymentStatus: "pending",
       };
 
       console.log("📝 Saving appointment:", appointmentData);
 
-      // Save to database
-      const response = await axios.post(
-        "http://localhost:5000/api/appointments",
-        appointmentData,
-      );
+      const response = await axios.post("/api/appointments", appointmentData);
 
       if (response.data.success) {
         setPaymentConfirmed(true);
-        setStep(4); // Go to waiting page
+        setStep(4);
       } else {
         alert("❌ Booking failed. Please try again.");
       }
@@ -380,15 +527,12 @@ function App() {
           "❌ This time slot was just booked! Please select a different time.",
         );
         if (selectedDoctor && bookingDetails.date) {
-          const response = await axios.get(
-            `http://localhost:5000/api/available-slots`,
-            {
-              params: {
-                doctorName: selectedDoctor.name,
-                date: bookingDetails.date,
-              },
+          const response = await axios.get(`/api/available-slots`, {
+            params: {
+              doctorName: selectedDoctor.name,
+              date: bookingDetails.date,
             },
-          );
+          });
           setAvailableSlots(response.data.availableSlots);
         }
         setStep(2);
@@ -400,26 +544,10 @@ function App() {
     }
   };
 
-  // Handle payment button click
   const handlePayment = async () => {
     setShowUPIPayment(true);
   };
 
-  const completeBooking = () => {
-    const newAppointment = {
-      id: Date.now(),
-      doctor: selectedDoctor,
-      patient: bookingDetails,
-      date: new Date().toISOString(),
-      status: "pending_verification",
-      paymentMethod: "upi",
-    };
-
-    setAppointments((prev) => [...prev, newAppointment]);
-    setLoading(false);
-  };
-
-  // Format date
   const formatDate = (dateString) => {
     if (!dateString) return "";
 
@@ -443,6 +571,7 @@ function App() {
     setSelectedDoctor(null);
     setBookingDetails({
       name: "",
+      age: "",
       email: "",
       phone: "",
       date: "",
@@ -454,55 +583,73 @@ function App() {
     setPaymentConfirmed(false);
   };
 
-  // ========== FIXED: 2-DAY BOOKING WINDOW with timezone fix ==========
-  // Format date as YYYY-MM-DD manually to avoid timezone issues
   const formatDateInput = (date) => {
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
   };
 
   const today = new Date();
   const todayStr = formatDateInput(today);
-
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
   const tomorrowStr = formatDateInput(tomorrow);
-
   const minDate = todayStr;
   const maxDateStr = tomorrowStr;
 
-  console.log("Today:", todayStr);
-  console.log("Tomorrow:", tomorrowStr);
-  console.log("Min Date:", minDate);
-  console.log("Max Date:", maxDateStr);
+  // Helper function to render stars
+  const renderStars = (rating) => {
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 >= 0.5;
+    const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
 
-  // Admin/Doctor route checks
-  if (isAdmin) {
-    return <AdminDashboard admin={adminUser} onLogout={handleAdminLogout} />;
-  }
+    let stars = [];
+    for (let i = 0; i < fullStars; i++) stars.push("★");
+    if (hasHalfStar) stars.push("½");
+    for (let i = 0; i < emptyStars; i++) stars.push("☆");
 
-  if (isDoctor) {
+    return stars.join("");
+  };
+
+  // Route handlers
+  if (currentPath === "/admin") {
     return (
-      <DoctorDashboard doctor={currentDoctor} onLogout={handleDoctorLogout} />
+      <AuthProvider>
+        <AdminLogin />
+      </AuthProvider>
     );
   }
 
-  if (window.location.pathname === "/admin") {
-    return <AdminLogin onLogin={handleAdminLogin} />;
+  if (currentPath === "/admin-dashboard") {
+    return (
+      <AuthProvider>
+        <AdminDashboard />
+      </AuthProvider>
+    );
   }
 
-  if (window.location.pathname === "/doctor") {
-    return <DoctorLogin onLogin={handleDoctorLogin} />;
+  if (currentPath === "/doctor") {
+    return (
+      <AuthProvider>
+        <DoctorLogin />
+      </AuthProvider>
+    );
   }
 
-  if (window.location.pathname === "/patient-records") {
+  if (currentPath === "/doctor-dashboard") {
+    return (
+      <AuthProvider>
+        <DoctorDashboard />
+      </AuthProvider>
+    );
+  }
+
+  if (currentPath === "/patient-records") {
     const PatientRecords = require("./pages/PatientRecords").default;
     return <PatientRecords />;
   }
 
-  // Use database doctors if available, otherwise fallback
   const displayDoctors = dbDoctors.length > 0 ? dbDoctors : fallbackDoctors;
 
   return (
@@ -515,49 +662,40 @@ function App() {
             <p className="tagline">Healthcare Center</p>
           </div>
 
-          {/* Desktop Navigation */}
           <div className="desktop-nav">
             <button
               className="nav-btn"
               onClick={() => {
-                const email = prompt(
-                  "Enter your email to view your appointments:",
-                );
-                if (email) {
-                  fetchAppointmentsByEmail(email);
-                }
+                setShowEmailModal(true);
                 setMobileMenuOpen(false);
               }}
             >
-              🔍 Find My Appointments
+              Find My Appointments
             </button>
-
             <button
               className="nav-btn admin-btn"
               onClick={() => (window.location.href = "/admin")}
             >
-              👨‍💼 Admin
+              Admin
             </button>
             <button
               className="nav-btn doctor-btn"
               onClick={() => (window.location.href = "/doctor")}
             >
-              👨‍⚕️ Doctor
+              Doctor
             </button>
-
             <button
               className="nav-btn home-btn"
               onClick={() => {
                 window.location.href = "/";
               }}
             >
-              🏠 Home
+              Home
             </button>
           </div>
 
-          {/* Mobile Hamburger Button */}
           <button
-            className={`mobile-menu-btn ${mobileMenuOpen ? "open" : ""}`}
+            className={`home-mobile-menu-btn ${mobileMenuOpen ? "open" : ""}`}
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="Toggle menu"
           >
@@ -565,17 +703,12 @@ function App() {
           </button>
         </div>
 
-        {/* Mobile Menu Dropdown */}
         {mobileMenuOpen && (
           <div className="mobile-menu">
+            {/* Mobile menu content remains the same */}
             <div className="mobile-menu-header">
               <span className="mobile-menu-title">Menu</span>
-              <button
-                className="mobile-menu-close"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                ✕
-              </button>
+              
             </div>
 
             <div className="mobile-menu-section">
@@ -583,19 +716,13 @@ function App() {
               <button
                 className="mobile-nav-item"
                 onClick={() => {
-                  const email = prompt(
-                    "Enter your email to view your appointments:",
-                  );
-                  if (email) {
-                    fetchAppointmentsByEmail(email);
-                  }
+                  setShowEmailModal(true);
                   setMobileMenuOpen(false);
                 }}
               >
                 <span className="mobile-nav-icon">🔍</span>
                 <span className="mobile-nav-text">Find My Appointments</span>
               </button>
-
               <button
                 className="mobile-nav-item"
                 onClick={() => {
@@ -608,7 +735,6 @@ function App() {
               </button>
             </div>
 
-            {/* COLLAPSIBLE DOCTORS SECTION */}
             <div className="mobile-menu-section">
               <div
                 className="mobile-menu-section-header"
@@ -658,7 +784,6 @@ function App() {
                 <span className="mobile-nav-icon">👨‍💼</span>
                 <span className="mobile-nav-text">Admin Dashboard</span>
               </button>
-
               <button
                 className="mobile-nav-item doctor-login-btn"
                 onClick={() => {
@@ -681,7 +806,6 @@ function App() {
       {/* Main Content */}
       <main className="app-main">
         {showAppointments ? (
-          // Appointments View
           <div className="appointments-view">
             <h2>Your Appointments</h2>
             {appointments.length === 0 ? (
@@ -710,12 +834,6 @@ function App() {
                         {apt.status === "confirmed" && "✅ Confirmed"}
                         {apt.status === "completed" && "✓ Completed"}
                         {apt.status === "cancelled" && "✗ Cancelled"}
-                        {![
-                          "pending_verification",
-                          "confirmed",
-                          "completed",
-                          "cancelled",
-                        ].includes(apt.status) && apt.status}
                       </span>
                     </div>
                     <div className="appointment-body">
@@ -737,6 +855,9 @@ function App() {
                         <p>
                           <strong>Patient:</strong>{" "}
                           {apt.patient?.name || apt.patientName}
+                        </p>
+                        <p>
+                          <strong>Age:</strong> {apt.patient?.age || "N/A"}
                         </p>
                         <p>
                           <strong>Date:</strong>{" "}
@@ -766,10 +887,8 @@ function App() {
             )}
           </div>
         ) : (
-          // Booking Flow
           <div className="booking-flow">
             {/* Progress Steps */}
-
             <div className="progress-steps">
               {[1, 2, 3, 4].map((stepNum) => (
                 <div
@@ -810,52 +929,113 @@ function App() {
                         key={doctor.doctorId || doctor.id}
                         className="home-doctor-card"
                       >
-                        <div className="home-doctor-image-section">
-                          <div className="home-doctor-image-container">
-                            <img
-                              src={
-                                doctor.imageUrl || getDoctorImage(doctor.name)
-                              }
-                              alt={doctor.name}
-                              onError={(e) => {
-                                e.target.onerror = null;
-                                e.target.src = getDoctorImage(doctor.name);
-                              }}
-                            />
-                          </div>
+                        {/* STATUS BADGE - TOP RIGHT CORNER */}
+                        <div
+                          className={`home-doctor-status-badge ${doctor.isActive ? "active" : "inactive"}`}
+                        >
+                          {doctor.isActive ? "🟢 Active" : "🔴 Inactive"}
                         </div>
 
-                        <div className="home-doctor-content">
-                          <h3 className="home-doctor-name">{doctor.name}</h3>
-                          <div className="home-doctor-specialty">
-                            {doctor.specialization}
+                        <div className="home-doctor-card-inner">
+                          {/* LEFT SIDE - IMAGE */}
+                          <div className="home-doctor-image-section">
+                            <div className="home-doctor-image-container">
+                              <img
+                                src={
+                                  doctor.imageUrl || getDoctorImage(doctor.name)
+                                }
+                                alt={doctor.name}
+                                onError={(e) => {
+                                  e.target.onerror = null;
+                                  e.target.src = getDoctorImage(doctor.name);
+                                }}
+                              />
+                            </div>
                           </div>
 
-                          <div className="home-info-row">
-                            <span className="home-info-badge">
-                              ⏱️ {doctor.experience || "10+ years"}
-                            </span>
-                            <span className="home-info-badge">
-                              🎓 {doctor.qualification || "MD"}
-                            </span>
-                          </div>
+                          {/* RIGHT SIDE - CONTENT */}
+                          <div className="home-doctor-content">
+                            <h3 className="home-doctor-name">{doctor.name}</h3>
 
-                          <div className="home-doctor-meta">
-                            <span className="home-fee-badge">
-                              {" "}
-                              ₹{doctor.fee}
-                            </span>
-                            <span className="home-rating-badge">
-                              ⭐ {doctor.rating || "4.5 ★"}
-                            </span>
-                          </div>
+                            {/* Specialization */}
+                            <div className="doctor-info-row">
+                              <span className="doctor-info-icon">🏥</span>
+                              <span className="doctor-info-text doctor-specialty-text">
+                                {doctor.specialization}
+                              </span>
+                            </div>
 
-                          <button
-                            className="home-book-btn"
-                            onClick={() => handleBookDoctor(doctor)}
-                          >
-                            Book Appointment
-                          </button>
+                            {/* Qualification/Degree */}
+                            <div className="doctor-info-row">
+                              <span className="doctor-info-icon">🎓</span>
+                              <span className="doctor-info-text doctor-degree-text">
+                                {doctor.qualification || "MBBS, MD"}
+                              </span>
+                            </div>
+
+                            {/* Experience */}
+                            <div className="doctor-info-row">
+                              <span className="doctor-info-icon">📅</span>
+                              <span className="doctor-info-text doctor-experience-text">
+                                {doctor.experience || "5+ years"} experience
+                              </span>
+                            </div>
+
+                            {/* Location - Clinic Name + Address */}
+                            <div className="doctor-info-row">
+                              <span className="doctor-info-icon">📍</span>
+                              <span className="doctor-info-text doctor-location-text">
+                                {doctor.clinicName}
+                                {doctor.clinicName && doctor.address
+                                  ? ", "
+                                  : ""}
+                                {doctor.address || ""}
+                                {!doctor.clinicName &&
+                                  !doctor.address &&
+                                  "Online Consultation"}
+                              </span>
+                            </div>
+
+                            {/* Available Slots - Button Only */}
+                            <div className="slots-row">
+                              {doctor.allSlotsCount > 0 ? (
+                                <button
+                                  className="view-all-slots-btn-primary"
+                                  onClick={() => fetchAllSlotsForDoctor(doctor)}
+                                >
+                                  View Available Slots ({doctor.allSlotsCount})
+                                  →
+                                </button>
+                              ) : (
+                                <span className="slots-time no-slots-message">
+                                  No slots available today
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Price & Button */}
+                            <div className="price-book-row">
+                              <span className="price-amount">
+                                ₹{doctor.fee} <span>/ consultation</span>
+                              </span>
+                              <button
+                                className="home-book-btn"
+                                onClick={() => handleBookDoctor(doctor)}
+                                disabled={!doctor.isActive}
+                                style={{
+                                  opacity: doctor.isActive ? 1 : 0.5,
+                                  cursor: doctor.isActive
+                                    ? "pointer"
+                                    : "not-allowed",
+                                  backgroundColor: doctor.isActive
+                                    ? "#2563eb"
+                                    : "#94a3b8",
+                                }}
+                              >
+                                {doctor.isActive ? "Book" : "Unavailable"}
+                              </button>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -879,7 +1059,6 @@ function App() {
                 </div>
 
                 <form onSubmit={handleBookingSubmit} className="booking-form">
-                  {/* PATIENT DETAILS SECTION */}
                   <div className="form-section">
                     <h3>Patient Details</h3>
                     <div className="form-row">
@@ -895,6 +1074,21 @@ function App() {
                         />
                       </div>
                       <div className="form-group">
+                        <label>Age *</label>
+                        <input
+                          type="number"
+                          name="age"
+                          value={bookingDetails.age}
+                          onChange={handleInputChange}
+                          placeholder="Enter age"
+                          min="1"
+                          max="120"
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div className="form-row">
+                      <div className="form-group">
                         <label>Phone Number *</label>
                         <input
                           type="tel"
@@ -906,21 +1100,20 @@ function App() {
                           required
                         />
                       </div>
-                    </div>
-                    <div className="form-group">
-                      <label>Email Address *</label>
-                      <input
-                        type="email"
-                        name="email"
-                        value={bookingDetails.email}
-                        onChange={handleInputChange}
-                        placeholder="Enter your email"
-                        required
-                      />
+                      <div className="form-group">
+                        <label>Email Address *</label>
+                        <input
+                          type="email"
+                          name="email"
+                          value={bookingDetails.email}
+                          onChange={handleInputChange}
+                          placeholder="Enter your email"
+                          required
+                        />
+                      </div>
                     </div>
                   </div>
 
-                  {/* APPOINTMENT DETAILS SECTION */}
                   <div className="form-section">
                     <h3>Appointment Details</h3>
                     <div className="form-row">
@@ -935,7 +1128,9 @@ function App() {
                           max={maxDateStr}
                           required
                         />
-                        <small className="date-hint">📅 You can book for today or tomorrow only</small>
+                        <small className="date-hint">
+                          📅 You can book for today or tomorrow only
+                        </small>
                       </div>
                       <div className="form-group">
                         <label>Preferred Time Slot *</label>
@@ -951,7 +1146,8 @@ function App() {
                           ) : availableSlots.length > 0 ? (
                             availableSlots.map((slot) => (
                               <option key={slot} value={slot}>
-                                {slot}
+                                {slot}{" "}
+                                {/* ← Changed from formatTo12Hour(slot) to slot */}
                               </option>
                             ))
                           ) : (
@@ -1020,8 +1216,8 @@ function App() {
                       <span>Doctor Consultation Fee</span>
                       <span>₹{selectedDoctor.fee}</span>
                     </div>
-                    <div className="home-summary-item.total">
-                      <span>Total Amount</span>
+                    <div className="home-summary-item total">
+                      <span>Total Amount </span>
                       <span>₹{selectedDoctor.fee}</span>
                     </div>
                   </div>
@@ -1033,6 +1229,9 @@ function App() {
                         <strong>Name:</strong> {bookingDetails.name}
                       </div>
                       <div className="home-patient-info-item">
+                        <strong>Age:</strong> {bookingDetails.age}
+                      </div>
+                      <div className="home-patient-info-item">
                         <strong>Email:</strong> {bookingDetails.email}
                       </div>
                       <div className="home-patient-info-item">
@@ -1041,7 +1240,7 @@ function App() {
                       <div className="home-patient-info-item">
                         <strong>Appointment:</strong>{" "}
                         {formatDate(bookingDetails.date)} at{" "}
-                        {bookingDetails.time}
+                        {formatTo12Hour(bookingDetails.time)}
                       </div>
                     </div>
 
@@ -1050,7 +1249,7 @@ function App() {
                       onClick={handlePayment}
                       disabled={loading}
                     >
-                       Proceed to UPI Payment
+                      Proceed to UPI Payment
                     </button>
                   </div>
                 </div>
@@ -1142,13 +1341,10 @@ function App() {
                 <div className="waiting-card minimal">
                   <div className="waiting-icon">🏥</div>
                   <h3>Booking Received</h3>
-
                   <p className="small-msg">
                     Visit clinic → Staff verifies → Get confirmation
                   </p>
-
                   <div className="amount-chip">₹{selectedDoctor?.fee}</div>
-
                   <button className="home-btn small" onClick={resetForm}>
                     Done
                   </button>
@@ -1158,6 +1354,142 @@ function App() {
           </div>
         )}
       </main>
+
+      {/* 🆕 VIEW ALL SLOTS MODAL */}
+      {showAllSlotsModal && selectedSlotDoctor && (
+        <div
+          className="modal-overlay"
+          onClick={() => setShowAllSlotsModal(false)}
+        >
+          <div
+            className="modal-content slots-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-header">
+              <h2>
+                {selectedSlotDoctor.availableSlot?.startsWith("Tomorrow")
+                  ? "📅 Tomorrow's"
+                  : "📅 Today's"}{" "}
+                Available Slots - {selectedSlotDoctor.name}
+              </h2>
+              <button
+                className="close-btn"
+                onClick={() => setShowAllSlotsModal(false)}
+              >
+                ✕
+              </button>
+            </div>
+            <div className="modal-body">
+              {allDoctorSlots.length === 0 ? (
+                <div className="no-slots-message">
+                  <p>
+                    No available slots for{" "}
+                    {selectedSlotDoctor.availableSlot?.startsWith("Tomorrow")
+                      ? "tomorrow"
+                      : "today"}
+                  </p>
+                </div>
+              ) : (
+                <div className="slots-grid">
+                  {allDoctorSlots.map((slot, idx) => (
+                    <button
+                      key={idx}
+                      className="slot-item"
+                      onClick={() => {
+                        const isTomorrow =
+                          selectedSlotDoctor.availableSlot?.startsWith(
+                            "Tomorrow",
+                          );
+                        const date = new Date();
+                        if (isTomorrow) {
+                          date.setDate(date.getDate() + 1);
+                        }
+                        const formattedDate = date.toISOString().split("T")[0];
+                        setShowAllSlotsModal(false);
+                        handleBookDoctor(selectedSlotDoctor);
+                        setBookingDetails((prev) => ({
+                          ...prev,
+                          date: formattedDate,
+                          time: slot.time || slot,
+                        }));
+                      }}
+                    >
+                      {slot.time || slot}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 📧 EMAIL MODAL - Find Appointments (ADD THIS HERE) */}
+      {showEmailModal && (
+        <div className="modal-overlay" onClick={() => setShowEmailModal(false)}>
+          <div
+            className="modal-content email-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-header">
+              <h2>🔍 Find Your Appointments</h2>
+              <button
+                className="close-btn"
+                onClick={() => setShowEmailModal(false)}
+              >
+                ✕
+              </button>
+            </div>
+            <div className="modal-body">
+              <p>Enter the email address you used when booking</p>
+              <input
+                type="email"
+                placeholder="your@email.com"
+                value={patientEmail}
+                onChange={(e) => setPatientEmail(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === "Enter") {
+                    if (patientEmail && patientEmail.includes("@")) {
+                      fetchAppointmentsByEmail(patientEmail);
+                      setShowEmailModal(false);
+                      setPatientEmail("");
+                    } else {
+                      alert("Please enter a valid email");
+                    }
+                  }
+                }}
+              />
+              <div style={{ display: "flex", gap: "10px", marginTop: "20px" }}>
+                <button
+                  className="primary-btn"
+                  style={{ flex: 1 }}
+                  onClick={() => {
+                    if (patientEmail && patientEmail.includes("@")) {
+                      fetchAppointmentsByEmail(patientEmail);
+                      setShowEmailModal(false);
+                      setPatientEmail("");
+                    } else {
+                      alert("Please enter a valid email");
+                    }
+                  }}
+                >
+                  View Appointments
+                </button>
+                <button
+                  className="secondary-btn"
+                  style={{ flex: 1 }}
+                  onClick={() => {
+                    setShowEmailModal(false);
+                    setPatientEmail("");
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <footer className="app-footer">
