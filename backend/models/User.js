@@ -1,41 +1,56 @@
-// models/User.js - WORKING TEST VERSION
-module.exports = {
-  // Mock findOne with select function
-  findOne: function(query) {
-    console.log('Mock findOne called:', query);
-    
-    // Return an object with select method
-    const mockUser = {
-      _id: 'test_user_id',
-      name: 'Test User',
-      email: query.email || 'test@test.com',
-      password: '$2b$10$hashed_password_for_testing', // bcrypt hash of "password123"
-      phone: '1234567890',
-      role: 'patient',
-      
-      // Add select method
-      select: function(field) {
-        console.log('Mock select called with:', field);
-        return Promise.resolve(this); // Return user object
-      },
-      
-      // Compare password method
-      comparePassword: async function(candidatePassword) {
-        // For testing, accept any password that contains "123"
-        return candidatePassword.includes('123');
-      }
-    };
-    
-    return Promise.resolve(mockUser);
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
+
+const UserSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: [true, 'Please add a name'],
+    trim: true
   },
-  
-  // Mock create function
-  create: function(data) {
-    console.log('Mock create called:', data);
-    return Promise.resolve({
-      ...data,
-      _id: 'new_user_id_' + Date.now(),
-      createdAt: new Date()
-    });
+  email: {
+    type: String,
+    required: [true, 'Please add an email'],
+    unique: true,
+    lowercase: true,
+    match: [
+      /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
+      'Please add a valid email'
+    ]
+  },
+  password: {
+    type: String,
+    required: [true, 'Please add a password'],
+    minlength: 6,
+    select: false
+  },
+  phone: {
+    type: String,
+    required: [true, 'Please add a phone number'],
+    match: [/^[0-9]{10}$/, 'Please add a valid 10-digit phone number']
+  },
+  role: {
+    type: String,
+    enum: ['patient', 'doctor', 'admin'],
+    default: 'patient'
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
   }
+});
+
+// Encrypt password using bcrypt
+UserSchema.pre('save', async function(next) {
+  if (!this.isModified('password')) {
+    next();
+  }
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+});
+
+// Match user entered password to hashed password in database
+UserSchema.methods.matchPassword = async function(enteredPassword) {
+  return await bcrypt.compare(enteredPassword, this.password);
 };
+
+module.exports = mongoose.model('User', UserSchema);
