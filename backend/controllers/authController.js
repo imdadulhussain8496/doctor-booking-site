@@ -1,14 +1,13 @@
-// controllers/authController.js
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
-const { validationResult } = require('express-validator');
+const bcrypt = require('bcryptjs');
 
 // Generate JWT Token
 const generateToken = (id, role) => {
   return jwt.sign(
     { id, role },
     process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+    { expiresIn: '7d' }
   );
 };
 
@@ -19,9 +18,7 @@ exports.register = async (req, res) => {
   try {
     const { name, email, password, phone, role } = req.body;
 
-    console.log('📝 Registration attempt:', { name, email });
-
-    // SIMPLE VALIDATION
+    // Validation
     if (!name || !email || !password || !phone) {
       return res.status(400).json({
         success: false,
@@ -29,21 +26,42 @@ exports.register = async (req, res) => {
       });
     }
 
-    // Generate JWT token (for testing)
-    const token = 'jwt_real_token_' + Date.now();
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: 'User already exists with this email'
+      });
+    }
 
-    // Return success with token
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Create user
+    const user = await User.create({
+      name,
+      email,
+      password: hashedPassword,
+      phone,
+      role: role || 'patient'
+    });
+
+    // Generate token
+    const token = generateToken(user._id, user.role);
+
     res.status(201).json({
       success: true,
       message: 'Registration successful',
-      token: token,  // ADD TOKEN HERE!
+      token,
       user: {
-        id: 'user_id_' + Date.now(),
-        name,
-        email,
-        phone,
-        role: role || 'patient',
-        createdAt: new Date()
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+        createdAt: user.createdAt
       }
     });
 
@@ -64,9 +82,7 @@ exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    console.log('Login attempt for:', email);
-
-    // Simple validation
+    // Validation
     if (!email || !password) {
       return res.status(400).json({
         success: false,
@@ -74,40 +90,38 @@ exports.login = async (req, res) => {
       });
     }
 
-    // Get user (using our mock)
-    const User = require('../models/User');
+    // Find user
     const user = await User.findOne({ email });
-    
     if (!user) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid email or password'
+        message: 'Invalid credentials'
       });
     }
 
     // Check password
-    const isPasswordCorrect = await user.comparePassword(password);
-    if (!isPasswordCorrect) {
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid email or password'
+        message: 'Invalid credentials'
       });
     }
 
-    // Generate fake token
-    const token = 'jwt_test_token_' + Date.now();
-
-    // Remove password from response
-    const userResponse = { ...user };
-    delete userResponse.password;
-    delete userResponse.comparePassword;
-    delete userResponse.select;
+    // Generate token
+    const token = generateToken(user._id, user.role);
 
     res.status(200).json({
       success: true,
-      message: 'Login successful (TEST MODE)',
+      message: 'Login successful',
       token,
-      user: userResponse
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        role: user.role
+      }
     });
 
   } catch (error) {
@@ -125,12 +139,20 @@ exports.login = async (req, res) => {
 // @access  Private
 exports.getMe = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user.id).select('-password');
     
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
     res.status(200).json({
       success: true,
       user
     });
+
   } catch (error) {
     console.error('Get user error:', error);
     res.status(500).json({
@@ -141,12 +163,12 @@ exports.getMe = async (req, res) => {
   }
 };
 
-// @desc    Logout user (client-side token removal)
+// @desc    Logout user
 // @route   POST /api/auth/logout
 // @access  Private
 exports.logout = (req, res) => {
   res.status(200).json({
     success: true,
-    message: 'Logout successful (remove token from client)'
+    message: 'Logout successful'
   });
 };
