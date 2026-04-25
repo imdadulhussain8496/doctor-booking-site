@@ -1,6 +1,5 @@
 // D:\Projects\DoctorBooking\frontend\src\pages\AdminLogin.js
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './Admin.css';
 
@@ -10,7 +9,6 @@ function AdminLogin() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { adminLogin } = useAuth();
-  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,7 +18,7 @@ function AdminLogin() {
     const result = await adminLogin(username, password);
     
     if (result.success) {
-      navigate('/admin-dashboard');
+      window.location.href = '/admin-dashboard';
     } else {
       setError(result.message || 'Invalid credentials');
     }
