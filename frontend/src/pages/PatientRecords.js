@@ -1,13 +1,16 @@
-// D:\Projects\DoctorBooking\frontend\src\pages\PatientRecords.js
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./PatientRecords.css";
+
+// Set axios defaults
+axios.defaults.withCredentials = true;
+axios.defaults.baseURL = "http://localhost:5000";
 
 function PatientRecords() {
   const [records, setRecords] = useState([]);
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("records"); // 'records' or 'appointments'
+  const [activeTab, setActiveTab] = useState("records");
   const [patientInfo, setPatientInfo] = useState(null);
 
   // Get email from URL manually (without router)
@@ -31,9 +34,7 @@ function PatientRecords() {
   const fetchPatientRecords = async () => {
     try {
       console.log("📄 Fetching medical records for email:", email);
-      const response = await axios.get(
-        `http://localhost:5000/api/upload/patient/${email}`,
-      );
+      const response = await axios.get(`/api/upload/patient/${email}`);
       console.log("✅ Records response:", response.data);
       setRecords(response.data.records || []);
 
@@ -51,13 +52,10 @@ function PatientRecords() {
   const fetchPatientAppointments = async () => {
     try {
       console.log("📅 Fetching appointments for email:", email);
-      const response = await axios.get(
-        `http://localhost:5000/api/appointments/${encodeURIComponent(email)}`
-      );
+      const response = await axios.get(`/api/appointments/${encodeURIComponent(email)}`);
       console.log("✅ Appointments response:", response.data);
       setAppointments(response.data.appointments || []);
       
-      // If we don't have patient info from records, get from appointments
       if (!patientInfo && response.data.appointments?.length > 0) {
         setPatientInfo({
           name: response.data.appointments[0].patient?.name || "Patient",
@@ -134,7 +132,6 @@ function PatientRecords() {
         </div>
       </header>
 
-      {/* Patient Summary Card */}
       {patientInfo && (
         <div className="patient-summary-card">
           <div className="summary-stats">
@@ -158,7 +155,6 @@ function PatientRecords() {
         </div>
       )}
 
-      {/* Tab Navigation */}
       <div className="records-tabs">
         <button
           className={`tab-btn ${activeTab === 'appointments' ? 'active' : ''}`}
@@ -174,7 +170,6 @@ function PatientRecords() {
         </button>
       </div>
 
-      {/* Appointments Tab */}
       {activeTab === 'appointments' && (
         <div className="appointments-section">
           {appointments.length === 0 ? (
@@ -247,7 +242,6 @@ function PatientRecords() {
         </div>
       )}
 
-      {/* Medical Records Tab */}
       {activeTab === 'records' && (
         <div className="records-section">
           {records.length === 0 ? (

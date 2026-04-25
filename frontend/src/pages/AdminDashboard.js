@@ -9,7 +9,7 @@ function AdminDashboard() {
   const { admin, adminLogout, loading } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect if not logged in - wait for loading to finish
+  // ✅ FIXED: Only redirect if explicitly logged out, not on every render
   useEffect(() => {
     if (!loading && !admin) {
       navigate("/admin");
@@ -162,9 +162,7 @@ function AdminDashboard() {
   const fetchRestrictedDoctors = async (showLoader = true) => {
     if (showLoader) setLoadingRestricted(true);
     try {
-      const response = await axios.get(
-        "http://localhost:5000/api/admin/restricted-doctors",
-      );
+      const response = await axios.get("/api/admin/restricted-doctors");
       if (response.data.success) {
         setRestrictedDoctors(response.data.doctors);
       }
@@ -178,9 +176,7 @@ function AdminDashboard() {
   // ✅ Fetch overdue doctors
   const fetchOverdueDoctors = async () => {
     try {
-      const response = await axios.get(
-        "http://localhost:5000/api/admin/overdue-doctors",
-      );
+      const response = await axios.get("/api/admin/overdue-doctors");
       if (response.data.success) {
         setOverdueDoctors(response.data.doctors);
       }
@@ -197,7 +193,7 @@ function AdminDashboard() {
 
     try {
       const response = await axios.post(
-        `http://localhost:5000/api/admin/doctors/unblock/${doctorId}`,
+        `/api/admin/doctors/unblock/${doctorId}`,
       );
 
       if (response.data.success) {
@@ -227,7 +223,7 @@ function AdminDashboard() {
 
     try {
       const response = await axios.post(
-        `http://localhost:5000/api/admin/send-reminder/${doctorId}/${type}`,
+        `/api/admin/send-reminder/${doctorId}/${type}`,
       );
 
       if (response.data.success) {
@@ -245,9 +241,7 @@ function AdminDashboard() {
   // ✅ Fetch commission due from all doctors
   const fetchCommissionDue = async (showLoader = true) => {
     try {
-      const response = await axios.get(
-        "http://localhost:5000/api/admin/commission-due",
-      );
+      const response = await axios.get("/api/admin/commission-due");
       if (response.data.success) {
         setCommissionDue(response.data.doctors);
         setTotalCommissionDue(response.data.totalDue);
@@ -268,14 +262,11 @@ function AdminDashboard() {
 
     setProcessingPayment(true);
     try {
-      const response = await axios.post(
-        "http://localhost:5000/api/admin/commission/mark-paid",
-        {
-          doctorId,
-          transactionId,
-          amount,
-        },
-      );
+      const response = await axios.post("/api/admin/commission/mark-paid", {
+        doctorId,
+        transactionId,
+        amount,
+      });
 
       if (response.data.success) {
         showNotification(
@@ -338,9 +329,9 @@ function AdminDashboard() {
     try {
       if (showLoader) setDataLoading(true);
       const [statsRes, appointmentsRes, doctorsRes] = await Promise.all([
-        axios.get("http://localhost:5000/api/admin/stats"),
-        axios.get("http://localhost:5000/api/admin/appointments"),
-        axios.get("http://localhost:5000/api/admin/doctors/stats"),
+        axios.get("/api/admin/stats"),
+        axios.get("/api/admin/appointments"),
+        axios.get("/api/admin/doctors/stats"),
       ]);
 
       setStats(statsRes.data.stats);
@@ -356,15 +347,12 @@ function AdminDashboard() {
   // ✅ Fetch commission report
   const fetchCommissionReport = async (showLoader = true) => {
     try {
-      const response = await axios.get(
-        "http://localhost:5000/api/admin/commission/report",
-        {
-          params: {
-            month: commissionPeriod.month,
-            year: commissionPeriod.year,
-          },
+      const response = await axios.get("/api/admin/commission/report", {
+        params: {
+          month: commissionPeriod.month,
+          year: commissionPeriod.year,
         },
-      );
+      });
       setCommissionReport(response.data.report);
     } catch (error) {
       console.error("Error fetching commission report:", error);
@@ -381,9 +369,7 @@ function AdminDashboard() {
       if (filter.startDate) params.append("startDate", filter.startDate);
       if (filter.endDate) params.append("endDate", filter.endDate);
 
-      const response = await axios.get(
-        `http://localhost:5000/api/admin/appointments?${params}`,
-      );
+      const response = await axios.get(`/api/admin/appointments?${params}`);
       setAppointments(response.data.appointments);
       showNotification("Filters applied", "success");
     } catch (error) {
@@ -402,14 +388,11 @@ function AdminDashboard() {
     }
 
     try {
-      const response = await axios.post(
-        "http://localhost:5000/api/admin/send-doctor-email",
-        {
-          email: doctor.email,
-          name: doctor.name,
-          password: doctor.password || "doctor123",
-        },
-      );
+      const response = await axios.post("/api/admin/send-doctor-email", {
+        email: doctor.email,
+        name: doctor.name,
+        password: doctor.password || "doctor123",
+      });
 
       if (response.data.success) {
         showNotification(`✅ Email sent to ${doctor.email}`, "success");
@@ -435,12 +418,9 @@ function AdminDashboard() {
     try {
       console.log("Resetting password for:", doc.email);
 
-      const response = await axios.patch(
-        `http://localhost:5000/api/admin/doctors/${doc._id}`,
-        {
-          password: newPassword || "doctor123",
-        },
-      );
+      const response = await axios.patch(`/api/admin/doctors/${doc._id}`, {
+        password: newPassword || "doctor123",
+      });
 
       if (response.data.success) {
         setResetResult({
@@ -469,98 +449,104 @@ function AdminDashboard() {
   };
 
   // ✅ Handle image upload for new doctor
-const handleImageUpload = async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
-  // ✅ SIZE VALIDATION
-  const MAX_SIZE = 500 * 1024; // 500KB
-  const MIN_SIZE = 10 * 1024;   // 10KB
+    const MAX_SIZE = 500 * 1024;
+    const MIN_SIZE = 10 * 1024;
 
-  if (file.size > MAX_SIZE) {
-    showNotification(`Image too large! Maximum ${MAX_SIZE / 1024}KB. Your file: ${(file.size / 1024).toFixed(0)}KB`, "error");
-    e.target.value = ''; // Clear the input
-    return;
-  }
+    if (file.size > MAX_SIZE) {
+      showNotification(
+        `Image too large! Maximum ${MAX_SIZE / 1024}KB. Your file: ${(file.size / 1024).toFixed(0)}KB`,
+        "error",
+      );
+      e.target.value = "";
+      return;
+    }
 
-  if (file.size < MIN_SIZE) {
-    showNotification(`File too small! Minimum ${MIN_SIZE / 1024}KB. Your file: ${(file.size / 1024).toFixed(0)}KB`, "error");
-    e.target.value = '';
-    return;
-  }
+    if (file.size < MIN_SIZE) {
+      showNotification(
+        `File too small! Minimum ${MIN_SIZE / 1024}KB. Your file: ${(file.size / 1024).toFixed(0)}KB`,
+        "error",
+      );
+      e.target.value = "";
+      return;
+    }
 
-  setPreviewImage(URL.createObjectURL(file));
+    setPreviewImage(URL.createObjectURL(file));
 
-  const formData = new FormData();
-  formData.append("image", file);
+    const formData = new FormData();
+    formData.append("image", file);
 
-  try {
-    setUploading(true);
-    const response = await axios.post(
-      "http://localhost:5000/api/upload/doctor-image",
-      formData,
-      { headers: { "Content-Type": "multipart/form-data" } },
-    );
+    try {
+      setUploading(true);
+      const response = await axios.post("/api/upload/doctor-image", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
 
-    setNewDoctor({
-      ...newDoctor,
-      imageUrl: response.data.imageUrl,
-    });
-    showNotification("Image uploaded successfully", "success");
-  } catch (error) {
-    console.error("Upload failed:", error);
-    showNotification("Failed to upload image", "error");
-  } finally {
-    setUploading(false);
-  }
-};
+      setNewDoctor({
+        ...newDoctor,
+        imageUrl: response.data.imageUrl,
+      });
+      showNotification("Image uploaded successfully", "success");
+    } catch (error) {
+      console.error("Upload failed:", error);
+      showNotification("Failed to upload image", "error");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   // ✅ Handle image upload for edit doctor
-const handleEditImageUpload = async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
+  const handleEditImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
-  // ✅ SIZE VALIDATION
-  const MAX_SIZE = 500 * 1024; // 500KB
-  const MIN_SIZE = 10 * 1024;   // 10KB
+    const MAX_SIZE = 500 * 1024;
+    const MIN_SIZE = 10 * 1024;
 
-  if (file.size > MAX_SIZE) {
-    showNotification(`Image too large! Maximum ${MAX_SIZE / 1024}KB. Your file: ${(file.size / 1024).toFixed(0)}KB`, "error");
-    e.target.value = ''; // Clear the input
-    return;
-  }
+    if (file.size > MAX_SIZE) {
+      showNotification(
+        `Image too large! Maximum ${MAX_SIZE / 1024}KB. Your file: ${(file.size / 1024).toFixed(0)}KB`,
+        "error",
+      );
+      e.target.value = "";
+      return;
+    }
 
-  if (file.size < MIN_SIZE) {
-    showNotification(`File too small! Minimum ${MIN_SIZE / 1024}KB. Your file: ${(file.size / 1024).toFixed(0)}KB`, "error");
-    e.target.value = '';
-    return;
-  }
+    if (file.size < MIN_SIZE) {
+      showNotification(
+        `File too small! Minimum ${MIN_SIZE / 1024}KB. Your file: ${(file.size / 1024).toFixed(0)}KB`,
+        "error",
+      );
+      e.target.value = "";
+      return;
+    }
 
-  setEditPreviewImage(URL.createObjectURL(file));
+    setEditPreviewImage(URL.createObjectURL(file));
 
-  const formData = new FormData();
-  formData.append("image", file);
+    const formData = new FormData();
+    formData.append("image", file);
 
-  try {
-    setEditUploading(true);
-    const response = await axios.post(
-      "http://localhost:5000/api/upload/doctor-image",
-      formData,
-      { headers: { "Content-Type": "multipart/form-data" } },
-    );
+    try {
+      setEditUploading(true);
+      const response = await axios.post("/api/upload/doctor-image", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
 
-    setEditDoctorData({
-      ...editDoctorData,
-      imageUrl: response.data.imageUrl,
-    });
-    showNotification("Image uploaded successfully", "success");
-  } catch (error) {
-    console.error("Upload failed:", error);
-    showNotification("Failed to upload image", "error");
-  } finally {
-    setEditUploading(false);
-  }
-};
+      setEditDoctorData({
+        ...editDoctorData,
+        imageUrl: response.data.imageUrl,
+      });
+      showNotification("Image uploaded successfully", "success");
+    } catch (error) {
+      console.error("Upload failed:", error);
+      showNotification("Failed to upload image", "error");
+    } finally {
+      setEditUploading(false);
+    }
+  };
 
   // ✅ Handle add doctor
   const handleAddDoctor = async () => {
@@ -574,13 +560,10 @@ const handleEditImageUpload = async (e) => {
 
       console.log("Adding doctor:", doctorData);
 
-      const response = await axios.post(
-        "http://localhost:5000/api/admin/doctors",
-        doctorData,
-      );
+      const response = await axios.post("/api/admin/doctors", doctorData);
 
       if (response.data.success) {
-        showNotification(` ${newDoctor.name} added successfully!`, "success");
+        showNotification(`✅ ${newDoctor.name} added successfully!`, "success");
 
         if (
           window.confirm(
@@ -606,6 +589,8 @@ const handleEditImageUpload = async (e) => {
           imageUrl: "",
           paymentMethod: "both",
           commissionPercentage: 1,
+          clinicName: "",
+          address: "",
         });
         setPreviewImage(null);
 
@@ -661,17 +646,16 @@ const handleEditImageUpload = async (e) => {
         commissionPercentage: editDoctorData.commissionPercentage || 1,
         clinicName: editDoctorData.clinicName || "",
         address: editDoctorData.address || "",
-
       };
 
       const response = await axios.patch(
-        `http://localhost:5000/api/admin/doctors/${doctorId}`,
+        `/api/admin/doctors/${doctorId}`,
         doctorData,
       );
 
       if (response.data.success) {
         showNotification(
-          ` ${editDoctorData.name} updated successfully!`,
+          `✅ ${editDoctorData.name} updated successfully!`,
           "success",
         );
         setShowEditDoctorModal(false);
@@ -706,9 +690,7 @@ const handleEditImageUpload = async (e) => {
     ) {
       try {
         console.log("Deleting doctor:", doctorId);
-        await axios.delete(
-          `http://localhost:5000/api/admin/doctors/${doctorId}`,
-        );
+        await axios.delete(`/api/admin/doctors/${doctorId}`);
 
         showNotification("Doctor deleted successfully", "success");
 
@@ -875,13 +857,16 @@ const handleEditImageUpload = async (e) => {
         </div>
       </div>
 
-      {/* ========== NEW: PAYMENT ENFORCEMENT MODAL ========== */}
+      {/* ========== PAYMENT ENFORCEMENT MODAL ========== */}
       {showPaymentEnforcementModal && (
         <div
           className="modal-overlay"
           onClick={() => setShowPaymentEnforcementModal(false)}
         >
-          <div className="modal-content payment-enforcement-modal">
+          <div
+            className="modal-content payment-enforcement-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="modal-header">
               <h2>💰 Payment Enforcement</h2>
               <button
@@ -929,15 +914,6 @@ const handleEditImageUpload = async (e) => {
               {/* Restricted Doctors List */}
               <div className="enforcement-section">
                 <h3>⛔ Restricted Accounts ({restrictedDoctors.length})</h3>
-                <button
-                  className="refresh-btn small"
-                  onClick={() => {
-                    fetchRestrictedDoctors();
-                    fetchOverdueDoctors();
-                  }}
-                >
-                  🔄 Refresh
-                </button>
               </div>
 
               {loadingRestricted ? (
@@ -1081,13 +1057,16 @@ const handleEditImageUpload = async (e) => {
         </div>
       )}
 
-      {/* ✅ FIXED: Commission Due Modal */}
+      {/* ✅ FIXED: Commission Due Modal with stopPropagation */}
       {showCommissionDueModal && (
         <div
           className="modal-overlay"
           onClick={() => setShowCommissionDueModal(false)}
         >
-          <div className="modal-content commission-modal">
+          <div
+            className="modal-content commission-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="modal-header">
               <h2>💰 Commission Report (1%)</h2>
               <button
@@ -1125,82 +1104,96 @@ const handleEditImageUpload = async (e) => {
                       </tr>
                     </thead>
                     <tbody>
-                      {commissionDue.map((doc) => {
-                        const totalWithFees =
-                          doc.commissionDue + (doc.lateFees || 0);
-                        return (
-                          <tr key={doc.doctorId}>
-                            <td>{doc.name}</td>
-                            <td>{doc.email}</td>
-                            <td className="commission-amount">
-                              ₹{doc.commissionDue}
-                            </td>
-                            <td className={doc.lateFees ? "fees-amount" : ""}>
-                              {doc.lateFees ? `₹${doc.lateFees}` : "-"}
-                            </td>
-                            <td className="total-amount">
-                              <strong>₹{totalWithFees}</strong>
-                            </td>
-                            <td>
-                              {doc.paymentStatus === "restricted" ? (
-                                <span className="status-badge restricted">
-                                  ⛔ Restricted
-                                </span>
-                              ) : doc.paymentStatus === "overdue" ? (
-                                <span className="status-badge overdue">
-                                  ⚠️ Overdue
-                                </span>
-                              ) : doc.commissionDue > 0 ? (
-                                <span className="status-badge pending">
-                                  ⏳ Pending
-                                </span>
-                              ) : (
-                                <span className="status-badge paid">
-                                  ✅ Paid
-                                </span>
-                              )}
-                            </td>
-                            <td>
-                              {doc.commissionDue > 0 ? (
-                                <div className="commission-action">
-                                  <input
-                                    type="text"
-                                    placeholder="Transaction ID"
-                                    value={
-                                      paymentTransactionId[doc.doctorId] || ""
-                                    }
-                                    onChange={(e) =>
-                                      setPaymentTransactionId({
-                                        ...paymentTransactionId,
-                                        [doc.doctorId]: e.target.value,
-                                      })
-                                    }
-                                  />
-                                  <button
-                                    className="mark-paid-btn"
-                                    onClick={() =>
-                                      handleMarkCommissionPaid(
-                                        doc.doctorId,
-                                        doc.commissionDue,
-                                      )
-                                    }
-                                    disabled={
-                                      processingPayment ||
-                                      !paymentTransactionId[doc.doctorId]
-                                    }
-                                  >
-                                    {processingPayment
-                                      ? "Processing..."
-                                      : "Mark Paid"}
-                                  </button>
-                                </div>
-                              ) : (
-                                <span className="paid-badge">✅ Paid</span>
-                              )}
-                            </td>
-                          </tr>
-                        );
-                      })}
+                      {commissionDue && commissionDue.length > 0 ? (
+                        commissionDue.map((doc) => {
+                          const totalWithFees =
+                            doc.commissionDue + (doc.lateFees || 0);
+                          return (
+                            <tr key={doc.doctorId}>
+                              <td>{doc.name}</td>
+                              <td>{doc.email}</td>
+                              <td className="commission-amount">
+                                ₹{doc.commissionDue}
+                              </td>
+                              <td className={doc.lateFees ? "fees-amount" : ""}>
+                                {doc.lateFees ? `₹${doc.lateFees}` : "-"}
+                              </td>
+                              <td className="total-amount">
+                                <strong>₹{totalWithFees}</strong>
+                              </td>
+                              <td>
+                                {doc.paymentStatus === "restricted" ? (
+                                  <span className="status-badge restricted">
+                                    ⛔ Restricted
+                                  </span>
+                                ) : doc.paymentStatus === "overdue" ? (
+                                  <span className="status-badge overdue">
+                                    ⚠️ Overdue
+                                  </span>
+                                ) : doc.commissionDue > 0 ? (
+                                  <span className="status-badge pending">
+                                    ⏳ Pending
+                                  </span>
+                                ) : (
+                                  <span className="status-badge paid">
+                                    ✅ Paid
+                                  </span>
+                                )}
+                              </td>
+                              <td>
+                                {doc.commissionDue > 0 ? (
+                                  <div className="commission-action">
+                                    <input
+                                      type="text"
+                                      placeholder="Transaction ID"
+                                      value={
+                                        paymentTransactionId[doc.doctorId] || ""
+                                      }
+                                      onChange={(e) =>
+                                        setPaymentTransactionId({
+                                          ...paymentTransactionId,
+                                          [doc.doctorId]: e.target.value,
+                                        })
+                                      }
+                                      onClick={(e) => e.stopPropagation()}
+                                      onMouseDown={(e) => e.stopPropagation()}
+                                    />
+                                    <button
+                                      className="mark-paid-btn"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleMarkCommissionPaid(
+                                          doc.doctorId,
+                                          doc.commissionDue,
+                                        );
+                                      }}
+                                      disabled={
+                                        processingPayment ||
+                                        !paymentTransactionId[doc.doctorId]
+                                      }
+                                    >
+                                      {processingPayment
+                                        ? "Processing..."
+                                        : "Mark Paid"}
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <span className="paid-badge">✅ Paid</span>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })
+                      ) : (
+                        <tr>
+                          <td
+                            colSpan="7"
+                            style={{ textAlign: "center", padding: "40px" }}
+                          >
+                            No commission dues found
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -1217,8 +1210,14 @@ const handleEditImageUpload = async (e) => {
 
       {/* ✅ FIXED: Password Reset Modal */}
       {showPasswordResetModal && resetResult && (
-        <div className="modal-overlay">
-          <div className="modal-content reset-modal">
+        <div
+          className="modal-overlay"
+          onClick={() => setShowPasswordResetModal(false)}
+        >
+          <div
+            className="modal-content reset-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="modal-header">
               <h2>🔑 Password Reset Successful</h2>
               <button
@@ -1246,7 +1245,6 @@ const handleEditImageUpload = async (e) => {
               <button
                 className="email-btn"
                 onClick={() => sendLoginEmail(resetResult)}
-                title="Send Login Details"
               >
                 📧 Email Password
               </button>
@@ -1263,8 +1261,14 @@ const handleEditImageUpload = async (e) => {
 
       {/* ✅ FIXED: Commission Report Modal */}
       {showCommissionModal && commissionReport && (
-        <div className="modal-overlay">
-          <div className="modal-content commission-modal">
+        <div
+          className="modal-overlay"
+          onClick={() => setShowCommissionModal(false)}
+        >
+          <div
+            className="modal-content commission-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="modal-header">
               <h2>💰 Commission Report (1%)</h2>
               <button
@@ -1367,8 +1371,11 @@ const handleEditImageUpload = async (e) => {
 
       {/* ✅ FIXED: QR Code Modal */}
       {showQRModal && selectedDoctorQR && (
-        <div className="modal-overlay">
-          <div className="modal-content qr-modal">
+        <div className="modal-overlay" onClick={() => setShowQRModal(false)}>
+          <div
+            className="modal-content qr-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="modal-header">
               <h2>📱 {selectedDoctorQR.name}'s QR Code</h2>
               <button
@@ -1378,12 +1385,11 @@ const handleEditImageUpload = async (e) => {
                 ✕
               </button>
             </div>
-
             <div className="qr-display">
               {selectedDoctorQR.qrCodeUrl ? (
                 <img
                   src={selectedDoctorQR.qrCodeUrl}
-                  alt={`QR Code for ${selectedDoctorQR.name}`}
+                  alt="QR Code"
                   className="qr-image-large"
                 />
               ) : (
@@ -1392,7 +1398,6 @@ const handleEditImageUpload = async (e) => {
                   <p>QR Code not available</p>
                 </div>
               )}
-
               <div className="qr-details">
                 <p>
                   <strong>Doctor:</strong> {selectedDoctorQR.name}
@@ -1404,7 +1409,6 @@ const handleEditImageUpload = async (e) => {
                   <strong>Amount:</strong> ₹{selectedDoctorQR.fee}
                 </p>
               </div>
-
               <button className="print-btn" onClick={() => window.print()}>
                 🖨️ Print QR Code
               </button>
@@ -1415,8 +1419,14 @@ const handleEditImageUpload = async (e) => {
 
       {/* ✅ FIXED: Edit Doctor Modal */}
       {showEditDoctorModal && editDoctorData && (
-        <div className="modal-overlay">
-          <div className="modal-content add-doctor-modal">
+        <div
+          className="modal-overlay"
+          onClick={() => setShowEditDoctorModal(false)}
+        >
+          <div
+            className="modal-content add-doctor-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="modal-header">
               <h2>✏️ Edit Doctor</h2>
               <button
@@ -1430,7 +1440,6 @@ const handleEditImageUpload = async (e) => {
                 ✕
               </button>
             </div>
-
             <div className="form-grid">
               <div className="form-group">
                 <label>Full Name *</label>
@@ -1555,7 +1564,6 @@ const handleEditImageUpload = async (e) => {
                   placeholder="doctor@okhdfcbank"
                 />
               </div>
-
               <div className="form-group full-width">
                 <label>📸 Profile Photo</label>
                 <div className="image-upload-container">
@@ -1572,14 +1580,12 @@ const handleEditImageUpload = async (e) => {
                   >
                     {editUploading ? "Uploading..." : "Choose Photo"}
                   </label>
-
                   {editPreviewImage && (
                     <div className="image-preview">
                       <img src={editPreviewImage} alt="Preview" />
                       <p className="preview-note">Preview</p>
                     </div>
                   )}
-
                   <p className="hint">
                     Or paste image URL directly:{" "}
                     <input
@@ -1597,7 +1603,6 @@ const handleEditImageUpload = async (e) => {
                   </p>
                 </div>
               </div>
-
               <div className="form-group">
                 <label>🏥 Clinic Name</label>
                 <input
@@ -1615,7 +1620,6 @@ const handleEditImageUpload = async (e) => {
                   Leave empty to auto-generate from doctor name
                 </small>
               </div>
-              {/* 👇 ADD THIS AFTER CLINIC NAME 👇 */}
               <div className="form-group">
                 <label>📍 Address / Location</label>
                 <input
@@ -1646,7 +1650,6 @@ const handleEditImageUpload = async (e) => {
                 />
               </div>
             </div>
-
             <div className="modal-actions">
               <button
                 className="cancel-btn"
@@ -1672,8 +1675,14 @@ const handleEditImageUpload = async (e) => {
 
       {/* ✅ FIXED: Add Doctor Modal */}
       {showAddDoctorModal && (
-        <div className="modal-overlay">
-          <div className="modal-content add-doctor-modal">
+        <div
+          className="modal-overlay"
+          onClick={() => setShowAddDoctorModal(false)}
+        >
+          <div
+            className="modal-content add-doctor-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="modal-header">
               <h2>➕ Add New Doctor</h2>
               <button
@@ -1686,7 +1695,6 @@ const handleEditImageUpload = async (e) => {
                 ✕
               </button>
             </div>
-
             <div className="form-grid">
               <div className="form-group">
                 <label>Full Name *</label>
@@ -1772,10 +1780,7 @@ const handleEditImageUpload = async (e) => {
                   type="text"
                   value={newDoctor.experience}
                   onChange={(e) =>
-                    setNewDoctor({
-                      ...newDoctor,
-                      experience: e.target.value,
-                    })
+                    setNewDoctor({ ...newDoctor, experience: e.target.value })
                   }
                   placeholder="10+ years"
                 />
@@ -1805,7 +1810,6 @@ const handleEditImageUpload = async (e) => {
                   Example: name@okhdfcbank, name@paytm
                 </small>
               </div>
-
               <div className="form-group full-width">
                 <label>📸 Profile Photo</label>
                 <div className="image-upload-container">
@@ -1819,31 +1823,25 @@ const handleEditImageUpload = async (e) => {
                   <label htmlFor="doctor-image" className="file-input-label">
                     {uploading ? "Uploading..." : "Choose Photo"}
                   </label>
-
                   {previewImage && (
                     <div className="image-preview">
                       <img src={previewImage} alt="Preview" />
                       <p className="preview-note">Preview</p>
                     </div>
                   )}
-
                   {newDoctor.imageUrl && !previewImage && (
                     <div className="image-preview">
                       <img src={newDoctor.imageUrl} alt="Uploaded" />
                       <p className="preview-note">Uploaded photo</p>
                     </div>
                   )}
-
                   <p className="hint">
                     Or paste image URL directly:{" "}
                     <input
                       type="text"
                       value={newDoctor.imageUrl}
                       onChange={(e) =>
-                        setNewDoctor({
-                          ...newDoctor,
-                          imageUrl: e.target.value,
-                        })
+                        setNewDoctor({ ...newDoctor, imageUrl: e.target.value })
                       }
                       placeholder="https://example.com/doctor.jpg"
                       className="url-input"
@@ -1851,7 +1849,6 @@ const handleEditImageUpload = async (e) => {
                   </p>
                 </div>
               </div>
-
               <div className="form-group">
                 <label>🏥 Clinic Name</label>
                 <input
@@ -1866,8 +1863,6 @@ const handleEditImageUpload = async (e) => {
                   Leave empty to auto-generate from doctor name
                 </small>
               </div>
-
-              {/* 👇 NEW ADDRESS FIELD - ADDED HERE 👇 */}
               <div className="form-group">
                 <label>📍 Address / Location</label>
                 <input
@@ -1878,9 +1873,7 @@ const handleEditImageUpload = async (e) => {
                   }
                   placeholder="e.g., Downtown, Mumbai"
                 />
-                <small className="hint">Area, city or full address</small>
               </div>
-
               <div className="form-group full-width">
                 <label>Commission Percentage</label>
                 <input
@@ -1898,7 +1891,6 @@ const handleEditImageUpload = async (e) => {
                 <p className="note">Default: 1% platform commission</p>
               </div>
             </div>
-
             <div className="modal-actions">
               <button
                 className="cancel-btn"
@@ -1996,7 +1988,6 @@ const handleEditImageUpload = async (e) => {
             </div>
           </div>
 
-          {/* Commission Due Summary Card - MOVED HERE */}
           {totalCommissionDue > 0 && (
             <div className="verification-summary-card commission-card">
               <div className="summary-header">
@@ -2110,8 +2101,6 @@ const handleEditImageUpload = async (e) => {
 
           <div className="appointments-list">
             <h2>All Appointments ({appointments.length})</h2>
-
-            {/* Desktop Table */}
             <div className="appointments-table">
               <table>
                 <thead>
@@ -2158,8 +2147,6 @@ const handleEditImageUpload = async (e) => {
                 </tbody>
               </table>
             </div>
-
-            {/* Mobile Cards */}
             <div className="appointments-cards">
               {appointments.map((apt) => (
                 <div key={apt.appointmentId} className="appointment-card">
@@ -2171,7 +2158,6 @@ const handleEditImageUpload = async (e) => {
                         : apt.status}
                     </span>
                   </div>
-
                   <div className="appointment-card-body">
                     <div className="appointment-info-item">
                       <span className="info-label">👨‍⚕️ Doctor</span>
@@ -2206,7 +2192,6 @@ const handleEditImageUpload = async (e) => {
                       </span>
                     </div>
                   </div>
-
                   <div className="appointment-card-footer">
                     <div className="appointment-amount">₹{apt.amount}</div>
                     <div className="appointment-commission">
@@ -2215,7 +2200,6 @@ const handleEditImageUpload = async (e) => {
                   </div>
                 </div>
               ))}
-
               {appointments.length === 0 && (
                 <div className="no-appointments-mobile">
                   <p>No appointments found</p>
@@ -2243,12 +2227,10 @@ const handleEditImageUpload = async (e) => {
                 className="add-doctor-btn"
                 onClick={() => setShowAddDoctorModal(true)}
               >
-                <span>➕</span>
-                Add New Doctor
+                <span>➕</span>Add New Doctor
               </button>
             </div>
           </div>
-
           <div className="doctor-list-grid">
             {doctors && doctors.length > 0 ? (
               doctors.map((doc) => (
@@ -2271,7 +2253,6 @@ const handleEditImageUpload = async (e) => {
                       </span>
                     </div>
                   </div>
-
                   <div className="doctor-card-details">
                     <p>
                       <strong>📧 Email:</strong> {doc.email}
@@ -2314,7 +2295,6 @@ const handleEditImageUpload = async (e) => {
                       <p className="restricted-badge">⛔ Account Restricted</p>
                     )}
                   </div>
-
                   <div className="doctor-card-stats">
                     <div className="stat">
                       <span>Appointments</span>
@@ -2331,7 +2311,6 @@ const handleEditImageUpload = async (e) => {
                       </strong>
                     </div>
                   </div>
-
                   <div className="doctor-card-actions">
                     <button
                       className="action-btn qr-btn"
@@ -2353,11 +2332,11 @@ const handleEditImageUpload = async (e) => {
                         if (doc.password) {
                           navigator.clipboard
                             .writeText(doc.password)
-                            .then(() => {
+                            .then(() =>
                               alert(
                                 `✅ Password copied!\n\nPassword: ${doc.password}\n\nNow paste in login form`,
-                              );
-                            });
+                              ),
+                            );
                         } else {
                           alert(`❌ Password not found`);
                         }
