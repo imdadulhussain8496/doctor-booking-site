@@ -1,6 +1,6 @@
 // Disable console.log in production
-if (process.env.NODE_ENV === 'production') {
-    console.log = function() {};
+if (process.env.NODE_ENV === "production") {
+  console.log = function () {};
 }
 
 require("dotenv").config();
@@ -29,6 +29,16 @@ const availabilityRoutes = require("./routes/availabilityRoutes");
 // ✅ IMPORT ENHANCED EMAIL SERVICE
 const emailService = require("./utils/emailService");
 
+// ✅ HELPER FUNCTION - PUT IT HERE
+function convertTo12Hour(time24) {
+  if (!time24) return "";
+  let [hours, minutes] = time24.split(":");
+  hours = parseInt(hours);
+  const ampm = hours >= 12 ? "PM" : "AM";
+  hours = hours % 12 || 12;
+  return `${hours}:${minutes} ${ampm}`;
+}
+
 // ✅ CONNECT TO MONGODB
 connectDB().catch(async (error) => {
   console.error("❌ Database connection failed:", error);
@@ -53,8 +63,8 @@ app.use(
 );
 
 // ✅ Body parsing middleware with increased limit
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 // ✅ Cookie parser middleware (IMPORTANT for HttpOnly cookies)
 app.use(cookieParser());
@@ -811,13 +821,14 @@ app.get("/api/appointments/:email", async (req, res) => {
   }
 });
 
-// ✅ GET AVAILABLE TIME SLOTS - FIXED WITH 12:45 PM
+// ✅ GET AVAILABLE TIME SLOTS - WITH LUNCH BREAK SUPPORT
 app.get("/api/available-slots", async (req, res) => {
   try {
     const { doctorName, date } = req.query;
 
     console.log("🔍 Checking available slots for:", doctorName, "on", date);
 
+    // Get booked appointments
     const bookedAppointments = await Appointment.find({
       "doctor.name": doctorName,
       appointmentDate: date,
@@ -826,20 +837,84 @@ app.get("/api/available-slots", async (req, res) => {
 
     const bookedTimes = bookedAppointments.map((apt) => apt.appointmentTime);
 
-   const allSlots = [
-  "9:00 AM", "9:15 AM", "9:30 AM", "9:45 AM",
-  "10:00 AM", "10:15 AM", "10:30 AM", "10:45 AM",
-  "11:00 AM", "11:15 AM", "11:30 AM", "11:45 AM",
-  "12:00 PM", "12:15 PM", "12:30 PM", "12:45 PM",
-  "2:00 PM", "2:15 PM", "2:30 PM", "2:45 PM",
-  "3:00 PM", "3:15 PM", "3:30 PM", "3:45 PM",
-  "4:00 PM", "4:15 PM", "4:30 PM", "4:45 PM",
-  "5:00 PM", "5:15 PM"
-];
+    // Get doctor's availability with lunch breaks
+    const doctor = await Doctor.findOne({ name: doctorName });
+    let lunchBreak = null;
 
-    const availableSlots = allSlots.filter(
-      (slot) => !bookedTimes.includes(slot),
-    );
+    if (doctor) {
+      const Availability = require("./models/Availability");
+      const availability = await Availability.findOne({
+        doctorId: doctor.doctorId,
+      });
+
+      // Get day of week (0 = Sunday, 1 = Monday, etc.)
+      const dayOfWeek = new Date(date).getDay();
+
+      if (availability && availability.weeklySchedule) {
+        const daySchedule = availability.weeklySchedule.find(
+          (s) => s.day === dayOfWeek,
+        );
+        // Get lunch break and convert to 12-hour format
+        if (daySchedule && daySchedule.breaks && daySchedule.breaks[0]) {
+          lunchBreak = {
+            start: convertTo12Hour(daySchedule.breaks[0].start),
+            end: convertTo12Hour(daySchedule.breaks[0].end),
+          };
+          console.log(
+            "🍽️ Lunch break found:",
+            lunchBreak.start,
+            "-",
+            lunchBreak.end,
+          );
+        }
+      }
+    }
+
+    const allSlots = [
+      "9:00 AM",
+      "9:15 AM",
+      "9:30 AM",
+      "9:45 AM",
+      "10:00 AM",
+      "10:15 AM",
+      "10:30 AM",
+      "10:45 AM",
+      "11:00 AM",
+      "11:15 AM",
+      "11:30 AM",
+      "11:45 AM",
+      "12:00 PM",
+      "12:15 PM",
+      "12:30 PM",
+      "12:45 PM",
+      "2:00 PM",
+      "2:15 PM",
+      "2:30 PM",
+      "2:45 PM",
+      "3:00 PM",
+      "3:15 PM",
+      "3:30 PM",
+      "3:45 PM",
+      "4:00 PM",
+      "4:15 PM",
+      "4:30 PM",
+      "4:45 PM",
+      "5:00 PM",
+      "5:15 PM",
+    ];
+
+    // Filter out booked slots
+    let availableSlots = allSlots.filter((slot) => !bookedTimes.includes(slot));
+
+    // Filter out lunch break slots (both in same 12-hour format)
+    if (lunchBreak) {
+      availableSlots = availableSlots.filter((slot) => {
+        return slot < lunchBreak.start || slot > lunchBreak.end;
+      });
+      console.log(
+        `🍽️ Removed lunch break slots (${lunchBreak.start} - ${lunchBreak.end})`,
+      );
+    }
 
     console.log("✅ Available slots:", availableSlots.length);
 
@@ -848,6 +923,7 @@ app.get("/api/available-slots", async (req, res) => {
       bookedSlots: bookedTimes,
       availableSlots,
       totalSlots: allSlots.length,
+      lunchBreak: lunchBreak,
       doctor: doctorName,
       date: date,
     });

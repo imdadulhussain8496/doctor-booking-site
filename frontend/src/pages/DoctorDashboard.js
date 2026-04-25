@@ -74,6 +74,13 @@ function DoctorDashboard() {
     sunday: { start: "09:00", end: "17:00", enabled: false },
   });
 
+  // Lunch Break State
+  const [lunchBreak, setLunchBreak] = useState({
+    enabled: false,
+    start: "13:00",
+    end: "14:00",
+  });
+
   // 🆕 Status Toggle States
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [isActive, setIsActive] = useState(doctor?.isActive ?? true);
@@ -90,6 +97,9 @@ function DoctorDashboard() {
 
   useEffect(() => {
     if (doctor && doctorId) {
+      console.log("🔍 Doctor from context:", doctor);
+      console.log("🔍 doctor.isActive value:", doctor?.isActive);
+
       fetchAllData();
       fetchAvailability();
       fetchPaymentHistory();
@@ -120,31 +130,38 @@ function DoctorDashboard() {
     }
   };
 
-  // 🆕 Toggle doctor active status
-  const toggleDoctorStatus = async () => {
-    const newStatus = !isActive;
+  // Save doctor active status (saves whatever is selected in modal)
+  const saveDoctorStatus = async () => {
+    setProcessingPayment(true);
+
     try {
+      console.log(`💾 Saving status: ${isActive ? "Active" : "Inactive"}`);
+
       const response = await axios.patch(
         `/api/doctor/toggle-status/${doctorId}`,
-        {
-          isActive: newStatus,
-        },
+        { isActive: isActive },
       );
 
       if (response.data.success) {
-        setIsActive(newStatus);
-        if (doctor) doctor.isActive = newStatus;
+        if (doctor) doctor.isActive = isActive;
+
+        localStorage.setItem("statusChanged", Date.now().toString());
+
         showNotificationMsg(
-          newStatus
+          isActive
             ? "✅ You are now Active - Patients can book appointments"
             : "🔴 You are now Inactive - Patients cannot book appointments",
-          newStatus ? "success" : "error",
+          "success",
         );
         setShowStatusModal(false);
+      } else {
+        showNotificationMsg("❌ Failed to update status", "error");
       }
     } catch (error) {
-      console.error("Error toggling status:", error);
+      console.error("Error saving status:", error);
       showNotificationMsg("❌ Failed to update status", "error");
+    } finally {
+      setProcessingPayment(false);
     }
   };
 
@@ -498,27 +515,46 @@ function DoctorDashboard() {
         saturday: 6,
       };
       const weeklySchedule = [];
+
       for (const [dayName, data] of Object.entries(availability)) {
         const day = daysMap[dayName];
         if (day !== undefined) {
+          // Create breaks array if lunch is enabled
+          const breaks = [];
+          if (lunchBreak.enabled && data.enabled) {
+            breaks.push({
+              start: lunchBreak.start,
+              end: lunchBreak.end,
+              reason: "Lunch",
+            });
+          }
+
           weeklySchedule.push({
             day,
             isAvailable: data.enabled,
             timeRanges: data.enabled
               ? [{ start: data.start, end: data.end }]
               : [],
-            breaks: [],
+            breaks: breaks, // ← Sending breaks to backend
           });
         }
       }
+
+      console.log("📤 Saving schedule with breaks:", weeklySchedule);
+
       const response = await axios.put(`/api/availability/${doctorId}/weekly`, {
         weeklySchedule,
       });
+
       if (response.data.success) {
-        showNotificationMsg("✅ Availability updated successfully!", "success");
+        showNotificationMsg(
+          "✅ Availability updated with lunch break!",
+          "success",
+        );
       }
     } catch (error) {
-      showNotificationMsg("✅ Availability saved locally!", "success");
+      console.error("Error saving availability:", error);
+      showNotificationMsg("❌ Failed to save availability", "error");
     }
   };
 
@@ -690,15 +726,15 @@ function DoctorDashboard() {
   });
 
   // Filter patients based on search query
-const filteredPatients = patients.filter((patient) => {
-  if (!searchQuery.trim()) return true;  // ← add .trim() here
-  const query = searchQuery.trim().toLowerCase();  // ← add .trim() here
-  return (
-    patient.name?.toLowerCase().includes(query) ||
-    patient.email?.toLowerCase().includes(query) ||
-    patient.phone?.includes(query)
-  );
-});
+  const filteredPatients = patients.filter((patient) => {
+    if (!searchQuery.trim()) return true; // ← add .trim() here
+    const query = searchQuery.trim().toLowerCase(); // ← add .trim() here
+    return (
+      patient.name?.toLowerCase().includes(query) ||
+      patient.email?.toLowerCase().includes(query) ||
+      patient.phone?.includes(query)
+    );
+  });
 
   // Filter records based on selected patient
   const filteredRecords = selectedPatientEmail
@@ -1164,7 +1200,7 @@ const filteredPatients = patients.filter((patient) => {
                 <div className="status-options">
                   <div
                     className={`status-option ${isActive === true ? "active" : ""}`}
-                    onClick={() => setIsActive(true)}
+                    onClick={() => setIsActive(true)} // ← ADD THIS LINE
                   >
                     <div className="status-option-icon">🟢</div>
                     <div className="status-option-content">
@@ -1178,7 +1214,7 @@ const filteredPatients = patients.filter((patient) => {
 
                   <div
                     className={`status-option ${isActive === false ? "active" : ""}`}
-                    onClick={() => setIsActive(false)}
+                    onClick={() => setIsActive(false)} // ← ADD THIS LINE
                   >
                     <div className="status-option-icon">🔴</div>
                     <div className="status-option-content">
@@ -1200,10 +1236,7 @@ const filteredPatients = patients.filter((patient) => {
                   </ul>
                 </div>
 
-                <button
-                  className="save-status-btn"
-                  onClick={toggleDoctorStatus}
-                >
+                <button className="save-status-btn" onClick={saveDoctorStatus}>
                   Save Status
                 </button>
               </div>
@@ -1890,6 +1923,76 @@ const filteredPatients = patients.filter((patient) => {
                 </div>
               ))}
             </div>
+
+            {/* 🆕 LUNCH BREAK SECTION */}
+            <div
+              style={{
+                marginTop: "20px",
+                padding: "15px",
+                border: "1px solid #e2e8f0",
+                borderRadius: "12px",
+                backgroundColor: "#fefce8",
+              }}
+            >
+              <label
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  cursor: "pointer",
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={lunchBreak.enabled}
+                  onChange={(e) =>
+                    setLunchBreak({ ...lunchBreak, enabled: e.target.checked })
+                  }
+                />
+                <strong>
+                  🍽️ Add Lunch Break (Clinic closed during this time)
+                </strong>
+              </label>
+              {lunchBreak.enabled && (
+                <div
+                  style={{
+                    marginTop: "12px",
+                    display: "flex",
+                    gap: "15px",
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <span>Break Time:</span>
+                  <input
+                    type="time"
+                    value={lunchBreak.start}
+                    onChange={(e) =>
+                      setLunchBreak({ ...lunchBreak, start: e.target.value })
+                    }
+                    style={{
+                      padding: "8px 12px",
+                      borderRadius: "6px",
+                      border: "1px solid #ccc",
+                    }}
+                  />
+                  <span>to</span>
+                  <input
+                    type="time"
+                    value={lunchBreak.end}
+                    onChange={(e) =>
+                      setLunchBreak({ ...lunchBreak, end: e.target.value })
+                    }
+                    style={{
+                      padding: "8px 12px",
+                      borderRadius: "6px",
+                      border: "1px solid #ccc",
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+
             <button
               className="save-availability-btn"
               onClick={updateAvailability}

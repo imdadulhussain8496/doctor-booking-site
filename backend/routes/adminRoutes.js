@@ -1405,20 +1405,21 @@ router.get("/doctors/stats", async (req, res) => {
   }
 });
 
-// ✅ GET ALL ACTIVE DOCTORS WITH PAGINATION
+// ✅ GET ALL DOCTORS WITH PAGINATION (excluding soft-deleted)
 router.get("/doctors", async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 20;
     const skip = (page - 1) * limit;
 
-    const doctors = await Doctor.find({ isActive: true })
+    // Exclude soft-deleted doctors
+    const doctors = await Doctor.find({ deletedAt: null })
       .select("+password")
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(limit); // ← ONLY 20 DOCTORS AT A TIME
+      .limit(limit);
 
-    const total = await Doctor.countDocuments({ isActive: true });
+    const total = await Doctor.countDocuments({ deletedAt: null });
 
     console.log(
       `📋 Found ${doctors.length} doctors (page ${page} of ${Math.ceil(total / limit)})`,
@@ -1445,10 +1446,12 @@ router.get("/doctors", async (req, res) => {
   }
 });
 
-// ✅ GET ALL DOCTORS (including deleted)
+// ✅ GET ALL DOCTORS (excluding soft-deleted)
 router.get("/doctors/all", async (req, res) => {
   try {
-    const doctors = await Doctor.find({})
+    const doctors = await Doctor.find({ 
+      deletedAt: null  // ← Only show doctors that are NOT soft-deleted
+    })
       .select("+password")
       .sort({ createdAt: -1 });
 

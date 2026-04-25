@@ -41,14 +41,26 @@ router.put("/:doctorId/weekly", async (req, res) => {
         bufferTime: 0,
       });
     } else {
-      availability.weeklySchedule = weeklySchedule;
+      // Clear existing schedule and push new one
+      availability.weeklySchedule = [];
+      weeklySchedule.forEach(schedule => {
+        availability.weeklySchedule.push({
+          day: schedule.day,
+          isAvailable: schedule.isAvailable,
+          timeRanges: schedule.timeRanges || [],
+          breaks: schedule.breaks || []  // ← Ensure breaks are saved
+        });
+      });
     }
 
     availability.updatedAt = new Date();
     await availability.save();
 
+    console.log("✅ Saved availability with breaks:", JSON.stringify(availability.weeklySchedule.map(s => ({ day: s.day, breaks: s.breaks }))));
+
     res.json({ success: true, availability });
   } catch (error) {
+    console.error("Error saving availability:", error);
     res.status(500).json({ success: false, error: error.message });
   }
 });

@@ -10,7 +10,7 @@ function DoctorLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const { doctorLogin } = useAuth();  // ← FIXED: Changed from "login" to "doctorLogin"
+  const { doctorLogin } = useAuth(); // ← FIXED: Changed from "login" to "doctorLogin"
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -20,15 +20,20 @@ function DoctorLogin() {
 
     try {
       const cleanedPassword = password.trim();
-      
+
       console.log("🔐 Doctor login attempt:", email);
       console.log("Password length:", cleanedPassword.length);
+      console.log("doctorLogin function:", doctorLogin);
 
-      const result = await doctorLogin(email.trim(), cleanedPassword);  // ← FIXED
+      const result = await doctorLogin(email.trim(), cleanedPassword);
+
+      console.log("Login result:", result);
 
       if (result.success) {
-        navigate("/doctor-dashboard");
+        console.log("✅ Success! Navigating to dashboard...");
+        window.location.href = "/doctor-dashboard";
       } else {
+        console.log("❌ Failed:", result.message);
         setError(result.message || "Invalid email or password");
       }
     } catch (error) {
