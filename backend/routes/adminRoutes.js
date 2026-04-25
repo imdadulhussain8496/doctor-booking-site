@@ -7,10 +7,10 @@ const Doctor = require("../models/Doctor");
 const PaymentHistory = require("../models/PaymentHistory");
 const { sendEmail } = require("../utils/emailService");
 
-// Simple admin auth (for demo - we'll add proper auth later)
+// Admin auth - Using environment variables for security
 const ADMIN_CREDENTIALS = {
-  username: "admin",
-  password: "doctor2026",
+  username: process.env.ADMIN_USERNAME || "admin",
+  password: process.env.ADMIN_PASSWORD || "hussainsilba",
 };
 
 // ✅ Generate random password WITHOUT SPACES

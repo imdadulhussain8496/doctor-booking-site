@@ -9,6 +9,7 @@ const app = express();
 const path = require("path");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
+const rateLimit = require('express-rate-limit');
 
 // ✅ ADD CRON JOB FOR COMMISSION REMINDERS
 const cron = require("node-cron");
@@ -62,6 +63,19 @@ app.use(
   }),
 );
 
+// ✅ Rate limiter - Prevents brute force attacks on login
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // 5 failed attempts
+  message: { 
+    success: false, 
+    message: 'Too many login attempts. Please try again after 15 minutes.' 
+  },
+  skipSuccessfulRequests: true,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // ✅ Body parsing middleware with increased limit
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
@@ -71,6 +85,10 @@ app.use(cookieParser());
 
 // ✅ Serve static files from uploads directory
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+// ✅ Apply rate limiting to login endpoints (Prevent brute force attacks)
+app.use('/api/admin/login', loginLimiter);
+app.use('/api/doctor/login', loginLimiter);
 
 // ✅ REGISTER ADMIN ROUTES
 console.log("📝 Registering admin routes...");

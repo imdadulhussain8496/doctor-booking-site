@@ -66,12 +66,6 @@ function AdminLogin() {
           >
             {loading ? 'Logging in...' : 'Login to Dashboard'}
           </button>
-
-          <div className="demo-credentials">
-            <p><strong>Demo Credentials:</strong></p>
-            <p>Username: <code>admin</code></p>
-            <p>Password: <code>doctor2026</code></p>
-          </div>
         </form>
       </div>
     </div>
