@@ -16,7 +16,7 @@ import DoctorDashboard from "./pages/DoctorDashboard";
 
 // Set axios defaults
 axios.defaults.withCredentials = true;
-axios.defaults.baseURL = process.env.REACT_APP_API_URL || "https://doctorbooking-djbq.onrender.com";
+axios.defaults.baseURL = "https://doctorbooking-djbq.onrender.com";
 
 function App() {
   // State Management
