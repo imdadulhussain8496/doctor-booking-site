@@ -309,10 +309,12 @@ router.get("/me", async (req, res) => {
 
 // ✅ LOGOUT ROUTE (ADD THIS)
 router.post("/logout", async (req, res) => {
+  const isProduction = process.env.NODE_ENV === "production";
+  
   res.clearCookie("authToken", {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "lax",
   });
   res.json({ success: true, message: "Logged out successfully" });
 });
@@ -367,10 +369,12 @@ router.post("/login", async (req, res) => {
         );
 
         // ✅ SET HTTPONLY COOKIE
+        const isProduction = process.env.NODE_ENV === "production";
+
         res.cookie("authToken", token, {
           httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: "lax",
+          secure: isProduction,
+          sameSite: isProduction ? "none" : "lax",
           maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
         });
 
@@ -454,10 +458,12 @@ router.post("/login", async (req, res) => {
       );
 
       // ✅ SET HTTPONLY COOKIE
+      const isProduction = process.env.NODE_ENV === "production";
+
       res.cookie("authToken", token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
+        secure: isProduction,
+        sameSite: isProduction ? "none" : "lax",
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
 
