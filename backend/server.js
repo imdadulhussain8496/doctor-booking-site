@@ -9,7 +9,7 @@ const app = express();
 const path = require("path");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
-const rateLimit = require('express-rate-limit');
+const rateLimit = require("express-rate-limit");
 
 // ✅ ADD CRON JOB FOR COMMISSION REMINDERS
 const cron = require("node-cron");
@@ -56,7 +56,10 @@ connectDB().catch(async (error) => {
 // ✅ CORS - Allow credentials for cookies
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: [
+      "http://localhost:3000",
+      "https://doctorbookingonline.netlify.app",
+    ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
@@ -67,9 +70,9 @@ app.use(
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 5, // 5 failed attempts
-  message: { 
-    success: false, 
-    message: 'Too many login attempts. Please try again after 15 minutes.' 
+  message: {
+    success: false,
+    message: "Too many login attempts. Please try again after 15 minutes.",
   },
   skipSuccessfulRequests: true,
   standardHeaders: true,
@@ -87,8 +90,8 @@ app.use(cookieParser());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // ✅ Apply rate limiting to login endpoints (Prevent brute force attacks)
-app.use('/api/admin/login', loginLimiter);
-app.use('/api/doctor/login', loginLimiter);
+app.use("/api/admin/login", loginLimiter);
+app.use("/api/doctor/login", loginLimiter);
 
 // ✅ REGISTER ADMIN ROUTES
 console.log("📝 Registering admin routes...");
