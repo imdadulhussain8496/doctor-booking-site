@@ -103,9 +103,10 @@ function AdminDashboard() {
     type: "",
   });
 
-  // Set axios defaults
-  axios.defaults.withCredentials = true;
-  axios.defaults.baseURL = "http://localhost:5000";
+// Set axios defaults
+axios.defaults.withCredentials = true;
+axios.defaults.baseURL = "https://doctorbooking-djbq.onrender.com";
+console.log("✅ AdminDashboard API Base URL set to:", axios.defaults.baseURL);
 
   // ✅ Logout handler
   const handleLogout = () => {

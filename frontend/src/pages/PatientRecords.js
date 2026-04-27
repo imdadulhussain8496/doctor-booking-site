@@ -104,7 +104,7 @@ function PatientRecords() {
         <h2>Invalid Access</h2>
         <p>No email address provided. Please go back to your appointments.</p>
         <button
-          className="home-btn"
+          className="patient-home-btn"
           onClick={() => (window.location.href = "/")}
         >
           Go to Home

@@ -16,7 +16,6 @@ import DoctorDashboard from "./pages/DoctorDashboard";
 
 // Set axios defaults
 axios.defaults.withCredentials = true;
-axios.defaults.baseURL = "https://doctorbooking-djbq.onrender.com";
 
 function App() {
   // State Management
@@ -78,7 +77,7 @@ function App() {
       }
 
       const response = await axios.get(
-        `/api/availability/${doctor.doctorId || doctor.id}/slots/${dateToFetch}`,
+        `https://doctorbooking-djbq.onrender.com/api/availability/${doctor.doctorId || doctor.id}/slots/${dateToFetch}`,
       );
 
       if (response.data.success && response.data.slots) {
@@ -187,7 +186,7 @@ function App() {
   const fetchDoctors = async () => {
     try {
       const response = await axios.get(
-        "/api/admin/doctors?limit=20&t=" + Date.now(),
+        "https://doctorbooking-djbq.onrender.com/api/admin/doctors?limit=20&t=" + Date.now(),
       );
       if (response.data.success) {
         const doctors = response.data.doctors;
@@ -211,7 +210,7 @@ function App() {
               const currentTime = today.getHours() * 60 + today.getMinutes();
 
               let slotsRes = await axios.get(
-                `/api/availability/${doctor.doctorId || doctor.id}/slots/${todayStr}`,
+                `https://doctorbooking-djbq.onrender.com/api/availability/${doctor.doctorId || doctor.id}/slots/${todayStr}`,
               );
               let targetDate = "Today";
               let futureSlots = [];
@@ -235,7 +234,7 @@ function App() {
                 const tomorrowStr = tomorrow.toISOString().split("T")[0];
 
                 slotsRes = await axios.get(
-                  `/api/availability/${doctor.doctorId || doctor.id}/slots/${tomorrowStr}`,
+                  `https://doctorbooking-djbq.onrender.com/api/availability/${doctor.doctorId || doctor.id}/slots/${tomorrowStr}`,
                 );
                 targetDate = "Tomorrow";
 
@@ -325,7 +324,7 @@ function App() {
       if (selectedDoctor && bookingDetails.date) {
         setLoadingSlots(true);
         try {
-          const response = await axios.get(`/api/available-slots`, {
+          const response = await axios.get(`https://doctorbooking-djbq.onrender.com/api/available-slots`, {
             params: {
               doctorName: selectedDoctor.name,
               date: bookingDetails.date,
@@ -402,7 +401,7 @@ function App() {
 
     setLoading(true);
     try {
-      const response = await axios.get(`/api/appointments/${email}`);
+      const response = await axios.get(`https://doctorbooking-djbq.onrender.com/api/appointments/${email}`);
       if (
         response.data.success &&
         response.data.appointments &&
@@ -424,7 +423,7 @@ function App() {
   const handlePaymentDone = async () => {
     setLoading(true);
     try {
-      const checkSlotResponse = await axios.get(`/api/available-slots`, {
+      const checkSlotResponse = await axios.get(`https://doctorbooking-djbq.onrender.com/api/available-slots`, {
         params: { doctorName: selectedDoctor.name, date: bookingDetails.date },
       });
 
@@ -457,7 +456,7 @@ function App() {
         paymentStatus: "pending",
       };
 
-      const response = await axios.post("/api/appointments", appointmentData);
+      const response = await axios.post("https://doctorbooking-djbq.onrender.com/api/appointments", appointmentData);
       if (response.data.success) {
         setPaymentConfirmed(true);
         setStep(4);
@@ -470,7 +469,7 @@ function App() {
           "❌ This time slot was just booked! Please select a different time.",
         );
         if (selectedDoctor && bookingDetails.date) {
-          const response = await axios.get(`/api/available-slots`, {
+          const response = await axios.get(`https://doctorbooking-djbq.onrender.com/api/available-slots`, {
             params: {
               doctorName: selectedDoctor.name,
               date: bookingDetails.date,

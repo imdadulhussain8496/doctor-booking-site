@@ -74,8 +74,9 @@ body {
   flex-wrap: nowrap;
 }
 
+/* ALL nav buttons - UNIFIED consistent style */
 .nav-btn {
-  background: transparent;
+  background: rgba(255, 255, 255, 0.15);
   color: white;
   border: none;
   padding: 0.4rem 1.8rem;
@@ -88,35 +89,21 @@ body {
 }
 
 .nav-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.3);
   transform: translateY(-2px);
 }
 
-.nav-btn.home-btn {
-  background: transparent;
-  border: none;
-}
-
-.nav-btn.home-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.nav-btn.admin-btn {
-  background: transparent;
-  border: none;
-}
-
-.nav-btn.admin-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
+/* All specific button types use same style */
+.nav-btn.home-btn,
+.nav-btn.admin-btn,
 .nav-btn.doctor-btn {
-  background: transparent;
-  border: none;
+  background: rgba(255, 255, 255, 0.15);
 }
 
+.nav-btn.home-btn:hover,
+.nav-btn.admin-btn:hover,
 .nav-btn.doctor-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .home-mobile-menu-btn {
@@ -2772,28 +2759,29 @@ body {
 /* Status Badge Styles - Home Page Only */
 .home-doctor-status-badge {
   position: absolute;
-  top: 15px;
-  right: 15px;
-  padding: 2px 6px;
-  font-size: 9px;
+  top: 12px;
+  right: 12px;
+  padding: 4px 10px;
+  font-size: 10px;
   font-weight: 600;
+  border-radius: 20px;
   z-index: 10;
   font-family: monospace;
-  
+  letter-spacing: 0.5px;
 }
 
 /* Active (Online) Badge */
 .home-doctor-status-badge.active {
- 
+  background: #d1fae5;
   color: #065f46;
-  
+  border: 1px solid #a7f3d0;
 }
 
 /* Inactive (Offline) Badge */
 .home-doctor-status-badge.inactive {
-
+  background: #fee2e2;
   color: #991b1b;
- 
+  border: 1px solid #fecaca;
 }
 
 /* Mobile Adjustment */
@@ -2801,31 +2789,30 @@ body {
   .home-doctor-status-badge {
     top: 10px;
     right: 10px;
-    padding: 3px 10px;
-    font-size: 10px;
+    padding: 3px 8px;
+    font-size: 9px;
   }
 }
 
 /* Small Mobile Adjustment */
 @media (max-width: 480px) {
   .home-doctor-status-badge {
-    top: 10px;
-    right: 10px;
-    padding: 1px 6px;
-    font-size: 7px;
+    top: 8px;
+    right: 8px;
+    padding: 2px 6px;
+    font-size: 8px;
   }
 }
 
 /* iPad Adjustment */
 @media (min-width: 768px) and (max-width: 1024px) {
   .home-doctor-status-badge {
-    top: 15px;
-    right: 10px;
-    padding: 2px 6px;
+    top: 12px;
+    right: 12px;
+    padding: 4px 10px;
     font-size: 10px;
   }
 }
-
 
 /* ========================================
    VIEW ALL SLOTS BUTTON & MODAL

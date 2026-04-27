@@ -6,9 +6,8 @@ import { useAuth } from "../context/AuthContext";
 import "./Doctor.css";
 
 function DoctorDashboard() {
-  const { doctor, logout, loading } = useAuth();
-  const navigate = useNavigate();
-
+  const { doctor, logout, loading } = useAuth(); // ← ADD THIS LINE (MOST IMPORTANT)
+  const navigate = useNavigate(); // ← ADD THIS LINE
   const doctorId = doctor?.id || doctor?.doctorId || doctor?._id;
 
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -87,7 +86,11 @@ function DoctorDashboard() {
 
   // Set axios defaults for cookies
   axios.defaults.withCredentials = true;
-  axios.defaults.baseURL = "http://localhost:5000";
+  axios.defaults.baseURL = "https://doctorbooking-djbq.onrender.com";
+  console.log(
+    "✅ DoctorDashboard API Base URL set to:",
+    axios.defaults.baseURL,
+  );
 
   useEffect(() => {
     if (!loading && !doctor) {

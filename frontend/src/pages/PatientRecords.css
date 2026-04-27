@@ -480,7 +480,7 @@ body {
   transform: translateY(-1px);
 }
 
-.home-btn {
+.patient-home-btn {
   padding: 0.5rem 1rem;
   background: #f1f5f9;
   color: #334155;
@@ -492,7 +492,7 @@ body {
   transition: all 0.2s;
 }
 
-.home-btn:hover {
+.patient-home-btn:hover {
   background: #e2e8f0;
 }
 
