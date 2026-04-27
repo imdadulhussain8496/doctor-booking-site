@@ -54,12 +54,13 @@ connectDB().catch(async (error) => {
 });
 
 // ✅ CORS - Allow credentials for cookies
+const allowedOrigins = process.env.CORS_ORIGIN 
+  ? [process.env.CORS_ORIGIN, "http://localhost:3000"]
+  : ["http://localhost:3000"];
+
 app.use(
   cors({
-    origin: [
-      "http://localhost:3000",
-      "https://doctorbookingonline.netlify.app",
-    ],
+    origin: allowedOrigins,
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
