@@ -579,7 +579,7 @@ function App() {
         <div className="header-content">
           <div className="logo-section">
             <h1 className="logo">🏥 Doctor Online</h1>
-            <p className="tagline">Healthcare Center</p>
+            <p className="tagline">Appointment Booking</p>
           </div>
           <div className="desktop-nav">
             <button
@@ -1253,7 +1253,7 @@ function App() {
         <div className="footer-content">
           <div className="footer-section">
             <h3>🏥 Doctor Online</h3>
-            <p>Healthcare Center</p>
+            <p>Appointment Booking</p>
             <p>Email: doctoronlinhelp@gmail.com</p>
           </div>
           <div className="footer-section">

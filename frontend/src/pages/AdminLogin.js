@@ -31,7 +31,7 @@ function AdminLogin() {
         <div className="admin-login-header">
           <span className="admin-icon">👨‍💼</span>
           <h1>Doctor Online</h1>
-          <p>Healthcare Center Portal</p>
+          <p>Admin Portal</p>
         </div>
 
         <form onSubmit={handleSubmit} className="admin-login-form">

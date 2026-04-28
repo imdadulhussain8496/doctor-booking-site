@@ -54,7 +54,7 @@ function DoctorLogin() {
         <div className="doctor-login-header">
           <span className="doctor-icon">👨‍⚕️</span>
           <h1>Doctor Online</h1>
-          <p>Healthcare Center - Doctor Portal</p>
+          <p>Doctor Portal</p>
         </div>
 
         <form onSubmit={handleSubmit} className="doctor-login-form">
