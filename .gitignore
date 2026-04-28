@@ -46,3 +46,4 @@ test.txt
 2026
 # Environment variable template (safe to commit)
 frontend/build/
+.vercel/
