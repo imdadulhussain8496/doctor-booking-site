@@ -3094,3 +3094,116 @@ body {
 }
 
 
+
+/* Fix for iPhone - Proper spacing and alignment */
+@media (max-width: 768px) {
+  .booking-form .form-group {
+    margin-bottom: 1.2rem;
+  }
+  
+  .booking-form .form-group label {
+    display: block;
+    margin-bottom: 0.4rem;
+    font-weight: 600;
+  }
+  
+  .booking-form input[type="date"],
+  .booking-form input[type="time"],
+  .booking-form select {
+    width: 100%;
+    padding: 0.7rem;
+    font-size: 16px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+  }
+  
+  .slot-warning {
+    margin: 0.5rem 0;
+    padding: 0.5rem;
+    font-size: 0.75rem;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+  
+  .form-actions button {
+    width: 100%;
+    padding: 0.8rem;
+  }
+}
+
+@supports (-webkit-touch-callout: none) {
+  .booking-form input,
+  .booking-form select,
+  .booking-form button {
+    border-radius: 12px;
+  }
+}
+
+/* iPhone Date Input Box Fix */
+.booking-form input[type="date"],
+.booking-form input[type="time"] {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  background: white !important;
+  border: 2px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  padding: 12px 12px !important;
+  font-size: 16px !important;
+  min-height: 48px !important;
+  width: 100% !important;
+  display: block !important;
+  color: #1e293b !important;
+}
+
+.booking-form input[type="date"]:focus,
+.booking-form input[type="time"]:focus {
+  outline: none !important;
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
+}
+
+.booking-form .form-group {
+  margin-bottom: 1rem !important;
+}
+
+.booking-form .form-group label {
+  display: block !important;
+  margin-bottom: 6px !important;
+  font-weight: 600 !important;
+}
+
+/* iPhone Date Input Box Fix - Added May 2026 */
+.booking-form input[type="date"],
+.booking-form input[type="time"] {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  background: white !important;
+  border: 2px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  padding: 12px 12px !important;
+  font-size: 16px !important;
+  min-height: 48px !important;
+  width: 100% !important;
+  display: block !important;
+  color: #1e293b !important;
+}
+
+.booking-form input[type="date"]:focus,
+.booking-form input[type="time"]:focus {
+  outline: none !important;
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
+}
+
+.booking-form .form-group {
+  margin-bottom: 1rem !important;
+}
+
+.booking-form .form-group label {
+  display: block !important;
+  margin-bottom: 6px !important;
+  font-weight: 600 !important;
+}
