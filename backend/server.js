@@ -97,6 +97,7 @@ app.use("/api/doctor/login", loginLimiter);
 // ✅ REGISTER ADMIN ROUTES
 console.log("📝 Registering admin routes...");
 app.use("/api/admin", adminRoutes);
+app.use("/api/doctors", doctorRoutes);
 console.log("✅ Admin routes registered");
 
 // ✅ REGISTER DOCTOR ROUTES
