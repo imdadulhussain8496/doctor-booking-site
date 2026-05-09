@@ -12,7 +12,7 @@ export const AuthProvider = ({ children }) => {
 
   // Set axios defaults
   axios.defaults.withCredentials = true;
-  axios.defaults.baseURL = "https://doctorbooking-djbq.onrender.com";
+  // baseURL removed - using .env instead
 
   useEffect(() => {
     checkAuth();

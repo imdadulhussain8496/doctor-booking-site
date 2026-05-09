@@ -86,7 +86,7 @@ function DoctorDashboard() {
 
   // Set axios defaults for cookies
   axios.defaults.withCredentials = true;
-  axios.defaults.baseURL = "https://doctorbooking-djbq.onrender.com";
+  // baseURL removed - using .env instead
   console.log(
     "✅ DoctorDashboard API Base URL set to:",
     axios.defaults.baseURL,

@@ -77,7 +77,7 @@ function App() {
       }
 
       const response = await axios.get(
-        `https://doctorbooking-djbq.onrender.com/api/availability/${doctor.doctorId || doctor.id}/slots/${dateToFetch}`,
+        `/api/availability/${doctor.doctorId || doctor.id}/slots/${dateToFetch}`,
       );
 
       if (response.data.success && response.data.slots) {
@@ -186,7 +186,7 @@ function App() {
   const fetchDoctors = async () => {
     try {
       const response = await axios.get(
-        "https://doctorbooking-djbq.onrender.com/api/admin/doctors?limit=20&t=" + Date.now(),
+        "/api/admin/doctors?limit=20&t=" + Date.now(),
       );
       if (response.data.success) {
         const doctors = response.data.doctors;
@@ -210,7 +210,7 @@ function App() {
               const currentTime = today.getHours() * 60 + today.getMinutes();
 
               let slotsRes = await axios.get(
-                `https://doctorbooking-djbq.onrender.com/api/availability/${doctor.doctorId || doctor.id}/slots/${todayStr}`,
+                `/api/availability/${doctor.doctorId || doctor.id}/slots/${todayStr}`,
               );
               let targetDate = "Today";
               let futureSlots = [];
@@ -234,7 +234,7 @@ function App() {
                 const tomorrowStr = tomorrow.toISOString().split("T")[0];
 
                 slotsRes = await axios.get(
-                  `https://doctorbooking-djbq.onrender.com/api/availability/${doctor.doctorId || doctor.id}/slots/${tomorrowStr}`,
+                  `/api/availability/${doctor.doctorId || doctor.id}/slots/${tomorrowStr}`,
                 );
                 targetDate = "Tomorrow";
 
@@ -324,7 +324,7 @@ function App() {
       if (selectedDoctor && bookingDetails.date) {
         setLoadingSlots(true);
         try {
-          const response = await axios.get(`https://doctorbooking-djbq.onrender.com/api/available-slots`, {
+          const response = await axios.get(`/api/available-slots`, {
             params: {
               doctorName: selectedDoctor.name,
               date: bookingDetails.date,
@@ -401,7 +401,7 @@ function App() {
 
     setLoading(true);
     try {
-      const response = await axios.get(`https://doctorbooking-djbq.onrender.com/api/appointments/${email}`);
+      const response = await axios.get(`/api/appointments/${email}`);
       if (
         response.data.success &&
         response.data.appointments &&
@@ -423,7 +423,7 @@ function App() {
   const handlePaymentDone = async () => {
     setLoading(true);
     try {
-      const checkSlotResponse = await axios.get(`https://doctorbooking-djbq.onrender.com/api/available-slots`, {
+      const checkSlotResponse = await axios.get(`/api/available-slots`, {
         params: { doctorName: selectedDoctor.name, date: bookingDetails.date },
       });
 
@@ -456,7 +456,7 @@ function App() {
         paymentStatus: "pending",
       };
 
-      const response = await axios.post("https://doctorbooking-djbq.onrender.com/api/appointments", appointmentData);
+      const response = await axios.post("/api/appointments", appointmentData);
       if (response.data.success) {
         setPaymentConfirmed(true);
         setStep(4);
@@ -469,7 +469,7 @@ function App() {
           "❌ This time slot was just booked! Please select a different time.",
         );
         if (selectedDoctor && bookingDetails.date) {
-          const response = await axios.get(`https://doctorbooking-djbq.onrender.com/api/available-slots`, {
+          const response = await axios.get(`/api/available-slots`, {
             params: {
               doctorName: selectedDoctor.name,
               date: bookingDetails.date,
@@ -578,8 +578,8 @@ function App() {
       <header className="app-header">
         <div className="header-content">
           <div className="logo-section">
-            <h1 className="logo">🏥 Doctor Online</h1>
-            <p className="tagline">Appointment Booking</p>
+            <h1 className="logo">🩺 DrAppointment</h1>
+            <p className="tagline">24/7 Doctor Booking</p>
           </div>
           <div className="desktop-nav">
             <button
@@ -1065,7 +1065,7 @@ function App() {
                           <p>✅ 1. Scan QR code and complete payment</p>
                           <p>📱 2. Save the payment screenshot</p>
                           <p>
-                            🏥 3. Show screenshot at clinic for verification
+                            🩺 3. Show screenshot at clinic for verification
                           </p>
                         </div>
                       </div>
@@ -1097,7 +1097,7 @@ function App() {
             {step === 4 && (
               <div className="step-content">
                 <div className="waiting-card minimal">
-                  <div className="waiting-icon">🏥</div>
+                  <div className="waiting-icon">🩺</div>
                   <h3>Booking Received</h3>
                   <p className="small-msg">
                     Visit clinic → Staff verifies → Get confirmation
@@ -1252,9 +1252,9 @@ function App() {
       <footer className="app-footer">
         <div className="footer-content">
           <div className="footer-section">
-            <h3>🏥 Doctor Online</h3>
-            <p>Appointment Booking</p>
-            <p>Email: doctoronlinhelp@gmail.com</p>
+            <h3>🩺 DrAppointment</h3>
+            <p>24/7 Doctor Booking</p>
+            <p>Email: support@drappointment24.com</p>
           </div>
           <div className="footer-section">
             <h4>Quick Links</h4>
@@ -1268,7 +1268,7 @@ function App() {
           </div>
         </div>
         <div className="footer-bottom">
-          <p>© 2026 Doctor Online. All rights reserved.</p>
+          <p>© 2026 DrAppointment. All rights reserved.</p>
         </div>
       </footer>
     </div>

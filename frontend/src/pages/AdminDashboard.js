@@ -105,7 +105,7 @@ function AdminDashboard() {
 
 // Set axios defaults
 axios.defaults.withCredentials = true;
-axios.defaults.baseURL = "https://doctorbooking-djbq.onrender.com";
+// baseURL removed - using .env instead
 console.log("✅ AdminDashboard API Base URL set to:", axios.defaults.baseURL);
 
   // ✅ Logout handler
