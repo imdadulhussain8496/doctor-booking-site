@@ -67,6 +67,11 @@ app.use(
   }),
 );
 
+// ✅ PUBLIC ROUTES (No authentication required)
+const publicDoctorsRouter = require("./routes/publicDoctors");
+app.use("/api/doctors", publicDoctorsRouter);
+console.log("✅ Public doctors route registered");
+
 // ✅ Rate limiter - Prevents brute force attacks on login
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -94,10 +99,11 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/api/admin/login", loginLimiter);
 app.use("/api/doctor/login", loginLimiter);
 
+
+
 // ✅ REGISTER ADMIN ROUTES
 console.log("📝 Registering admin routes...");
 app.use("/api/admin", adminRoutes);
-app.use("/api/doctors", doctorRoutes);
 console.log("✅ Admin routes registered");
 
 // ✅ REGISTER DOCTOR ROUTES
@@ -1110,3 +1116,6 @@ app.listen(PORT, () => {
   console.log("📁 Static files served from: /uploads");
   console.log("=".repeat(60) + "\n");
 });
+
+
+
