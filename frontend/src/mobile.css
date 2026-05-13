@@ -1037,3 +1037,53 @@
     border-radius: 12px;
   }
 }
+
+
+/* ========================================
+   FIX: Appointment Cards Text Overlap (Mobile)
+   ======================================== */
+
+@media (max-width: 768px) {
+
+  .appointment-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 5px !important;
+  }
+
+  .appointment-id {
+    font-size: 10px !important;
+  }
+
+  .appointment-body {
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+
+  .doctor-info {
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+
+  .doctor-icon {
+    font-size: 24px !important;
+  }
+
+  .patient-info p {
+    font-size: 13px !important;
+    margin: 3px 0 !important;
+    word-break: break-word !important;
+  }
+
+  .patient-info strong {
+    display: inline-block !important;
+    min-width: 70px !important;
+  }
+
+  .view-records-btn {
+    width: 100% !important;
+    padding: 8px !important;
+    font-size: 12px !important;
+  }
+}

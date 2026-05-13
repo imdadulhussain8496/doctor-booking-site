@@ -1180,7 +1180,7 @@ router.post("/pay-commission", async (req, res) => {
         doctor.email,
         "✅ Commission Payment Confirmation",
         emailHtml,
-        { from: process.env.FROM_EMAIL || "imdadulhussain8496@gmail.com" },
+        { from: "DrAppointment <doctoronlinhelp@gmail.com>" },
       );
       console.log(`✅ Confirmation email sent to ${doctor.email}`);
     } catch (emailError) {

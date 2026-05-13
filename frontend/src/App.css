@@ -23,8 +23,7 @@ body {
    2. HEADER & NAVIGATION
    ======================================== */
 .app-header {
-  background: linear-gradient(135deg, #1e40af, #2563eb);
-  color: white;
+  background: white; color: #1e40af;
   padding: 1rem 1rem;
   position: sticky;
   top: 0;
@@ -50,18 +49,18 @@ body {
   min-width: 150px;
 }
 
-.logo {
+.logo { color: #2563eb;  color: #2563eb; 
   font-size: 1.5rem;
   font-weight: 800;
-  background: linear-gradient(135deg, #fff, #e0f2fe);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  
+  
+  
+  
   letter-spacing: -0.5px;
   line-height: 1.2;
 }
 
-.tagline {
+.tagline { color: #3b82f6;  color: #3b82f6;  font-size: 0.75rem; color: #64748b; margin-left: 5px; 
   font-size: 0.8rem;
   opacity: 0.9;
   font-weight: 400;
@@ -77,8 +76,6 @@ body {
 
 /* ALL nav buttons - UNIFIED consistent style */
 .nav-btn {
-  background: rgba(255, 255, 255, 0.15);
-  color: white;
   border: none;
   padding: 0.4rem 1.8rem;
   border-radius: 10px;
@@ -89,7 +86,7 @@ body {
   white-space: nowrap;
 }
 
-.nav-btn:hover {
+.nav-btn:hover {:hover { background: #eef2ff; color: #1e40af; transform: translateY(-2px); } 
   background: rgba(255, 255, 255, 0.3);
   transform: translateY(-2px);
 }
@@ -98,7 +95,6 @@ body {
 .nav-btn.home-btn,
 .nav-btn.admin-btn,
 .nav-btn.doctor-btn {
-  background: rgba(255, 255, 255, 0.15);
 }
 
 .nav-btn.home-btn:hover,
@@ -109,9 +105,7 @@ body {
 
 .home-mobile-menu-btn {
   display: none;
-  background: transparent;
   border: none;
-  color: white;
   font-size: 24px;
   cursor: pointer;
   width: 44px;
@@ -276,9 +270,7 @@ body {
    ======================================== */
 .home-mobile-menu-btn {
   display: none;
-  background: transparent;
   border: none;
-  color: white;
   font-size: 24px;
   cursor: pointer;
   width: 44px;
@@ -524,13 +516,14 @@ body {
 }
 
 .booking-flow .step.active .step-circle {
+  color: white !important;
   background: #2563eb;
-  color: white;
-  border-color: #2563eb;
+  border-color: white !important;
+  color: white !important;
 }
 .booking-flow .step.completed .step-circle {
+  color: white !important;
   background: #10b981;
-  color: white;
   border-color: #10b981;
 }
 
@@ -700,8 +693,7 @@ body {
     padding: 4px 20px;
     font-size: 10px;
     margin-right: 3px;
-    background-color: #2563eb;
-    color: white;
+    background-color: #2563eb; color: white;
     border: none;
     border-radius: 40px;
     cursor: pointer;
@@ -907,8 +899,7 @@ body {
   }
 
   .home-doctor-card .home-book-btn {
-    background-color: #2563eb;
-    color: white;
+    background-color: #2563eb; color: white;
     border: none;
     padding: 7px 32px;
     border-radius: 40px;
@@ -1047,8 +1038,7 @@ body {
   }
 
   .home-doctor-card .home-book-btn {
-    background-color: #2563eb;
-    color: white;
+    background-color: #2563eb; color: white;
     border: none;
     padding: 5px 16px;
     border-radius: 40px;
@@ -1182,8 +1172,7 @@ body {
   }
 
   .home-doctor-card .home-book-btn {
-    background-color: #2563eb;
-    color: white;
+    background-color: #2563eb; color: white;
     border-radius: 10px;
     border: none;
     cursor: pointer;
@@ -1313,8 +1302,7 @@ body {
   }
 
   .home-doctor-card .home-book-btn {
-    background-color: #2563eb;
-    color: white;
+    background-color: #2563eb; color: white;
     border-radius: 40px;
     border: none;
     cursor: pointer;
@@ -1439,8 +1427,7 @@ body {
   }
 
   .home-doctor-card .home-book-btn {
-    background-color: #2563eb;
-    color: white;
+    background-color: #2563eb; color: white;
     border-radius: 40px;
     border: none;
     cursor: pointer;
@@ -1571,8 +1558,7 @@ body {
   }
 
   .home-doctor-card .home-book-btn {
-    background-color: #2563eb;
-    color: white;
+    background-color: #2563eb; color: white;
     border-radius: 40px;
     border: none;
     cursor: pointer;
@@ -1715,8 +1701,7 @@ body {
   }
 
   .home-doctor-card .home-book-btn {
-    background-color: #2563eb;
-    color: white;
+    background-color: #2563eb; color: white;
     border-radius: 40px;
     border: none;
     cursor: pointer;
@@ -1877,9 +1862,8 @@ body {
   font-size: 0.95rem;
 }
 
-.home-consultation-fee {
+.home-consultation-fee { color: white; 
   background: #2563eb;
-  color: white;
   padding: 0.5rem 1.2rem;
   border-radius: 40px;
   font-weight: 700;
@@ -1891,9 +1875,8 @@ body {
 /* ========================================
    12. BUTTONS - RESPONSIVE
    ======================================== */
-.primary-btn {
+.primary-btn { color: white; 
   background: #2563eb;
-  color: white;
   border: none;
   padding: 0.7rem 1.5rem;
   border-radius: 40px;
@@ -2048,9 +2031,8 @@ body {
   width: 100%;
 }
 
-.payment-btn {
+.payment-btn { color: white; 
   background: linear-gradient(135deg, #10b981, #059669);
-  color: white;
   border: none;
   padding: 1rem 2rem;
   border-radius: 50px;
@@ -2191,13 +2173,11 @@ body {
   gap: 0.5rem;
 }
 .footer-section h3 {
-  color: white;
   margin-bottom: 0.5rem;
   font-size: 1.2rem;
   font-weight: 600;
 }
 .footer-section h4 {
-  color: white;
   margin-bottom: 0.5rem;
   font-size: 1rem;
   font-weight: 600;
@@ -2220,7 +2200,6 @@ body {
 }
 .footer-section button:hover {
   background: rgba(255, 255, 255, 0.2);
-  color: white;
   transform: translateY(-2px);
 }
 
@@ -2273,8 +2252,8 @@ body {
   display: inline-block;
 }
 .home-btn.small {
+  color: white !important;
   background: #2563eb;
-  color: white;
   border: none;
   padding: 0.7rem 1.5rem;
   border-radius: 30px;
@@ -2454,7 +2433,6 @@ body {
 
 .slot-item:hover {
   background: #2563eb;
-  color: white;
   border-color: #2563eb;
   transform: translateY(-2px);
 }
@@ -2484,3 +2462,75 @@ body {
   border-color: #2563eb;
 }
 
+
+/* Header Logo Responsive */
+
+@media (max-width: 768px) {
+  
+  .logo-section {
+  }
+  
+  .tagline { color: #3b82f6;  color: #3b82f6;  font-size: 0.75rem; color: #64748b; margin-left: 5px; 
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+}
+
+/* Force logo size */
+
+
+@media (max-width: 768px) {
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+}
+
+.logo-section img {
+}
+
+@media (max-width: 768px) {
+  .logo-section img {
+  }
+}
+
+.logo-section img {
+}
+
+@media (max-width: 768px) {
+  .logo-section img {
+  }
+}
+
+/* Clean logo style */
+.logo {
+}
+
+.home-doctor-card .home-book-btn {
+}
+
+@media (min-width: 811px) and (max-width: 1024px) {
+  .home-doctor-card .home-book-btn {
+  }
+}
+
+/* ========================================
+   FORCE BOOK BUTTON STYLE (DO NOT REMOVE)
+   ======================================== */
+
+.home-doctor-card .home-book-btn {
+}
+
+.home-doctor-card .home-book-btn:hover {
+}
+
+/* Override any problematic media query */
+@media (min-width: 811px) and (max-width: 1024px) {
+  .home-doctor-card .home-book-btn {
+  }
+}
+
+@media (max-width: 767px) {
+  .home-doctor-card .home-book-btn {
+  }
+}

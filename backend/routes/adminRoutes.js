@@ -123,7 +123,7 @@ const sendDoctorWelcomeEmail = async (doctorEmail, doctorName, password) => {
       doctorEmail,
       "🏥 Welcome to Doctor Online - Your Account Details",
       html,
-      { from: process.env.FROM_EMAIL || "imdadulhussain8496@gmail.com" },
+      { from: "DrAppointment <doctoronlinhelp@gmail.com>" },
     );
 
     if (result.success) {
@@ -1326,7 +1326,7 @@ router.post("/send-payment-message", async (req, res) => {
       patientEmail,
       "⏳ Payment Received - Awaiting Verification",
       html,
-      { from: process.env.FROM_EMAIL || "imdadulhussain8496@gmail.com" },
+      { from: "DrAppointment <doctoronlinhelp@gmail.com>" },
     );
 
     if (result.success) {

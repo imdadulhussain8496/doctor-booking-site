@@ -585,7 +585,7 @@ const fetchDoctors = async () => {
         <div className="header-content">
           <div className="logo-section">
             <h1 className="logo">🩺 DrAppointment</h1>
-            <p className="tagline">24/7 Doctor Booking</p>
+            <p className="tagline" style={{ color: "#3b82f6" }}>24/7 Doctor Booking</p>
           </div>
           <div className="desktop-nav">
             <button
