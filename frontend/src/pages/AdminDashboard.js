@@ -53,7 +53,7 @@ function AdminDashboard() {
   // ✅ Doctor Management State
   const [showAddDoctorModal, setShowAddDoctorModal] = useState(false);
   const [showEditDoctorModal, setShowEditDoctorModal] = useState(false);
-  const [selectedDoctor, setSelectedDoctor] = useState(null);
+  //const [selectedDoctor, setSelectedDoctor] = useState(null);
 
   const [newDoctor, setNewDoctor] = useState({
     name: "",
@@ -326,24 +326,24 @@ console.log("✅ AdminDashboard API Base URL set to:", axios.defaults.baseURL);
   };
 
   // ✅ Fetch dashboard data
-  const fetchDashboardData = async (showLoader = true) => {
-    try {
-      if (showLoader) setDataLoading(true);
-      const [statsRes, appointmentsRes, doctorsRes] = await Promise.all([
-        axios.get("/api/admin/stats"),
-        axios.get("/api/admin/appointments"),
-        axios.get("/api/admin/doctors/stats"),
-      ]);
+const fetchDashboardData = async (showLoader = true) => {
+  try {
+    if (showLoader) setDataLoading(true);
+    const [statsRes, appointmentsRes, doctorsRes] = await Promise.all([
+      axios.get("/api/admin/stats"),
+      axios.get("/api/admin/appointments"),
+      axios.get("/api/admin/doctors/stats")
+    ]);
 
-      setStats(statsRes.data.stats);
-      setAppointments(appointmentsRes.data.appointments);
-    } catch (error) {
-      console.error("Error fetching dashboard data:", error);
-      showNotification("Failed to fetch dashboard data", "error");
-    } finally {
-      if (showLoader) setDataLoading(false);
-    }
-  };
+    setStats(statsRes.data.stats);
+    setAppointments(appointmentsRes.data.appointments);
+  } catch (error) {
+    console.error("Error fetching dashboard data:", error);
+    showNotification("Failed to fetch dashboard data", "error");
+  } finally {
+    if (showLoader) setDataLoading(false);
+  }
+};
 
   // ✅ Fetch commission report
   const fetchCommissionReport = async (showLoader = true) => {
