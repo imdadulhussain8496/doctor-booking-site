@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import axios from "axios";
+import api from "../api/axios";
 import { getDoctorImage } from "../utils/doctorImages";
 import "./Admin.css";
 
@@ -103,10 +103,7 @@ function AdminDashboard() {
     type: "",
   });
 
-// Set axios defaults
-axios.defaults.withCredentials = true;
-// baseURL removed - using .env instead
-console.log("✅ AdminDashboard API Base URL set to:", axios.defaults.baseURL);
+  // api.js handles withCredentials and baseURL
 
   // ✅ Logout handler
   const handleLogout = () => {
@@ -163,7 +160,7 @@ console.log("✅ AdminDashboard API Base URL set to:", axios.defaults.baseURL);
   const fetchRestrictedDoctors = async (showLoader = true) => {
     if (showLoader) setLoadingRestricted(true);
     try {
-      const response = await axios.get("/api/admin/restricted-doctors");
+      const response = await api.get("/api/admin/restricted-doctors");
       if (response.data.success) {
         setRestrictedDoctors(response.data.doctors);
       }
@@ -177,7 +174,7 @@ console.log("✅ AdminDashboard API Base URL set to:", axios.defaults.baseURL);
   // ✅ Fetch overdue doctors
   const fetchOverdueDoctors = async () => {
     try {
-      const response = await axios.get("/api/admin/overdue-doctors");
+      const response = await api.get("/api/admin/overdue-doctors");
       if (response.data.success) {
         setOverdueDoctors(response.data.doctors);
       }
@@ -193,9 +190,7 @@ console.log("✅ AdminDashboard API Base URL set to:", axios.defaults.baseURL);
     }
 
     try {
-      const response = await axios.post(
-        `/api/admin/doctors/unblock/${doctorId}`,
-      );
+      const response = await api.post(`/api/admin/doctors/unblock/${doctorId}`);
 
       if (response.data.success) {
         showNotification(`✅ ${doctorName} unblocked successfully`, "success");
@@ -223,7 +218,7 @@ console.log("✅ AdminDashboard API Base URL set to:", axios.defaults.baseURL);
     }
 
     try {
-      const response = await axios.post(
+      const response = await api.post(
         `/api/admin/send-reminder/${doctorId}/${type}`,
       );
 
@@ -242,7 +237,7 @@ console.log("✅ AdminDashboard API Base URL set to:", axios.defaults.baseURL);
   // ✅ Fetch commission due from all doctors
   const fetchCommissionDue = async (showLoader = true) => {
     try {
-      const response = await axios.get("/api/admin/commission-due");
+      const response = await api.get("/api/admin/commission-due");
       if (response.data.success) {
         setCommissionDue(response.data.doctors);
         setTotalCommissionDue(response.data.totalDue);
@@ -263,7 +258,7 @@ console.log("✅ AdminDashboard API Base URL set to:", axios.defaults.baseURL);
 
     setProcessingPayment(true);
     try {
-      const response = await axios.post("/api/admin/commission/mark-paid", {
+      const response = await api.post("/api/admin/commission/mark-paid", {
         doctorId,
         transactionId,
         amount,
@@ -296,7 +291,7 @@ console.log("✅ AdminDashboard API Base URL set to:", axios.defaults.baseURL);
     try {
       if (showLoader) setDataLoading(true);
       console.log("🔵 Fetching doctors...");
-      const response = await axios.get("/api/admin/doctors?limit=50");
+      const response = await api.get("/api/admin/doctors?limit=50");
 
       if (response.data.success) {
         const doctorsData = response.data.doctors;
@@ -326,29 +321,29 @@ console.log("✅ AdminDashboard API Base URL set to:", axios.defaults.baseURL);
   };
 
   // ✅ Fetch dashboard data
-const fetchDashboardData = async (showLoader = true) => {
-  try {
-    if (showLoader) setDataLoading(true);
-    const [statsRes, appointmentsRes, doctorsRes] = await Promise.all([
-      axios.get("/api/admin/stats"),
-      axios.get("/api/admin/appointments"),
-      axios.get("/api/admin/doctors/stats")
-    ]);
+  const fetchDashboardData = async (showLoader = true) => {
+    try {
+      if (showLoader) setDataLoading(true);
+      const [statsRes, appointmentsRes, doctorsRes] = await Promise.all([
+        api.get("/api/admin/stats"),
+        api.get("/api/admin/appointments"),
+        api.get("/api/admin/doctors/stats"),
+      ]);
 
-    setStats(statsRes.data.stats);
-    setAppointments(appointmentsRes.data.appointments);
-  } catch (error) {
-    console.error("Error fetching dashboard data:", error);
-    showNotification("Failed to fetch dashboard data", "error");
-  } finally {
-    if (showLoader) setDataLoading(false);
-  }
-};
+      setStats(statsRes.data.stats);
+      setAppointments(appointmentsRes.data.appointments);
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+      showNotification("Failed to fetch dashboard data", "error");
+    } finally {
+      if (showLoader) setDataLoading(false);
+    }
+  };
 
   // ✅ Fetch commission report
   const fetchCommissionReport = async (showLoader = true) => {
     try {
-      const response = await axios.get("/api/admin/commission/report", {
+      const response = await api.get("/api/admin/commission/report", {
         params: {
           month: commissionPeriod.month,
           year: commissionPeriod.year,
@@ -370,7 +365,7 @@ const fetchDashboardData = async (showLoader = true) => {
       if (filter.startDate) params.append("startDate", filter.startDate);
       if (filter.endDate) params.append("endDate", filter.endDate);
 
-      const response = await axios.get(`/api/admin/appointments?${params}`);
+      const response = await api.get(`/api/admin/appointments?${params}`);
       setAppointments(response.data.appointments);
       showNotification("Filters applied", "success");
     } catch (error) {
@@ -389,7 +384,7 @@ const fetchDashboardData = async (showLoader = true) => {
     }
 
     try {
-      const response = await axios.post("/api/admin/send-doctor-email", {
+      const response = await api.post("/api/admin/send-doctor-email", {
         email: doctor.email,
         name: doctor.name,
         password: doctor.password || "doctor123",
@@ -419,7 +414,7 @@ const fetchDashboardData = async (showLoader = true) => {
     try {
       console.log("Resetting password for:", doc.email);
 
-      const response = await axios.patch(`/api/admin/doctors/${doc._id}`, {
+      const response = await api.patch(`/api/admin/doctors/${doc._id}`, {
         password: newPassword || "doctor123",
       });
 
@@ -482,7 +477,7 @@ const fetchDashboardData = async (showLoader = true) => {
 
     try {
       setUploading(true);
-      const response = await axios.post("/api/upload/doctor-image", formData, {
+      const response = await api.post("/api/upload/doctor-image", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
@@ -532,7 +527,7 @@ const fetchDashboardData = async (showLoader = true) => {
 
     try {
       setEditUploading(true);
-      const response = await axios.post("/api/upload/doctor-image", formData, {
+      const response = await api.post("/api/upload/doctor-image", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
@@ -561,7 +556,7 @@ const fetchDashboardData = async (showLoader = true) => {
 
       console.log("Adding doctor:", doctorData);
 
-      const response = await axios.post("/api/admin/doctors", doctorData);
+      const response = await api.post("/api/admin/doctors", doctorData);
 
       if (response.data.success) {
         showNotification(`✅ ${newDoctor.name} added successfully!`, "success");
@@ -649,7 +644,7 @@ const fetchDashboardData = async (showLoader = true) => {
         address: editDoctorData.address || "",
       };
 
-      const response = await axios.patch(
+      const response = await api.patch(
         `/api/admin/doctors/${doctorId}`,
         doctorData,
       );
@@ -691,7 +686,7 @@ const fetchDashboardData = async (showLoader = true) => {
     ) {
       try {
         console.log("Deleting doctor:", doctorId);
-        await axios.delete(`/api/admin/doctors/${doctorId}`);
+        await api.delete(`/api/admin/doctors/${doctorId}`);
 
         showNotification("Doctor deleted successfully", "success");
 

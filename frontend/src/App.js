@@ -3,8 +3,7 @@ import DoctorCard from "./components/DoctorCard";
 import React, { useState, useEffect } from "react";
 import "./App.css";
 import "./mobile.css"; // Mobile fixes (after App.css)
-import axios from "axios";
-import { getDoctorImage } from "./utils/doctorImages";
+import api from "./api/axios";
 import { AuthProvider } from "./context/AuthContext";
 
 // Import Admin Pages
@@ -16,7 +15,7 @@ import DoctorLogin from "./pages/DoctorLogin";
 import DoctorDashboard from "./pages/DoctorDashboard";
 
 // Set axios defaults
-axios.defaults.withCredentials = true;
+api.defaults.withCredentials = true;
 
 function App() {
   // State Management
@@ -77,7 +76,7 @@ function App() {
         dateLabel = "tomorrow";
       }
 
-      const response = await axios.get(
+      const response = await api.get(
         `/api/availability/${doctor.doctorId || doctor.id}/slots/${dateToFetch}`,
       );
 
@@ -188,7 +187,7 @@ const fetchDoctors = async () => {
   try {
     // ✅ USE ENVIRONMENT VARIABLE - Works on both local and production
     const API_BASE = process.env.REACT_APP_API_URL || "";
-    const response = await axios.get(`${API_BASE}/doctors`);
+    const response = await api.get(`${API_BASE}/api/doctors`);
 
     // Public route returns array directly, not {success, doctors}
     let doctors = Array.isArray(response.data)
@@ -218,8 +217,8 @@ const fetchDoctors = async () => {
           const currentTime = today.getHours() * 60 + today.getMinutes();
 
           // ✅ USE ENVIRONMENT VARIABLE (Fixed: removed /api)
-          const availabilityUrl = `${API_BASE}/availability/${doctor.doctorId || doctor._id}/slots/${todayStr}`;
-          let slotsRes = await axios.get(availabilityUrl);
+          const availabilityUrl = `${API_BASE}/api/availability/${doctor.doctorId || doctor._id}/slots/${todayStr}`;
+          let slotsRes = await api.get(availabilityUrl);
           let targetDate = "Today";
           let futureSlots = [];
 
@@ -241,8 +240,8 @@ const fetchDoctors = async () => {
             tomorrow.setDate(tomorrow.getDate() + 1);
             const tomorrowStr = tomorrow.toISOString().split("T")[0];
 
-            const tomorrowUrl = `${API_BASE}/availability/${doctor.doctorId || doctor._id}/slots/${tomorrowStr}`;
-            slotsRes = await axios.get(tomorrowUrl);
+            const tomorrowUrl = `${API_BASE}/api/availability/${doctor.doctorId || doctor._id}/slots/${tomorrowStr}`;
+            slotsRes = await api.get(tomorrowUrl);
             targetDate = "Tomorrow";
 
             if (
@@ -330,7 +329,7 @@ const fetchDoctors = async () => {
       if (selectedDoctor && bookingDetails.date) {
         setLoadingSlots(true);
         try {
-          const response = await axios.get(`/api/available-slots`, {
+          const response = await api.get(`/api/available-slots`, {
             params: {
               doctorName: selectedDoctor.name,
               date: bookingDetails.date,
@@ -407,7 +406,7 @@ const fetchDoctors = async () => {
 
     setLoading(true);
     try {
-      const response = await axios.get(`/api/appointments/${email}`);
+      const response = await api.get(`/api/appointments/${email}`);
       if (
         response.data.success &&
         response.data.appointments &&
@@ -429,7 +428,7 @@ const fetchDoctors = async () => {
   const handlePaymentDone = async () => {
     setLoading(true);
     try {
-      const checkSlotResponse = await axios.get(`/api/available-slots`, {
+      const checkSlotResponse = await api.get(`/api/available-slots`, {
         params: { doctorName: selectedDoctor.name, date: bookingDetails.date },
       });
 
@@ -462,7 +461,7 @@ const fetchDoctors = async () => {
         paymentStatus: "pending",
       };
 
-      const response = await axios.post("/api/appointments", appointmentData);
+      const response = await api.post("/api/appointments", appointmentData);
       if (response.data.success) {
         setPaymentConfirmed(true);
         setStep(4);
@@ -475,7 +474,7 @@ const fetchDoctors = async () => {
           "❌ This time slot was just booked! Please select a different time.",
         );
         if (selectedDoctor && bookingDetails.date) {
-          const response = await axios.get(`/api/available-slots`, {
+          const response = await api.get(`/api/available-slots`, {
             params: {
               doctorName: selectedDoctor.name,
               date: bookingDetails.date,

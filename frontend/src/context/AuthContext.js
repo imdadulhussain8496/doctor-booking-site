@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from "react";
-import axios from "axios";
+import api from "../api/axios";
 
 const AuthContext = createContext();
 
@@ -9,10 +9,6 @@ export const AuthProvider = ({ children }) => {
   const [doctor, setDoctor] = useState(null);
   const [admin, setAdmin] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  // Set axios defaults
-  axios.defaults.withCredentials = true;
-  // baseURL removed - using .env instead
 
   useEffect(() => {
     checkAuth();
@@ -32,14 +28,12 @@ export const AuthProvider = ({ children }) => {
 
   const checkDoctorAuth = async () => {
     try {
-      const response = await axios.get("/api/doctor/me");
+      const response = await api.get("/api/doctor/me");
       if (response.data.success) {
-        // 🆕 NEW: Fetch logo and clinic name separately
         const doctorData = response.data.doctor;
 
-        // Fetch logo and clinic name
         try {
-          const logoResponse = await axios.get(
+          const logoResponse = await api.get(
             `/api/doctor/logo/${doctorData.id || doctorData.doctorId}`,
           );
           if (logoResponse.data.success) {
@@ -59,10 +53,10 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // ✅ UPDATED: Check Admin Auth using HttpOnly cookie (no localStorage)
+  // ✅ UPDATED: Check Admin Auth
   const checkAdminAuth = async () => {
     try {
-      const response = await axios.get("/api/admin/verify");
+      const response = await api.get("/api/admin/verify");
       if (response.data.success) {
         setAdmin(response.data.admin);
       }
@@ -76,19 +70,18 @@ export const AuthProvider = ({ children }) => {
   // Doctor Login
   const doctorLogin = async (email, password) => {
     try {
-      const response = await axios.post(
+      const response = await api.post(
         "/api/doctor/login",
         { email, password },
-        { withCredentials: true }, // ← ADD THIS
+        { withCredentials: true },
       );
       if (response.data.success) {
         const doctorData = response.data.doctor;
 
-        // Fetch logo and clinic name after login
         try {
-          const logoResponse = await axios.get(
+          const logoResponse = await api.get(
             `/api/doctor/logo/${doctorData.id || doctorData.doctorId}`,
-            { withCredentials: true }, // ← ADD THIS
+            { withCredentials: true },
           );
           if (logoResponse.data.success) {
             doctorData.logoUrl = logoResponse.data.logoUrl;
@@ -113,20 +106,20 @@ export const AuthProvider = ({ children }) => {
   // Doctor Logout
   const doctorLogout = async () => {
     try {
-      await axios.post("/api/doctor/logout");
+      await api.post("/api/doctor/logout");
     } catch (error) {
       console.error("Logout error:", error);
     }
     setDoctor(null);
   };
 
-  // ✅ UPDATED: Admin Login - No localStorage, cookie is set by backend
+  // ✅ UPDATED: Admin Login
   const adminLogin = async (username, password) => {
     try {
-      const response = await axios.post(
+      const response = await api.post(
         "/api/admin/login",
         { username, password },
-        { withCredentials: true }, // ← ADD THIS
+        { withCredentials: true },
       );
       if (response.data.success) {
         setAdmin(response.data.admin);
@@ -141,10 +134,10 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // ✅ UPDATED: Admin Logout - Clear cookie via backend
+  // Admin Logout
   const adminLogout = async () => {
     try {
-      await axios.post("/api/admin/logout");
+      await api.post("/api/admin/logout");
     } catch (error) {
       console.error("Logout error:", error);
     }
