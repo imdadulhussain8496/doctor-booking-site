@@ -183,102 +183,100 @@ function App() {
   ];
 
   // Fetch doctors from database
-const fetchDoctors = async () => {
-  try {
-    // ✅ USE ENVIRONMENT VARIABLE - Works on both local and production
-    const API_BASE = process.env.REACT_APP_API_URL || "";
-    const response = await api.get(`${API_BASE}/api/doctors`);
+  const fetchDoctors = async () => {
+    try {
+      // ✅ USE ENVIRONMENT VARIABLE - Works on both local and production
+      const API_BASE = process.env.REACT_APP_API_URL?.replace("/api", "") || "";
+      const response = await api.get(`${API_BASE}/api/doctors`);
 
-    // Public route returns array directly, not {success, doctors}
-    let doctors = Array.isArray(response.data)
-      ? response.data
-      : response.data.doctors || [];
+      // Public route returns array directly, not {success, doctors}
+      let doctors = Array.isArray(response.data) ? response.data : [];
 
-    if (!Array.isArray(doctors)) {
-      doctors = [];
-    }
+      if (!Array.isArray(doctors)) {
+        doctors = [];
+      }
 
-    const doctorsWithRealSlots = await Promise.all(
-      doctors.map(async (doctor) => {
-        // ✅ SAFETY NET: If isActive is undefined, default to true
-        if (doctor.isActive === undefined) {
-          doctor.isActive = true;
-        }
-
-        // ✅ Skip slot fetching for inactive doctors
-        if (!doctor.isActive) {
-          doctor.allSlotsCount = 0;
-          return doctor;
-        }
-
-        try {
-          const today = new Date();
-          const todayStr = today.toISOString().split("T")[0];
-          const currentTime = today.getHours() * 60 + today.getMinutes();
-
-          // ✅ USE ENVIRONMENT VARIABLE (Fixed: removed /api)
-          const availabilityUrl = `${API_BASE}/api/availability/${doctor.doctorId || doctor._id}/slots/${todayStr}`;
-          let slotsRes = await api.get(availabilityUrl);
-          let targetDate = "Today";
-          let futureSlots = [];
-
-          if (
-            slotsRes.data.success &&
-            slotsRes.data.slots &&
-            slotsRes.data.slots.length > 0
-          ) {
-            futureSlots = slotsRes.data.slots.filter((slot) => {
-              let hours = parseInt(slot.start.split(":")[0]);
-              const minutes = parseInt(slot.start.split(":")[1]);
-              const slotTimeMinutes = hours * 60 + minutes;
-              return slotTimeMinutes > currentTime + 15;
-            });
+      const doctorsWithRealSlots = await Promise.all(
+        doctors.map(async (doctor) => {
+          // ✅ SAFETY NET: If isActive is undefined, default to true
+          if (doctor.isActive === undefined) {
+            doctor.isActive = true;
           }
 
-          if (futureSlots.length === 0) {
-            const tomorrow = new Date(today);
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            const tomorrowStr = tomorrow.toISOString().split("T")[0];
+          // ✅ Skip slot fetching for inactive doctors
+          if (!doctor.isActive) {
+            doctor.allSlotsCount = 0;
+            return doctor;
+          }
 
-            const tomorrowUrl = `${API_BASE}/api/availability/${doctor.doctorId || doctor._id}/slots/${tomorrowStr}`;
-            slotsRes = await api.get(tomorrowUrl);
-            targetDate = "Tomorrow";
+          try {
+            const today = new Date();
+            const todayStr = today.toISOString().split("T")[0];
+            const currentTime = today.getHours() * 60 + today.getMinutes();
+
+            // ✅ USE ENVIRONMENT VARIABLE (Fixed: removed /api)
+            const availabilityUrl = `${API_BASE}/api/availability/${doctor.doctorId || doctor._id}/slots/${todayStr}`;
+            let slotsRes = await api.get(availabilityUrl);
+            let targetDate = "Today";
+            let futureSlots = [];
 
             if (
               slotsRes.data.success &&
               slotsRes.data.slots &&
               slotsRes.data.slots.length > 0
             ) {
-              futureSlots = slotsRes.data.slots;
+              futureSlots = slotsRes.data.slots.filter((slot) => {
+                let hours = parseInt(slot.start.split(":")[0]);
+                const minutes = parseInt(slot.start.split(":")[1]);
+                const slotTimeMinutes = hours * 60 + minutes;
+                return slotTimeMinutes > currentTime + 15;
+              });
             }
-          }
 
-          if (futureSlots.length > 0) {
-            const timeSlots = futureSlots
-              .slice(0, 2)
-              .map((slot) => formatTo12Hour(slot.start))
-              .join(", ");
-            doctor.availableSlot = `${targetDate} ${timeSlots}`;
-            doctor.allSlotsCount = futureSlots.length;
-          } else {
+            if (futureSlots.length === 0) {
+              const tomorrow = new Date(today);
+              tomorrow.setDate(tomorrow.getDate() + 1);
+              const tomorrowStr = tomorrow.toISOString().split("T")[0];
+
+              const tomorrowUrl = `${API_BASE}/api/availability/${doctor.doctorId || doctor._id}/slots/${tomorrowStr}`;
+              slotsRes = await api.get(tomorrowUrl);
+              targetDate = "Tomorrow";
+
+              if (
+                slotsRes.data.success &&
+                slotsRes.data.slots &&
+                slotsRes.data.slots.length > 0
+              ) {
+                futureSlots = slotsRes.data.slots;
+              }
+            }
+
+            if (futureSlots.length > 0) {
+              const timeSlots = futureSlots
+                .slice(0, 2)
+                .map((slot) => formatTo12Hour(slot.start))
+                .join(", ");
+              doctor.availableSlot = `${targetDate} ${timeSlots}`;
+              doctor.allSlotsCount = futureSlots.length;
+            } else {
+              doctor.availableSlot = "No slots available";
+              doctor.allSlotsCount = 0;
+            }
+          } catch (error) {
+            console.error(`Error fetching slots for ${doctor.name}:`, error);
             doctor.availableSlot = "No slots available";
             doctor.allSlotsCount = 0;
           }
-        } catch (error) {
-          console.error(`Error fetching slots for ${doctor.name}:`, error);
-          doctor.availableSlot = "No slots available";
-          doctor.allSlotsCount = 0;
-        }
-        return doctor;
-      }),
-    );
+          return doctor;
+        }),
+      );
 
-    setDbDoctors(doctorsWithRealSlots);
-  } catch (error) {
-    console.error("Error fetching doctors:", error);
-    setDbDoctors(fallbackDoctors);
-  }
-};
+      setDbDoctors(doctorsWithRealSlots);
+    } catch (error) {
+      console.error("Error fetching doctors:", error);
+      setDbDoctors(fallbackDoctors);
+    }
+  };
 
   // Listen for URL changes
   useEffect(() => {
@@ -584,7 +582,9 @@ const fetchDoctors = async () => {
         <div className="header-content">
           <div className="logo-section">
             <h1 className="logo">🩺 DrAppointment</h1>
-            <p className="tagline" style={{ color: "#3b82f6" }}>24/7 Doctor Booking</p>
+            <p className="tagline" style={{ color: "#3b82f6" }}>
+              24/7 Doctor Booking
+            </p>
           </div>
           <div className="desktop-nav">
             <button

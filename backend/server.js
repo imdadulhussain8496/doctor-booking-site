@@ -54,7 +54,7 @@ connectDB().catch(async (error) => {
 });
 
 // ✅ CORS - Allow credentials for cookies
-const allowedOrigins = process.env.CORS_ORIGIN 
+const allowedOrigins = process.env.CORS_ORIGIN
   ? [process.env.CORS_ORIGIN, "http://localhost:3000"]
   : ["http://localhost:3000"];
 
@@ -98,8 +98,6 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 // ✅ Apply rate limiting to login endpoints (Prevent brute force attacks)
 app.use("/api/admin/login", loginLimiter);
 app.use("/api/doctor/login", loginLimiter);
-
-
 
 // ✅ REGISTER ADMIN ROUTES
 console.log("📝 Registering admin routes...");
@@ -1022,10 +1020,10 @@ app.use((req, res) => {
 });
 
 // ✅ Start server
-const PORT = process.env.PORT || 5000;
+console.log(`✅ SERVER RUNNING ON PORT ${PORT}`);
 app.listen(PORT, () => {
   console.log("\n" + "=".repeat(60));
-  console.log("✅ SERVER RUNNING ON PORT 5000");
+  console.log(`✅ SERVER RUNNING ON PORT ${PORT}`);
   console.log("=".repeat(60));
   console.log("👨‍💼 ADMIN ROUTES:");
   console.log("   POST   /api/admin/login");
@@ -1116,6 +1114,3 @@ app.listen(PORT, () => {
   console.log("📁 Static files served from: /uploads");
   console.log("=".repeat(60) + "\n");
 });
-
-
-

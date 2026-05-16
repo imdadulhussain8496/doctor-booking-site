@@ -1,6 +1,5 @@
-// D:\Projects\DoctorBooking\frontend\src\components\PaymentHistory.js
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api/axios';
 import './PaymentHistory.css';
 
 const PaymentHistory = ({ doctorId, isAdmin = false }) => {
@@ -23,7 +22,7 @@ const PaymentHistory = ({ doctorId, isAdmin = false }) => {
       
       if (isAdmin) {
         // Admin sees ALL payment history from PaymentHistory collection
-        response = await axios.get('http://localhost:5000/api/admin/payment-history');
+        response = await api.get('/api/admin/payment-history');
         
         if (response.data.success) {
           setPayments(response.data.payments || []);
@@ -35,7 +34,7 @@ const PaymentHistory = ({ doctorId, isAdmin = false }) => {
         }
       } else {
         // Doctor sees only their payment history
-        response = await axios.get(`http://localhost:5000/api/doctor/payment-history/${doctorId}`);
+        response = await api.get(`/api/doctor/payment-history/${doctorId}`);
 
         if (response.data.success) {
           setPayments(response.data.payments || []);
