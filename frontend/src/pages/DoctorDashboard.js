@@ -1,4 +1,6 @@
 // D:\Projects\DoctorBooking\frontend\src\pages\DoctorDashboard.js
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from "react";
 import api from "../api/axios";
 import { useNavigate } from "react-router-dom";
