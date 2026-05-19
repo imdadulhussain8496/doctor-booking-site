@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import api from '../api/axios';
 import './PaymentHistory.css';
 
@@ -11,17 +11,12 @@ const PaymentHistory = ({ doctorId, isAdmin = false }) => {
     pendingTotal: 0
   });
 
-  useEffect(() => {
-    fetchPaymentHistory();
-  }, [doctorId, isAdmin]);
-
-  const fetchPaymentHistory = async () => {
+  const fetchPaymentHistory = useCallback(async () => {
     setLoading(true);
     try {
       let response;
       
       if (isAdmin) {
-        // Admin sees ALL payment history from PaymentHistory collection
         response = await api.get('/api/admin/payment-history');
         
         if (response.data.success) {
@@ -33,7 +28,7 @@ const PaymentHistory = ({ doctorId, isAdmin = false }) => {
           });
         }
       } else {
-        // Doctor sees only their payment history
+        if (!doctorId) return;
         response = await api.get(`/api/doctor/payment-history/${doctorId}`);
 
         if (response.data.success) {
@@ -50,9 +45,13 @@ const PaymentHistory = ({ doctorId, isAdmin = false }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [isAdmin, doctorId]);
 
-  const formatDate = (dateString) => {
+  useEffect(() => {
+    fetchPaymentHistory();
+  }, [fetchPaymentHistory]);
+
+  const formatDate = useCallback((dateString) => {
     return new Date(dateString).toLocaleDateString('en-IN', {
       day: 'numeric',
       month: 'short',
@@ -60,7 +59,7 @@ const PaymentHistory = ({ doctorId, isAdmin = false }) => {
       hour: '2-digit',
       minute: '2-digit'
     });
-  };
+  }, []);
 
   if (loading) {
     return (
@@ -102,7 +101,6 @@ const PaymentHistory = ({ doctorId, isAdmin = false }) => {
       ) : (
         <div className="payment-list">
           {isAdmin ? (
-            // Admin View - All payments
             payments.map((payment, idx) => (
               <div key={idx} className="payment-item">
                 <div className="payment-date">
@@ -124,7 +122,6 @@ const PaymentHistory = ({ doctorId, isAdmin = false }) => {
               </div>
             ))
           ) : (
-            // Doctor View - Their payments
             payments.map((payment, idx) => (
               <div key={idx} className="payment-item">
                 <div className="payment-date">

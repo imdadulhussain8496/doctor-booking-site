@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect, useCallback } from 'react';
+import api from '../api/axios';
 import './AvailabilityManager.css';
 
 const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -7,7 +7,7 @@ const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Fri
 function AvailabilityManager({ doctorId }) {
   const [availability, setAvailability] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [selectedDay, setSelectedDay] = useState(1); // Monday default
+  const [selectedDay, setSelectedDay] = useState(1);
   const [editing, setEditing] = useState(false);
   const [exceptions, setExceptions] = useState([]);
   const [showExceptionModal, setShowExceptionModal] = useState(false);
@@ -18,23 +18,25 @@ function AvailabilityManager({ doctorId }) {
     timeRanges: []
   });
 
-  useEffect(() => {
-    fetchAvailability();
-  }, [doctorId]);
-
-  const fetchAvailability = async () => {
+  const fetchAvailability = useCallback(async () => {
+    if (!doctorId) return;
     try {
-      const response = await axios.get(`http://localhost:5000/api/availability/${doctorId}`);
+      const response = await api.get(`/api/availability/${doctorId}`);
       setAvailability(response.data.availability);
-      setExceptions(response.data.availability.exceptions || []);
+      setExceptions(response.data.availability?.exceptions || []);
     } catch (error) {
       console.error('Error fetching availability:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [doctorId]);
 
-  const handleTimeRangeAdd = (day) => {
+  useEffect(() => {
+    fetchAvailability();
+  }, [fetchAvailability]);
+
+  const handleTimeRangeAdd = useCallback((day) => {
+    if (!availability) return;
     const updatedSchedule = [...availability.weeklySchedule];
     const dayIndex = updatedSchedule.findIndex(d => d.day === day);
     
@@ -47,9 +49,10 @@ function AvailabilityManager({ doctorId }) {
       ...availability,
       weeklySchedule: updatedSchedule
     });
-  };
+  }, [availability]);
 
-  const handleTimeRangeChange = (day, rangeIndex, field, value) => {
+  const handleTimeRangeChange = useCallback((day, rangeIndex, field, value) => {
+    if (!availability) return;
     const updatedSchedule = [...availability.weeklySchedule];
     const dayIndex = updatedSchedule.findIndex(d => d.day === day);
     updatedSchedule[dayIndex].timeRanges[rangeIndex][field] = value;
@@ -57,9 +60,10 @@ function AvailabilityManager({ doctorId }) {
       ...availability,
       weeklySchedule: updatedSchedule
     });
-  };
+  }, [availability]);
 
-  const handleTimeRangeRemove = (day, rangeIndex) => {
+  const handleTimeRangeRemove = useCallback((day, rangeIndex) => {
+    if (!availability) return;
     const updatedSchedule = [...availability.weeklySchedule];
     const dayIndex = updatedSchedule.findIndex(d => d.day === day);
     updatedSchedule[dayIndex].timeRanges.splice(rangeIndex, 1);
@@ -67,9 +71,10 @@ function AvailabilityManager({ doctorId }) {
       ...availability,
       weeklySchedule: updatedSchedule
     });
-  };
+  }, [availability]);
 
-  const handleBreakAdd = (day) => {
+  const handleBreakAdd = useCallback((day) => {
+    if (!availability) return;
     const updatedSchedule = [...availability.weeklySchedule];
     const dayIndex = updatedSchedule.findIndex(d => d.day === day);
     
@@ -86,9 +91,10 @@ function AvailabilityManager({ doctorId }) {
       ...availability,
       weeklySchedule: updatedSchedule
     });
-  };
+  }, [availability]);
 
-  const handleBreakChange = (day, breakIndex, field, value) => {
+  const handleBreakChange = useCallback((day, breakIndex, field, value) => {
+    if (!availability) return;
     const updatedSchedule = [...availability.weeklySchedule];
     const dayIndex = updatedSchedule.findIndex(d => d.day === day);
     updatedSchedule[dayIndex].breaks[breakIndex][field] = value;
@@ -96,9 +102,10 @@ function AvailabilityManager({ doctorId }) {
       ...availability,
       weeklySchedule: updatedSchedule
     });
-  };
+  }, [availability]);
 
-  const handleBreakRemove = (day, breakIndex) => {
+  const handleBreakRemove = useCallback((day, breakIndex) => {
+    if (!availability) return;
     const updatedSchedule = [...availability.weeklySchedule];
     const dayIndex = updatedSchedule.findIndex(d => d.day === day);
     updatedSchedule[dayIndex].breaks.splice(breakIndex, 1);
@@ -106,35 +113,42 @@ function AvailabilityManager({ doctorId }) {
       ...availability,
       weeklySchedule: updatedSchedule
     });
-  };
+  }, [availability]);
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
+    if (!availability) return;
     try {
-      await axios.put(`http://localhost:5000/api/availability/${doctorId}/weekly`, {
+      await api.put(`/api/availability/${doctorId}/weekly`, {
         weeklySchedule: availability.weeklySchedule
       });
       setEditing(false);
       alert('Schedule saved successfully!');
+      fetchAvailability();
     } catch (error) {
       console.error('Error saving schedule:', error);
       alert('Failed to save schedule');
     }
-  };
+  }, [availability, doctorId, fetchAvailability]);
 
-  const handleAddException = async () => {
+  const handleAddException = useCallback(async () => {
     try {
-      await axios.post(`http://localhost:5000/api/availability/${doctorId}/exception`, newException);
+      await api.post(`/api/availability/${doctorId}/exception`, newException);
       setShowExceptionModal(false);
-      fetchAvailability(); // Refresh
+      setNewException({ date: '', reason: 'leave', isAvailable: false, timeRanges: [] });
+      fetchAvailability();
       alert('Exception added successfully!');
     } catch (error) {
       console.error('Error adding exception:', error);
       alert('Failed to add exception');
     }
-  };
+  }, [doctorId, newException, fetchAvailability]);
 
   if (loading) {
     return <div className="availability-loading">Loading schedule...</div>;
+  }
+
+  if (!availability) {
+    return <div className="availability-error">No availability data found.</div>;
   }
 
   return (
@@ -323,7 +337,6 @@ function AvailabilityManager({ doctorId }) {
         )}
       </div>
 
-      {/* Exceptions List */}
       {exceptions.length > 0 && (
         <div className="exceptions-list">
           <h3>Exceptions (Holidays/Vacations)</h3>
@@ -343,7 +356,6 @@ function AvailabilityManager({ doctorId }) {
         </div>
       )}
 
-      {/* Exception Modal */}
       {showExceptionModal && (
         <div className="modal-overlay">
           <div className="modal-content exception-modal">
@@ -399,7 +411,6 @@ function AvailabilityManager({ doctorId }) {
               {newException.isAvailable && (
                 <div className="form-group">
                   <label>Time Ranges (if partially available)</label>
-                  {/* Add time range picker here */}
                   <p className="hint">Coming soon: Add specific hours</p>
                 </div>
               )}

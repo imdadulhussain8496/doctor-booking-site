@@ -1020,7 +1020,7 @@ app.use((req, res) => {
 });
 
 // ✅ Start server
-console.log(`✅ SERVER RUNNING ON PORT ${PORT}`);
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log("\n" + "=".repeat(60));
   console.log(`✅ SERVER RUNNING ON PORT ${PORT}`);

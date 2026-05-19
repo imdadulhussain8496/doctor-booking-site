@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import './UPIPayment.css';
 
 function UPIPayment({ doctor, amount, onPaymentComplete, onCancel }) {
-    const [step, setStep] = useState('qr'); // 'qr', 'confirm', 'processing'
+    const [step, setStep] = useState('qr');
     const [transactionId, setTransactionId] = useState('');
     const [upiApp, setUpiApp] = useState('');
 
@@ -13,7 +13,6 @@ function UPIPayment({ doctor, amount, onPaymentComplete, onCancel }) {
             return;
         }
         setStep('processing');
-        // Simulate payment verification
         setTimeout(() => {
             onPaymentComplete({
                 transactionId,
@@ -30,10 +29,8 @@ function UPIPayment({ doctor, amount, onPaymentComplete, onCancel }) {
         alert('✅ UPI ID copied to clipboard!');
     };
 
-    // ✅ Helper function to open UPI app
     const openUpiApp = (appName) => {
-        const upiIntent = `upi://pay?pa=${doctor.upiId}&pn=${encodeURIComponent(doctor.name)}&am=${amount}&cu=INR`;
-        
+        // No need to store upiIntent variable - removed
         let appScheme = '';
         switch(appName) {
             case 'gpay':
@@ -50,7 +47,6 @@ function UPIPayment({ doctor, amount, onPaymentComplete, onCancel }) {
                 return;
         }
         
-        // Try to open app, fallback to manual
         window.location.href = appScheme;
         setTimeout(() => {
             alert('If app did not open, please scan QR code manually');
@@ -113,7 +109,6 @@ function UPIPayment({ doctor, amount, onPaymentComplete, onCancel }) {
                             </div>
                         </div>
 
-                        {/* ✅ Quick app buttons */}
                         <div className="quick-apps">
                             <p className="quick-apps-label">Quick pay with:</p>
                             <div className="app-buttons">
@@ -159,18 +154,8 @@ function UPIPayment({ doctor, amount, onPaymentComplete, onCancel }) {
                     </div>
 
                     <div className="qr-actions">
-                        <button 
-                            className="secondary-btn"
-                            onClick={onCancel}
-                        >
-                            ← Back
-                        </button>
-                        <button 
-                            className="primary-btn"
-                            onClick={() => setStep('confirm')}
-                        >
-                            I've Made Payment →
-                        </button>
+                        <button className="secondary-btn" onClick={onCancel}>← Back</button>
+                        <button className="primary-btn" onClick={() => setStep('confirm')}>I've Made Payment →</button>
                     </div>
                 </div>
             )}
@@ -225,17 +210,8 @@ function UPIPayment({ doctor, amount, onPaymentComplete, onCancel }) {
                     </div>
 
                     <div className="confirm-actions">
-                        <button 
-                            className="secondary-btn"
-                            onClick={() => setStep('qr')}
-                        >
-                            ← Back
-                        </button>
-                        <button 
-                            className="payment-btn"
-                            onClick={handlePaymentConfirm}
-                            disabled={!transactionId}
-                        >
+                        <button className="secondary-btn" onClick={() => setStep('qr')}>← Back</button>
+                        <button className="payment-btn" onClick={handlePaymentConfirm} disabled={!transactionId}>
                             Confirm Payment
                         </button>
                     </div>

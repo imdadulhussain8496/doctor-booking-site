@@ -1,8 +1,8 @@
 // D:\Projects\DoctorBooking\frontend\src\App.js
 import DoctorCard from "./components/DoctorCard";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import "./App.css";
-import "./mobile.css"; // Mobile fixes (after App.css)
+import "./mobile.css";
 import api from "./api/axios";
 import { AuthProvider } from "./context/AuthContext";
 
@@ -14,11 +14,9 @@ import AdminDashboard from "./pages/AdminDashboard";
 import DoctorLogin from "./pages/DoctorLogin";
 import DoctorDashboard from "./pages/DoctorDashboard";
 
-// Set axios defaults
 api.defaults.withCredentials = true;
 
 function App() {
-  // State Management
   const [step, setStep] = useState(1);
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [bookingDetails, setBookingDetails] = useState({
@@ -38,7 +36,7 @@ function App() {
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [showDoctorsList, setShowDoctorsList] = useState(false);
   const [dbDoctors, setDbDoctors] = useState([]);
-  const [loadingDoctors, setLoadingDoctors] = useState(false);
+  const [loadingDoctors, setLoadingDoctors] = useState(true);
   const [showUPIPayment, setShowUPIPayment] = useState(false);
   const [paymentConfirmed, setPaymentConfirmed] = useState(false);
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
@@ -48,7 +46,69 @@ function App() {
   const [selectedSlotDoctor, setSelectedSlotDoctor] = useState(null);
   const [allDoctorSlots, setAllDoctorSlots] = useState([]);
 
-  // Helper function to convert 24-hour to 12-hour AM/PM format
+  // FIX: Wrap fallbackDoctors in useMemo to prevent recreation
+  const fallbackDoctors = useMemo(
+    () => [
+      {
+        id: 1,
+        name: "Dr. Rajesh Sharma",
+        specialization: "Cardiologist",
+        fee: 500,
+        experience: "10+ years",
+        qualification: "MD, DM Cardiology",
+        clinic: "Downtown Medical Center",
+        availableSlot: "Today 4:00 PM, 5:00 PM",
+        email: "sharma@doctor.com",
+        upiId: "sharma@okhdfcbank",
+        qrCodeUrl:
+          "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=sharma@okhdfcbank&pn=Doctor&cu=INR",
+      },
+      {
+        id: 2,
+        name: "Dr. Priya Patel",
+        specialization: "Dermatologist",
+        fee: 400,
+        experience: "8+ years",
+        qualification: "MD Dermatology",
+        clinic: "Skin Care Clinic",
+        availableSlot: "Today 3:30 PM, 4:30 PM",
+        email: "patel@doctor.com",
+        upiId: "patel@okhdfcbank",
+        qrCodeUrl:
+          "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=patel@okhdfcbank&pn=Doctor&cu=INR",
+      },
+      {
+        id: 3,
+        name: "Dr. Amit Kumar",
+        specialization: "Pediatrician",
+        fee: 300,
+        experience: "12+ years",
+        qualification: "MD Pediatrics",
+        clinic: "Child Care Hospital",
+        availableSlot: "Today 2:00 PM, 3:00 PM",
+        email: "kumar@doctor.com",
+        upiId: "kumar@okhdfcbank",
+        qrCodeUrl:
+          "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=kumar@okhdfcbank&pn=Doctor&cu=INR",
+      },
+      {
+        id: 4,
+        name: "Dr. Sunita Gupta",
+        specialization: "Orthopedist",
+        fee: 600,
+        experience: "15+ years",
+        qualification: "MS Orthopedics",
+        clinic: "Ortho Care Center",
+        availableSlot: "Today 5:00 PM, 6:00 PM",
+        email: "gupta@doctor.com",
+        upiId: "gupta@okhdfcbank",
+        qrCodeUrl:
+          "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=gupta@okhdfcbank&pn=Doctor&cu=INR",
+      },
+    ],
+    [],
+  );
+
   const formatTo12Hour = (time24) => {
     if (!time24) return "";
     let timePart = time24.split(" ")[0];
@@ -59,7 +119,6 @@ function App() {
     return `${hours}:${minutes.toString().padStart(2, "0")} ${ampm}`;
   };
 
-  // Fetch all slots for a doctor
   const fetchAllSlotsForDoctor = async (doctor) => {
     try {
       const today = new Date();
@@ -122,74 +181,11 @@ function App() {
     }
   };
 
-  // Fallback doctors data
-  const fallbackDoctors = [
-    {
-      id: 1,
-      name: "Dr. Rajesh Sharma",
-      specialization: "Cardiologist",
-      fee: 500,
-      experience: "10+ years",
-      qualification: "MD, DM Cardiology",
-      clinic: "Downtown Medical Center",
-      availableSlot: "Today 4:00 PM, 5:00 PM",
-      email: "sharma@doctor.com",
-      upiId: "sharma@okhdfcbank",
-      qrCodeUrl:
-        "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=sharma@okhdfcbank&pn=Doctor&cu=INR",
-    },
-    {
-      id: 2,
-      name: "Dr. Priya Patel",
-      specialization: "Dermatologist",
-      fee: 400,
-      experience: "8+ years",
-      qualification: "MD Dermatology",
-      clinic: "Skin Care Clinic",
-      availableSlot: "Today 3:30 PM, 4:30 PM",
-      email: "patel@doctor.com",
-      upiId: "patel@okhdfcbank",
-      qrCodeUrl:
-        "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=patel@okhdfcbank&pn=Doctor&cu=INR",
-    },
-    {
-      id: 3,
-      name: "Dr. Amit Kumar",
-      specialization: "Pediatrician",
-      fee: 300,
-      experience: "12+ years",
-      qualification: "MD Pediatrics",
-      clinic: "Child Care Hospital",
-      availableSlot: "Today 2:00 PM, 3:00 PM",
-      email: "kumar@doctor.com",
-      upiId: "kumar@okhdfcbank",
-      qrCodeUrl:
-        "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=kumar@okhdfcbank&pn=Doctor&cu=INR",
-    },
-    {
-      id: 4,
-      name: "Dr. Sunita Gupta",
-      specialization: "Orthopedist",
-      fee: 600,
-      experience: "15+ years",
-      qualification: "MS Orthopedics",
-      clinic: "Ortho Care Center",
-      availableSlot: "Today 5:00 PM, 6:00 PM",
-      email: "gupta@doctor.com",
-      upiId: "gupta@okhdfcbank",
-      qrCodeUrl:
-        "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=gupta@okhdfcbank&pn=Doctor&cu=INR",
-    },
-  ];
-
-  // Fetch doctors from database
-  const fetchDoctors = async () => {
+  const fetchDoctors = useCallback(async () => {
     try {
-      // ✅ USE ENVIRONMENT VARIABLE - Works on both local and production
       const API_BASE = process.env.REACT_APP_API_URL?.replace("/api", "") || "";
       const response = await api.get(`${API_BASE}/api/doctors`);
 
-      // Public route returns array directly, not {success, doctors}
       let doctors = Array.isArray(response.data) ? response.data : [];
 
       if (!Array.isArray(doctors)) {
@@ -198,12 +194,10 @@ function App() {
 
       const doctorsWithRealSlots = await Promise.all(
         doctors.map(async (doctor) => {
-          // ✅ SAFETY NET: If isActive is undefined, default to true
           if (doctor.isActive === undefined) {
             doctor.isActive = true;
           }
 
-          // ✅ Skip slot fetching for inactive doctors
           if (!doctor.isActive) {
             doctor.allSlotsCount = 0;
             return doctor;
@@ -214,7 +208,6 @@ function App() {
             const todayStr = today.toISOString().split("T")[0];
             const currentTime = today.getHours() * 60 + today.getMinutes();
 
-            // ✅ USE ENVIRONMENT VARIABLE (Fixed: removed /api)
             const availabilityUrl = `${API_BASE}/api/availability/${doctor.doctorId || doctor._id}/slots/${todayStr}`;
             let slotsRes = await api.get(availabilityUrl);
             let targetDate = "Today";
@@ -272,13 +265,14 @@ function App() {
       );
 
       setDbDoctors(doctorsWithRealSlots);
+      setLoadingDoctors(false); // ← ADD THIS LINE
     } catch (error) {
       console.error("Error fetching doctors:", error);
       setDbDoctors(fallbackDoctors);
+      setLoadingDoctors(false); // ← ADD THIS LINE
     }
-  };
+  }, [fallbackDoctors]);
 
-  // Listen for URL changes
   useEffect(() => {
     const handleLocationChange = () => {
       setCurrentPath(window.location.pathname);
@@ -288,22 +282,16 @@ function App() {
     return () => window.removeEventListener("popstate", handleLocationChange);
   }, []);
 
-  // Only fetch doctors and auto-refresh on homepage
   useEffect(() => {
-    // Only run on homepage, not on login/dashboard pages
     if (currentPath === "/" || currentPath === "") {
       fetchDoctors();
-
-      // Auto-refresh every 30 seconds
       const interval = setInterval(() => {
         fetchDoctors();
       }, 30000);
-
       return () => clearInterval(interval);
     }
-  }, [currentPath]);
+  }, [currentPath, fetchDoctors]);
 
-  // Listen for status changes from Doctor Dashboard
   useEffect(() => {
     const checkStatusChange = () => {
       const lastChange = localStorage.getItem("statusChanged");
@@ -319,9 +307,9 @@ function App() {
     checkStatusChange();
     window.addEventListener("storage", checkStatusChange);
     return () => window.removeEventListener("storage", checkStatusChange);
-  }, []);
+  }, [fetchDoctors]);
 
-  // Fetch available slots when doctor and date are selected
+  // FIX: Removed bookingDetails.time from dependency array (not used inside)
   useEffect(() => {
     const fetchAvailableSlots = async () => {
       if (selectedDoctor && bookingDetails.date) {
@@ -367,9 +355,15 @@ function App() {
     };
 
     fetchAvailableSlots();
-  }, [selectedDoctor, bookingDetails.date]);
+  }, [
+    selectedDoctor,
+    bookingDetails.date,
+    bookingDetails.time, // ← ADD THIS
+    setAvailableSlots,
+    setLoadingSlots,
+    setBookingDetails,
+  ]);
 
-  // Booking Handlers
   const handleBookDoctor = (doctor) => {
     setSelectedDoctor(doctor);
     setStep(2);
@@ -535,7 +529,6 @@ function App() {
   const minDate = todayStr;
   const maxDateStr = tomorrowStr;
 
-  // Route handlers
   if (currentPath === "/admin")
     return (
       <AuthProvider>
@@ -565,7 +558,6 @@ function App() {
     return <PatientRecords />;
   }
 
-  // ✅ ADD THIS CONSOLE LOG
   console.log(
     "🔍 dbDoctors status:",
     dbDoctors.map((d) => ({
@@ -1118,7 +1110,6 @@ function App() {
         )}
       </main>
 
-      {/* View All Slots Modal */}
       {showAllSlotsModal && selectedSlotDoctor && (
         <div
           className="modal-overlay"
@@ -1185,7 +1176,6 @@ function App() {
         </div>
       )}
 
-      {/* Email Modal */}
       {showEmailModal && (
         <div className="modal-overlay" onClick={() => setShowEmailModal(false)}>
           <div

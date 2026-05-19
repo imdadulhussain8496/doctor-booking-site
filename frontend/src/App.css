@@ -13,8 +13,7 @@
 }
 
 body {
-  font-family:
-    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   background: #0a1929;
   min-height: 100vh;
 }
@@ -23,7 +22,7 @@ body {
    2. HEADER & NAVIGATION
    ======================================== */
 .app-header {
-  background: white; color: #1e40af;
+  background: white;
   padding: 1rem 1rem;
   position: sticky;
   top: 0;
@@ -49,22 +48,20 @@ body {
   min-width: 150px;
 }
 
-.logo { color: #2563eb;  color: #2563eb; 
+.logo {
+  color: #2563eb;
   font-size: 1.5rem;
   font-weight: 800;
-  
-  
-  
-  
   letter-spacing: -0.5px;
   line-height: 1.2;
 }
 
-.tagline { color: #3b82f6;  color: #3b82f6;  font-size: 0.75rem; color: #64748b; margin-left: 5px; 
-  font-size: 0.8rem;
+.tagline {
+  color: #3b82f6;
+  font-size: 0.75rem;
+  margin-left: 5px;
   opacity: 0.9;
   font-weight: 400;
-  color: rgba(255, 255, 255, 0.8);
 }
 
 .desktop-nav {
@@ -74,33 +71,22 @@ body {
   flex-wrap: nowrap;
 }
 
-/* ALL nav buttons - UNIFIED consistent style */
 .nav-btn {
   border: none;
   padding: 0.4rem 1.8rem;
   border-radius: 10px;
   cursor: pointer;
-  font-size: 0.90rem;
+  font-size: 0.9rem;
   font-weight: 600;
   transition: all 0.3s;
   white-space: nowrap;
+  background: rgba(255, 255, 255, 0.3);
 }
 
-.nav-btn:hover {:hover { background: #eef2ff; color: #1e40af; transform: translateY(-2px); } 
-  background: rgba(255, 255, 255, 0.3);
+.nav-btn:hover {
+  background: #eef2ff;
+  color: #1e40af;
   transform: translateY(-2px);
-}
-
-/* All specific button types use same style */
-.nav-btn.home-btn,
-.nav-btn.admin-btn,
-.nav-btn.doctor-btn {
-}
-
-.nav-btn.home-btn:hover,
-.nav-btn.admin-btn:hover,
-.nav-btn.doctor-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
 }
 
 .home-mobile-menu-btn {
@@ -134,7 +120,6 @@ body {
   .desktop-nav {
     gap: 0.3rem;
   }
-  
   .nav-btn {
     padding: 0.3rem 0.8rem;
     font-size: 0.8rem;
@@ -160,16 +145,19 @@ body {
   color: #92400e;
   border: 1px solid #fde68a;
 }
+
 .appointment-status-badge.confirmed {
   background: #dbeafe;
   color: #1e40af;
   border: 1px solid #bfdbfe;
 }
+
 .appointment-status-badge.completed {
   background: #d1fae5;
   color: #065f46;
   border: 1px solid #a7f3d0;
 }
+
 .appointment-status-badge.cancelled {
   background: #fee2e2;
   color: #991b1b;
@@ -235,14 +223,17 @@ body {
 .doctor-icon {
   font-size: 2rem;
 }
+
 .patient-info {
   flex: 1;
 }
+
 .patient-info p {
   margin: 0.3rem 0;
   font-size: 0.9rem;
   color: #475569;
 }
+
 .patient-info strong {
   color: #1f2937;
   min-width: 70px;
@@ -268,27 +259,6 @@ body {
 /* ========================================
    5. MOBILE MENU
    ======================================== */
-.home-mobile-menu-btn {
-  display: none;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  width: 44px;
-  height: 44px;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px;
-  transition: all 0.3s ease;
-}
-
-.home-mobile-menu-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.home-mobile-menu-btn.open {
-  color: #fbbf24;
-}
-
 .mobile-menu {
   position: fixed;
   top: 70px;
@@ -327,22 +297,6 @@ body {
 .mobile-menu-title {
   font-size: 18px;
   font-weight: 600;
-  color: #1e293b;
-}
-
-.mobile-menu-close {
-  background: #f1f5f9;
-  border: none;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  font-size: 18px;
-  cursor: pointer;
-  color: #64748b;
-}
-
-.mobile-menu-close:hover {
-  background: #e2e8f0;
   color: #1e293b;
 }
 
@@ -395,6 +349,7 @@ body {
 .mobile-nav-item:last-child {
   border-bottom: none;
 }
+
 .mobile-nav-item:hover {
   color: #059669;
   transform: translateX(5px);
@@ -414,15 +369,18 @@ body {
 .mobile-nav-text {
   flex: 1;
 }
+
 .mobile-doctor-name {
   font-weight: 600;
   color: #1e293b;
   font-size: 14px;
 }
+
 .mobile-doctor-specialty {
   font-size: 11px;
   color: #64748b;
 }
+
 .mobile-doctor-fee {
   background: #f0fdf4;
   color: #059669;
@@ -431,6 +389,7 @@ body {
   font-size: 11px;
   font-weight: 600;
 }
+
 .mobile-menu-footer {
   padding: 15px 20px;
   margin-top: auto;
@@ -438,12 +397,11 @@ body {
   border-top: 1px solid #e2e8f0;
   background: #f8fafc;
 }
+
 .mobile-version {
   font-size: 11px;
   color: #94a3b8;
 }
-
-
 
 /* ========================================
    6. MAIN CONTAINER
@@ -460,7 +418,7 @@ body {
 }
 
 /* ========================================
-   7. PROGRESS STEPS - STRAIGHT LINE
+   7. PROGRESS STEPS
    ======================================== */
 .booking-flow .progress-steps {
   display: flex;
@@ -494,6 +452,7 @@ body {
 .booking-flow .step.active:not(:last-child)::after {
   background: #2563eb;
 }
+
 .booking-flow .step.completed:not(:last-child)::after {
   background: #10b981;
 }
@@ -516,15 +475,15 @@ body {
 }
 
 .booking-flow .step.active .step-circle {
-  color: white !important;
   background: #2563eb;
-  border-color: white !important;
-  color: white !important;
+  border-color: white;
+  color: white;
 }
+
 .booking-flow .step.completed .step-circle {
-  color: white !important;
   background: #10b981;
   border-color: #10b981;
+  color: white;
 }
 
 .booking-flow .step-label {
@@ -538,6 +497,7 @@ body {
   color: #2563eb;
   font-weight: 600;
 }
+
 .booking-flow .step.completed .step-label {
   color: #10b981;
 }
@@ -558,8 +518,8 @@ body {
   font-size: clamp(1.5rem, 5vw, 2rem);
   margin-bottom: 0.5rem;
   background: linear-gradient(135deg, #1e293b, #2563eb);
-  -webkit-background-clip: text;
   background-clip: text;
+  -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   font-weight: 800;
 }
@@ -571,1147 +531,326 @@ body {
 }
 
 /* ========================================
-   9. DOCTORS GRID & CARDS - DEVICE SPECIFIC
+   9. DOCTORS GRID & CARDS
    ======================================== */
-/* ========================================
-   MOBILE (max-width: 767px)
-   ======================================== */
-@media (max-width: 767px) {
-  .home-doctors-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
+.home-doctors-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
 
-  .home-doctor-card {
-    background: white;
-    border-radius: 20px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    border: 1px solid #eef2f6;
-    transition: all 0.3s ease;
-  }
+.home-doctor-card {
+  background: white;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid #eef2f6;
+  transition: all 0.3s ease;
+  position: relative;
+}
 
-  .home-doctor-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
-  }
+.home-doctor-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+}
 
-  .home-doctor-card-inner {
-    display: flex;
-    flex-direction: row;
-    padding: 5px;
-    gap: 15px;
-    line-height: 1.2;
-    align-items: flex-start;
-  }
+.home-doctor-card-inner {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  padding: 22px;
+  gap: 22px;
+  min-height: 200px;
+}
 
-  .home-doctor-card .home-doctor-image-section {
-    flex-shrink: 0;
-  }
+.home-doctor-image-section {
+  flex-shrink: 0;
+  display: flex;
+  align-items: stretch;
+}
 
-  .home-doctor-card .home-doctor-image-container {
-    width: 100px;
-    height: 140px;
-    border-radius: 23px;
-    overflow: hidden;
-    background: #f1f5f9;
-  }
+.home-doctor-image-container {
+  width: 140px;
+  height: 100%;
+  min-height: 170px;
+  border-radius: 23px;
+  overflow: hidden;
+  background: #f1f5f9;
+}
 
-  .home-doctor-card .home-doctor-image-container img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
+.home-doctor-image-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 
-  .home-doctor-card .home-doctor-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-  }
+.home-doctor-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+}
 
-  .home-doctor-card .home-doctor-name {
-    font-size: 16px;
-    font-weight: 700;
-    color: #1e40af;
-    padding-top: 5px;
-    margin: 0;
-  }
+.home-doctor-name {
+  font-size: 19px;
+  font-weight: 700;
+  color: #1e40af;
+  margin: 0;
+}
 
-  /* ===== NEW CSS CLASSES ===== */
-  .doctor-info-row {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-bottom: 4px;
-    flex-wrap: wrap;
-  }
+/* Status Badge */
+.home-doctor-status-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 4px 10px;
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: 20px;
+  z-index: 10;
+  font-family: monospace;
+  letter-spacing: 0.5px;
+}
 
-  .doctor-info-icon {
-    font-size: 11px;
-    width: 18px;
-    flex-shrink: 0;
-  }
+.home-doctor-status-badge.active {
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
 
-  .doctor-info-text {
-    font-size: 10px;
-    font-weight: 500;
-    line-height: 1.3;
-    word-break: break-word;
-  }
+.home-doctor-status-badge.inactive {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
 
-  .doctor-specialty-text { color: #2563eb; font-weight: 600; }
-  .doctor-degree-text { color: #8b5cf6; font-weight: 500; }
-  .doctor-experience-text { color: #10b981; font-weight: 500; }
-  .doctor-location-text { color: #6b7280; font-weight: 500; }
-  /* ===== END NEW CSS ===== */
+/* Doctor Info Rows */
+.doctor-info-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
 
-  .home-doctor-card .price-book-row {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    margin-top: 6px;
-    width: 100%;
-  }
+.doctor-info-icon {
+  font-size: 14px;
+  width: 22px;
+  flex-shrink: 0;
+}
 
-  .home-doctor-card .price-amount {
-    font-size: 13px;
-    font-weight: 800;
-    color: #059669;
-    white-space: nowrap;
-  }
+.doctor-info-text {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+  word-break: break-word;
+}
 
-  .home-doctor-card .price-amount span {
-    font-size: 9px;
-    font-weight: 400;
-    color: #6b7280;
-  }
+.doctor-specialty-text {
+  color: #2563eb;
+  font-weight: 600;
+}
 
-  .home-doctor-card .home-book-btn {
-    padding: 4px 20px;
-    font-size: 10px;
-    margin-right: 3px;
-    background-color: #2563eb; color: white;
-    border: none;
-    border-radius: 40px;
-    cursor: pointer;
-  }
+.doctor-degree-text {
+  color: #8b5cf6;
+  font-weight: 500;
+}
 
-  .home-doctor-card .home-book-btn:hover {
-    background-color: #1d4ed8;
-  }
+.doctor-experience-text {
+  color: #10b981;
+  font-weight: 500;
+}
+
+.doctor-location-text {
+  color: #6b7280;
+  font-weight: 500;
+}
+
+/* Slots Row */
+.slots-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.slots-time {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.view-all-slots-btn-primary {
+  background: none;
+  border: 1px solid #2563eb;
+  color: #2563eb;
+  padding: 5px 14px;
+  border-radius: 30px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-left: 8px;
+  white-space: nowrap;
+}
+
+.view-all-slots-btn-primary:hover {
+  background: #eef2ff;
+  transform: translateY(-1px);
+}
+
+/* Price and Book Row */
+.price-book-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 6px;
+  width: 100%;
+}
+
+.price-amount {
+  font-size: 19px;
+  font-weight: 800;
+  color: #059669;
+  white-space: nowrap;
+}
+
+.price-amount span {
+  font-size: 12px;
+  font-weight: 400;
+  color: #6b7280;
+}
+
+.home-book-btn {
+  background-color: #2563eb;
+  color: white;
+  border-radius: 40px;
+  border: none;
+  cursor: pointer;
+  padding: 10px 32px;
+  font-size: 14px;
+  transition: all 0.3s;
+}
+
+.home-book-btn:hover {
+  background-color: #1d4ed8;
+  transform: translateY(-2px);
 }
 
 /* ========================================
-   SMALL MOBILE (up to 480px)
+   RESPONSIVE BREAKPOINTS
    ======================================== */
-@media (max-width: 480px) {
-  .home-doctor-card-inner {
-    padding: 5px;
-    gap: 10px;
-   
-    align-items: flex-start;
+@media (max-width: 1024px) {
+  .home-doctors-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
   }
-
-  .home-doctor-card .home-doctor-image-container {
-    width: 100px;
-    height: 140px;
-    border-radius: 23px;
-  }
-
-  .home-doctor-card .home-doctor-name {
-    font-size: 15px;
-    padding-top: 3px;
-    margin-bottom: 2px;
-  }
-
-  /* ===== NEW CSS CLASSES ===== */
-  .doctor-info-row {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    margin-bottom: 2px;
-    flex-wrap: wrap;
-  }
-
-  .doctor-info-icon {
-    font-size: 10px;
-    width: 16px;
-    flex-shrink: 0;
-  }
-
-  .doctor-info-text {
-    font-size: 9px;
-    font-weight: 500;
-    line-height: 1.2;
-    word-break: break-word;
-  }
-
-  .doctor-specialty-text { color: #2563eb; font-weight: 600; }
-  .doctor-degree-text { color: #8b5cf6; font-weight: 500; }
-  .doctor-experience-text { color: #10b981; font-weight: 500; }
-  .doctor-location-text { color: #6b7280; font-weight: 500; }
   
-
-  .home-doctor-card .price-book-row {
-    gap: 6px;
-    margin-top: 4px;
-  }
-
-  .home-doctor-card .price-amount {
-    font-size: 12px;
-  }
-
-  .home-doctor-card .price-amount span {
-    font-size: 8px;
-  }
-
-  .home-doctor-card .home-book-btn {
-    padding: 4px 20px;
-    font-size: 9px;
-    margin-right: 2px;
-  }
-}
-
-/* ========================================
-   iPAD MINI (768px - 810px) - 1 CARD
-   ======================================== */
-@media (min-width: 768px) and (max-width: 810px) {
-  .home-doctors-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
-
-  .home-doctor-card {
-    background: white;
-    border-radius: 20px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    border: 1px solid #eef2f6;
-    transition: all 0.3s ease;
-    width: 100%;
-    max-width: 530px;
-    margin: 0 auto;
-  }
-
-  .home-doctor-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
-  }
-
   .home-doctor-card-inner {
-    display: flex;
-    flex-direction: row;
-    align-items: stretch;
     padding: 16px;
-    gap: 20px;
+    gap: 16px;
     min-height: 180px;
   }
-
-  .home-doctor-card .home-doctor-image-section {
-    flex-shrink: 0;
-    display: flex;
-    align-items: stretch;
-  }
-
-  .home-doctor-card .home-doctor-image-container {
-    width: 140px;
-    height: 100%;
-    min-height: 160px;
-    border-radius: 23px;
-    overflow: hidden;
-    background: #f1f5f9;
-  }
-
-  .home-doctor-card .home-doctor-image-container img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  .home-doctor-card .home-doctor-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 8px;
-  }
-
-  .home-doctor-card .home-doctor-name {
-    font-size: 18px;
-    font-weight: 700;
-    color: #1e40af;
-    margin: 0;
-  }
-
-  /* ===== NEW CSS CLASSES ===== */
-  .doctor-info-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 6px;
-    flex-wrap: wrap;
-  }
-
-  .doctor-info-icon {
-    font-size: 13px;
-    width: 20px;
-    flex-shrink: 0;
-  }
-
-  .doctor-info-text {
-    font-size: 12px;
-    font-weight: 500;
-    line-height: 1.4;
-    word-break: break-word;
-  }
-
-  .doctor-specialty-text { color: #2563eb; font-weight: 600; }
-  .doctor-degree-text { color: #8b5cf6; font-weight: 500; }
-  .doctor-experience-text { color: #10b981; font-weight: 500; }
-  .doctor-location-text { color: #6b7280; font-weight: 500; }
-  /* ===== END NEW CSS ===== */
-
-  .home-doctor-card .price-book-row {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    margin-top: 6px;
-    width: 100%;
-  }
-
-  .home-doctor-card .price-amount {
-    font-size: 18px;
-    font-weight: 800;
-    color: #059669;
-    white-space: nowrap;
-  }
-
-  .home-doctor-card .price-amount span {
-    font-size: 11px;
-    font-weight: 400;
-    color: #6b7280;
-  }
-
-  .home-doctor-card .home-book-btn {
-    background-color: #2563eb; color: white;
-    border: none;
-    padding: 7px 32px;
-    border-radius: 40px;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    white-space: nowrap;
-  }
-
-  .home-doctor-card .home-book-btn:hover {
-    background-color: #1d4ed8;
-  }
-}
-
-/* ========================================
-   iPAD AIR (811px - 1024px) - 2 CARDS
-   ======================================== */
-@media (min-width: 811px) and (max-width: 1024px) {
-  .home-doctors-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
-  }
-
-  .home-doctor-card {
-    background: white;
-    border-radius: 20px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    border: 1px solid #eef2f6;
-    transition: all 0.3s ease;
-    height: auto;
-    max-height: none;
-    width: 100%;
-  }
-
-  .home-doctor-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
-  }
-
-  .home-doctor-card-inner {
-    display: flex;
-    flex-direction: row;
-    align-items: stretch;
-    padding: 14px;
-    gap: 14px;
-    min-height: 150px;
-  }
-
-  .home-doctor-card .home-doctor-image-section {
-    flex-shrink: 0;
-    display: flex;
-    align-items: stretch;
-  }
-
-  .home-doctor-card .home-doctor-image-container {
-    width: 95px;
-    height: 100%;
-    min-height: 130px;
-    border-radius: 23px;
-    overflow: hidden;
-    background: #f1f5f9;
-  }
-
-  .home-doctor-card .home-doctor-image-container img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  .home-doctor-card .home-doctor-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 6px;
-  }
-
-  .home-doctor-card .home-doctor-name {
-    font-size: 15px;
-    font-weight: 700;
-    color: #1e40af;
-    margin: 0;
-  }
-
-  /* ===== NEW CSS CLASSES ===== */
-  .doctor-info-row {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-bottom: 5px;
-    flex-wrap: wrap;
-  }
-
-  .doctor-info-icon {
-    font-size: 11px;
-    width: 18px;
-    flex-shrink: 0;
-  }
-
-  .doctor-info-text {
-    font-size: 10px;
-    font-weight: 500;
-    line-height: 1.3;
-    word-break: break-word;
-  }
-
-  .doctor-specialty-text { color: #2563eb; font-weight: 600; }
-  .doctor-degree-text { color: #8b5cf6; font-weight: 500; }
-  .doctor-experience-text { color: #10b981; font-weight: 500; }
-  .doctor-location-text { color: #6b7280; font-weight: 500; }
-  /* ===== END NEW CSS ===== */
-
-  .home-doctor-card .price-book-row {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    margin-top: 5px;
-    width: 100%;
-  }
-
-  .home-doctor-card .price-amount {
-    font-size: 15px;
-    font-weight: 800;
-    color: #059669;
-    white-space: nowrap;
-  }
-
-  .home-doctor-card .price-amount span {
-    font-size: 10px;
-    font-weight: 400;
-    color: #6b7280;
-  }
-
-  .home-doctor-card .home-book-btn {
-    background-color: #2563eb; color: white;
-    border: none;
-    padding: 5px 16px;
-    border-radius: 40px;
-    font-size: 11px;
-    font-weight: 600;
-    cursor: pointer;
-    white-space: nowrap;
-  }
-
-  .home-doctor-card .home-book-btn:hover {
-    background-color: #1d4ed8;
-  }
-}
-
-/* ========================================
-   iPAD PRO (1024px - 1366px) - 2 CARDS
-   ======================================== */
-@media (min-width: 1024px) and (max-width: 1366px) {
-  .home-doctors-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 24px;
-  }
-
-  .home-doctor-card {
-    background: white;
-    border-radius: 20px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    border: 1px solid #eef2f6;
-    transition: all 0.3s ease;
-  }
-
-  .home-doctor-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
-  }
-
-  .home-doctor-card-inner {
-    display: flex;
-    flex-direction: row;
-    align-items: stretch;
-    padding: 18px;
-    gap: 18px;
-    min-height: 170px;
-  }
-
-  .home-doctor-card .home-doctor-image-section {
-    flex-shrink: 0;
-    display: flex;
-    align-items: stretch;
-  }
-
-  .home-doctor-card .home-doctor-image-container {
-    width: 130px;
-    height: 100%;
-    min-height: 160px;
-    border-radius: 23px;
-    overflow: hidden;
-    background: #f1f5f9;
-  }
-
-  .home-doctor-card .home-doctor-image-container img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  .home-doctor-card .home-doctor-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 8px;
-  }
-
-  .home-doctor-card .home-doctor-name {
-    font-size: 17px;
-    font-weight: 700;
-    color: #1e40af;
-    margin: 0;
-  }
-
-  /* NEW CSS CLASSES */
-  .doctor-info-row {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    margin-bottom: 5px;
-    flex-wrap: wrap;
-  }
-
-  .doctor-info-icon {
-    font-size: 12px;
-    width: 19px;
-    flex-shrink: 0;
-  }
-
-  .doctor-info-text {
-    font-size: 11px;
-    font-weight: 500;
-    line-height: 1.3;
-    word-break: break-word;
-  }
-
-  .doctor-specialty-text { color: #2563eb; font-weight: 600; }
-  .doctor-degree-text { color: #8b5cf6; font-weight: 500; }
-  .doctor-experience-text { color: #10b981; font-weight: 500; }
-  .doctor-location-text { color: #6b7280; font-weight: 500; }
-
-  .home-doctor-card .price-book-row {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    margin-top: 6px;
-  }
-
- .home-doctor-card .price-amount {
-    font-size: 17px;
-    font-weight: 800;
-    color: #059669;
-    white-space: nowrap;
-  }
-
-  .home-doctor-card .price-amount span {
-    font-size: 11px;
-    font-weight: 400;
-    color: #6b7280;
-  }
-
-  .home-doctor-card .home-book-btn {
-    background-color: #2563eb; color: white;
-    border-radius: 10px;
-    border: none;
-    cursor: pointer;
-    padding: 7px 22px;
-    font-size: 12px;
-  }
-}
-
-
-/* ========================================
-   SURFACE DUO (540px - 720px) - 1 OR 2 CARDS
-   ======================================== */
-
-/* Folded mode (single screen) */
-@media (max-width: 540px) {
-  .home-doctors-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-
-  .home-doctor-card {
-    background: white;
-    border-radius: 20px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    border: 1px solid #eef2f6;
-    transition: all 0.3s ease;
-  }
-
-  .home-doctor-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
-  }
-
-  .home-doctor-card-inner {
-    display: flex;
-    flex-direction: row;
-    align-items: stretch;
-    padding: 12px;
-    gap: 12px;
+  
+  .home-doctor-image-container {
+    width: 120px;
     min-height: 140px;
   }
-
-  .home-doctor-card .home-doctor-image-section {
-    flex-shrink: 0;
-    display: flex;
-    align-items: stretch;
+  
+  .home-doctor-name {
+    font-size: 18px;
   }
-
-  .home-doctor-card .home-doctor-image-container {
-    width: 110px;
-    height: 100%;
-    min-height: 115px;
-    border-radius: 18px;
-    overflow: hidden;
-    background: #f1f5f9;
+  
+  .price-amount {
+    font-size: 18px;
   }
-
-  .home-doctor-card .home-doctor-image-container img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+  
+  .home-book-btn {
+    padding: 8px 24px;
+    font-size: 13px;
   }
+}
 
-  .home-doctor-card .home-doctor-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 5px;
+@media (max-width: 768px) {
+  .home-doctors-grid {
+    gap: 16px;
   }
+  
+  .home-doctor-card-inner {
+    padding: 12px;
+    gap: 12px;
+    min-height: 160px;
+  }
+  
+  .home-doctor-image-container {
+    width: 100px;
+    min-height: 120px;
+  }
+  
+  .home-doctor-name {
+    font-size: 16px;
+  }
+  
+  .doctor-info-icon {
+    font-size: 12px;
+    width: 18px;
+  }
+  
+  .doctor-info-text {
+    font-size: 11px;
+  }
+  
+  .price-amount {
+    font-size: 16px;
+  }
+  
+  .home-book-btn {
+    padding: 6px 20px;
+    font-size: 12px;
+  }
+}
 
-  .home-doctor-card .home-doctor-name {
+@media (max-width: 480px) {
+  .home-doctor-card-inner {
+    padding: 10px;
+    gap: 10px;
+    min-height: 140px;
+  }
+  
+  .home-doctor-image-container {
+    width: 80px;
+    min-height: 100px;
+  }
+  
+  .home-doctor-name {
     font-size: 14px;
-    font-weight: 700;
-    color: #1e40af;
-    margin: 0;
   }
-
-  .doctor-info-row {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    margin-bottom: 3px;
-    flex-wrap: wrap;
-  }
-
+  
   .doctor-info-icon {
     font-size: 10px;
     width: 16px;
-    flex-shrink: 0;
   }
-
+  
   .doctor-info-text {
     font-size: 9px;
-    font-weight: 500;
-    line-height: 1.3;
-    word-break: break-word;
   }
-
-  .doctor-specialty-text { color: #2563eb; font-weight: 600; }
-  .doctor-degree-text { color: #8b5cf6; font-weight: 500; }
-  .doctor-experience-text { color: #10b981; font-weight: 500; }
-  .doctor-location-text { color: #6b7280; font-weight: 500; }
-
-  .home-doctor-card .price-book-row {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    margin-top: 4px;
+  
+  .price-amount {
+    font-size: 14px;
   }
-
-  .home-doctor-card .price-amount {
-    font-size: 12px;
-    font-weight: 800;
-    color: #059669;
-    white-space: nowrap;
-  }
-
-  .home-doctor-card .price-amount span {
-    font-size: 8px;
-    font-weight: 400;
-    color: #6b7280;
-  }
-
-  .home-doctor-card .home-book-btn {
-    background-color: #2563eb; color: white;
-    border-radius: 40px;
-    border: none;
-    cursor: pointer;
-    padding: 4px 16px;
-    font-size: 9px;
-  }
-}
-
-/* Dual screen (unfolded) */
-@media (min-width: 541px) and (max-width: 720px) {
-  .home-doctors-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
-  }
-
-  .home-doctor-card {
-    background: white;
-    border-radius: 20px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    border: 1px solid #eef2f6;
-    transition: all 0.3s ease;
-  }
-
-  .home-doctor-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
-  }
-
-  .home-doctor-card-inner {
-    display: flex;
-    flex-direction: row;
-    align-items: stretch;
-    padding: 10px;
-    gap: 10px;
-    min-height: 130px;
-  }
-
-  .home-doctor-card .home-doctor-image-section {
-    flex-shrink: 0;
-    display: flex;
-    align-items: stretch;
-  }
-
-  .home-doctor-card .home-doctor-image-container {
-    width: 80px;
-    height: 100%;
-    min-height: 110px;
-    border-radius: 18px;
-    overflow: hidden;
-    background: #f1f5f9;
-  }
-
-  .home-doctor-card .home-doctor-image-container img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  .home-doctor-card .home-doctor-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 4px;
-  }
-
-  .home-doctor-card .home-doctor-name {
-    font-size: 13px;
-    font-weight: 700;
-    color: #1e40af;
-    margin: 0;
-  }
-
-  .doctor-info-row {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    margin-bottom: 2px;
-    flex-wrap: wrap;
-  }
-
-  .doctor-info-icon {
-    font-size: 9px;
-    width: 15px;
-    flex-shrink: 0;
-  }
-
-  .doctor-info-text {
-    font-size: 8px;
-    font-weight: 500;
-    line-height: 1.2;
-    word-break: break-word;
-  }
-
-  .doctor-specialty-text { color: #2563eb; font-weight: 600; }
-  .doctor-degree-text { color: #8b5cf6; font-weight: 500; }
-  .doctor-experience-text { color: #10b981; font-weight: 500; }
-  .doctor-location-text { color: #6b7280; font-weight: 500; }
-
-  .home-doctor-card .price-book-row {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    margin-top: 3px;
-  }
-
-  .home-doctor-card .price-amount {
+  
+  .home-book-btn {
+    padding: 5px 16px;
     font-size: 11px;
-    font-weight: 800;
-    color: #059669;
-    white-space: nowrap;
-  }
-
-  .home-doctor-card .price-amount span {
-    font-size: 7px;
-    font-weight: 400;
-    color: #6b7280;
-  }
-
-  .home-doctor-card .home-book-btn {
-    background-color: #2563eb; color: white;
-    border-radius: 40px;
-    border: none;
-    cursor: pointer;
-    padding: 3px 12px;
-    font-size: 8px;
   }
 }
 
 /* ========================================
-   DESKTOP (1367px - 1920px) - 2 CARDS
-   ======================================== */
-@media (min-width: 1367px) and (max-width: 1920px) {
-  .home-doctors-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 28px;
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-
-  .home-doctor-card {
-    background: white;
-    border-radius: 20px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    border: 1px solid #eef2f6;
-    transition: all 0.3s ease;
-  }
-
-  .home-doctor-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
-  }
-
-  .home-doctor-card-inner {
-    display: flex;
-    flex-direction: row;
-    align-items: stretch;
-    padding: 22px;
-    gap: 22px;
-    min-height: 200px;
-  }
-
-  .home-doctor-card .home-doctor-image-section {
-    flex-shrink: 0;
-    display: flex;
-    align-items: stretch;
-  }
-
-  .home-doctor-card .home-doctor-image-container {
-    width: 140px;
-    height: 100%;
-    min-height: 170px;
-    border-radius: 23px;
-    overflow: hidden;
-    background: #f1f5f9;
-  }
-
-  .home-doctor-card .home-doctor-image-container img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  .home-doctor-card .home-doctor-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 10px;
-  }
-
-  .home-doctor-card .home-doctor-name {
-    font-size: 19px;
-    font-weight: 700;
-    color: #1e40af;
-    margin: 0;
-  }
-
-  /* NEW CSS CLASSES */
-  .doctor-info-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 6px;
-    flex-wrap: wrap;
-  }
-
-  .doctor-info-icon {
-    font-size: 14px;
-    width: 22px;
-    flex-shrink: 0;
-  }
-
-  .doctor-info-text {
-    font-size: 13px;
-    font-weight: 500;
-    line-height: 1.4;
-    word-break: break-word;
-  }
-
-  .doctor-specialty-text { color: #2563eb; font-weight: 600; }
-  .doctor-degree-text { color: #8b5cf6; font-weight: 500; }
-  .doctor-experience-text { color: #10b981; font-weight: 500; }
-  .doctor-location-text { color: #6b7280; font-weight: 500; }
-
-  .home-doctor-card .price-book-row {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    margin-top: 6px;
-    width: 100%;
-  }
-
- .home-doctor-card .price-amount {
-    font-size: 19px;
-    font-weight: 800;
-    color: #059669;
-    white-space: nowrap;
-  }
-
-  .home-doctor-card .price-amount span {
-    font-size: 12px;
-    font-weight: 400;
-    color: #6b7280;
-  }
-
-  .home-doctor-card .home-book-btn {
-    background-color: #2563eb; color: white;
-    border-radius: 40px;
-    border: none;
-    cursor: pointer;
-    padding: 10px 32px;
-    font-size: 14px;
-  }
-}
-
-/* ========================================
-   LARGE DESKTOP (1921px and above) - 2 CARDS
-   ======================================== */
-@media (min-width: 1921px) {
-  .home-doctors-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 32px;
-    max-width: 1400px;
-    margin: 0 auto;
-  }
-
-  .home-doctor-card {
-    background: white;
-    border-radius: 24px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    border: 1px solid #eef2f6;
-    transition: all 0.3s ease;
-  }
-
-  .home-doctor-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
-  }
-
-  .home-doctor-card-inner {
-    display: flex;
-    flex-direction: row;
-    align-items: stretch;
-    padding: 24px;
-    gap: 24px;
-    min-height: 220px;
-  }
-
-  .home-doctor-card .home-doctor-image-section {
-    flex-shrink: 0;
-    display: flex;
-    align-items: stretch;
-  }
-
-  .home-doctor-card .home-doctor-image-container {
-    width: 160px;
-    height: 100%;
-    min-height: 190px;
-    border-radius: 23px;
-    overflow: hidden;
-    background: #f1f5f9;
-  }
-
-  .home-doctor-card .home-doctor-image-container img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  .home-doctor-card .home-doctor-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 12px;
-  }
-
-  .home-doctor-card .home-doctor-name {
-    font-size: 21px;
-    font-weight: 700;
-    color: #1e40af;
-    margin: 0;
-  }
-
-  /* NEW CSS CLASSES */
-  .doctor-info-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 8px;
-    flex-wrap: wrap;
-  }
-
-  .doctor-info-icon {
-    font-size: 16px;
-    width: 24px;
-    flex-shrink: 0;
-  }
-
-  .doctor-info-text {
-    font-size: 15px;
-    font-weight: 500;
-    line-height: 1.4;
-    word-break: break-word;
-  }
-
-  .doctor-specialty-text { color: #2563eb; font-weight: 600; }
-  .doctor-degree-text { color: #8b5cf6; font-weight: 500; }
-  .doctor-experience-text { color: #10b981; font-weight: 500; }
-  .doctor-location-text { color: #6b7280; font-weight: 500; }
-
-  .home-doctor-card .slots-row {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-wrap: wrap;
-  }
-
-  .home-doctor-card .slots-time {
-    font-size: 14px;
-    color: #6b7280;
-  }
-
-  .home-doctor-card .price-book-row {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    margin-top: 6px;
-    width: 100%;
-  }
-
- .home-doctor-card .price-amount {
-    font-size: 21px;
-    font-weight: 800;
-    color: #059669;
-    white-space: nowrap;
-  }
-
-  .home-doctor-card .price-amount span {
-    font-size: 13px;
-    font-weight: 400;
-    color: #6b7280;
-  }
-
-  .home-doctor-card .home-book-btn {
-    background-color: #2563eb; color: white;
-    border-radius: 40px;
-    border: none;
-    cursor: pointer;
-    padding: 10px 32px;
-    font-size: 14px;
-  }
-}
-
-/* ========================================
-   10. BOOKING FORM - RESPONSIVE
+   10. BOOKING FORM
    ======================================== */
 .booking-form {
   max-width: 800px;
@@ -1736,6 +875,7 @@ body {
   gap: 0.5rem;
   font-weight: 600;
 }
+
 .form-section h3::before {
   content: "📋";
   font-size: 1.2rem;
@@ -1754,6 +894,7 @@ body {
   gap: 0.4rem;
   margin-bottom: 0.5rem;
 }
+
 .form-group label {
   font-size: 0.85rem;
   font-weight: 600;
@@ -1762,6 +903,7 @@ body {
   align-items: center;
   gap: 0.3rem;
 }
+
 .form-group label::before {
   content: "•";
   color: #2563eb;
@@ -1780,6 +922,7 @@ body {
   background: white;
   width: 100%;
 }
+
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
@@ -1787,10 +930,12 @@ body {
   border-color: #2563eb;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
+
 .form-group textarea {
   resize: vertical;
   min-height: 100px;
 }
+
 .form-group select {
   appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
@@ -1798,23 +943,6 @@ body {
   background-position: right 1rem center;
   background-size: 1rem;
   padding-right: 2.5rem;
-}
-
-.slot-warning {
-  background: #fee2e2;
-  color: #b91c1c;
-  padding: 0.6rem 1rem;
-  border-radius: 10px;
-  font-size: 0.85rem;
-  margin-top: 0.5rem;
-  border-left: 4px solid #dc2626;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-.slot-warning::before {
-  content: "⚠️";
-  font-size: 1rem;
 }
 
 .form-actions {
@@ -1826,7 +954,7 @@ body {
 }
 
 /* ========================================
-   11. DOCTOR SUMMARY - RESPONSIVE
+   11. DOCTOR SUMMARY
    ======================================== */
 .home-doctor-summary {
   background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
@@ -1844,12 +972,14 @@ body {
 .home-doctor-summary-info {
   flex: 1;
 }
+
 .home-doctor-summary-info h2 {
   font-size: 1rem;
   color: #475569;
   font-weight: 500;
   margin-bottom: 0.2rem;
 }
+
 .home-doctor-summary-info h3 {
   font-size: 1.5rem;
   color: #1d4ed8;
@@ -1857,13 +987,15 @@ body {
   margin-bottom: 0.3rem;
   line-height: 1.2;
 }
+
 .home-doctor-summary-info p {
   color: #475569;
   font-size: 0.95rem;
 }
 
-.home-consultation-fee { color: white; 
+.home-consultation-fee {
   background: #2563eb;
+  color: white;
   padding: 0.5rem 1.2rem;
   border-radius: 40px;
   font-weight: 700;
@@ -1873,10 +1005,11 @@ body {
 }
 
 /* ========================================
-   12. BUTTONS - RESPONSIVE
+   12. BUTTONS
    ======================================== */
-.primary-btn { color: white; 
+.primary-btn {
   background: #2563eb;
+  color: white;
   border: none;
   padding: 0.7rem 1.5rem;
   border-radius: 40px;
@@ -1886,11 +1019,13 @@ body {
   transition: all 0.3s;
   box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
 }
+
 .primary-btn:hover:not(:disabled) {
   background: #1d4ed8;
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
 }
+
 .primary-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -1907,13 +1042,14 @@ body {
   cursor: pointer;
   transition: all 0.3s;
 }
+
 .secondary-btn:hover {
   background: #f8fafc;
   border-color: #94a3b8;
 }
 
 /* ========================================
-   13. PAYMENT PAGE - FULLY RESPONSIVE
+   13. PAYMENT PAGE
    ======================================== */
 .home-payment-container {
   max-width: 900px;
@@ -1931,6 +1067,7 @@ body {
   border: 1px solid #e2e8f0;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
 }
+
 .home-payment-summary h3 {
   font-size: 1.5rem;
   color: #0f172a;
@@ -1940,6 +1077,7 @@ body {
   gap: 0.5rem;
   font-weight: 700;
 }
+
 .home-payment-summary h3::before {
   content: "💰";
   font-size: 1.5rem;
@@ -1953,9 +1091,11 @@ body {
   color: #475569;
   font-size: 1rem;
 }
+
 .home-summary-item:last-of-type {
   border-bottom: none;
 }
+
 .home-summary-item.total {
   border-top: 2px solid #2563eb;
   margin-top: 1rem;
@@ -1964,19 +1104,10 @@ body {
   font-weight: 700;
   color: #0f172a;
 }
+
 .home-summary-item.total span:last-child {
   color: #2563eb;
   font-size: 1.3rem;
-}
-
-.commission-note {
-  font-size: 0.9rem;
-  color: #64748b;
-  margin-top: 1rem;
-  padding: 0.5rem;
-  background: #f1f5f9;
-  border-radius: 8px;
-  text-align: center;
 }
 
 .home-patient-summary {
@@ -1987,6 +1118,7 @@ body {
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
   margin-bottom: 1.5rem;
 }
+
 .home-patient-summary h4 {
   font-size: 1.2rem;
   color: #0f172a;
@@ -1996,43 +1128,15 @@ body {
   gap: 0.5rem;
   font-weight: 600;
 }
+
 .home-patient-summary h4::before {
   content: "👤";
   font-size: 1.2rem;
 }
 
-.home-patient-info-item {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.7rem 0;
-  border-bottom: 1px dashed #e2e8f0;
-}
-.home-patient-info-item:last-child {
-  border-bottom: none;
-}
-.home-patient-info-item strong {
-  min-width: 80px;
-  color: #475569;
-  font-size: 0.9rem;
-  font-weight: 600;
-}
-.home-patient-info-item span {
-  color: #0f172a;
-  font-size: 0.95rem;
-  font-weight: 500;
-  word-break: break-word;
-}
-
-.payment-actions {
-  display: flex;
-  gap: 1rem;
-  margin-top: 1.5rem;
-  width: 100%;
-}
-
-.payment-btn { color: white; 
+.payment-btn {
   background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
   border: none;
   padding: 1rem 2rem;
   border-radius: 50px;
@@ -2047,20 +1151,24 @@ body {
   gap: 0.5rem;
   box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
 }
+
 .payment-btn:hover {
   background: linear-gradient(135deg, #059669, #047857);
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
 }
+
 .payment-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
   transform: none;
 }
+
 .payment-btn::before {
   content: "💳";
   font-size: 1.2rem;
 }
+
 /* ========================================
    14. UPI PAYMENT
    ======================================== */
@@ -2074,6 +1182,17 @@ body {
   animation: slideUp 0.3s ease;
 }
 
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .qr-code-image {
   width: 200px;
   height: 200px;
@@ -2083,277 +1202,9 @@ body {
   border-radius: 16px;
 }
 
-.payment-instructions {
-  background: #f0f9ff;
-  padding: 20px;
-  border-radius: 16px;
-  border-left: 4px solid #2563eb;
-  margin-bottom: 20px;
-}
-
 /* ========================================
-   15. CONFIRMATION PAGE
+   15. SLOTS MODAL
    ======================================== */
-.confirmation-card {
-  max-width: 500px;
-  margin: 0 auto;
-  padding: 1.5rem;
-  background: white;
-  border-radius: 24px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-}
-
-.success-icon {
-  font-size: 3rem;
-  text-align: center;
-  margin-bottom: 1rem;
-  animation: bounce 1s ease infinite;
-}
-
-@keyframes bounce {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-}
-
-.details-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0.8rem;
-  margin: 1.5rem 0;
-}
-.detail-item {
-  background: #f8fafc;
-  padding: 0.8rem;
-  border-radius: 12px;
-}
-.detail-label {
-  font-size: 0.65rem;
-  color: #64748b;
-  text-transform: uppercase;
-  margin-bottom: 0.2rem;
-  display: block;
-  font-weight: 600;
-}
-.detail-value {
-  font-size: 0.9rem;
-  font-weight: 600;
-  word-break: break-word;
-  color: #0f172a;
-}
-
-/* ========================================
-   16. FOOTER
-   ======================================== */
-.app-footer {
-  background: #0f172a;
-  color: #94a3b8;
-  padding: 2.5rem 1rem 1.5rem;
-  margin-top: 3rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  width: 100%;
-}
-
-.footer-content {
-  max-width: 1400px;
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 2rem;
-  padding: 0 1rem;
-}
-
-.footer-section {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-.footer-section h3 {
-  margin-bottom: 0.5rem;
-  font-size: 1.2rem;
-  font-weight: 600;
-}
-.footer-section h4 {
-  margin-bottom: 0.5rem;
-  font-size: 1rem;
-  font-weight: 600;
-}
-.footer-section p {
-  line-height: 1.6;
-  font-size: 0.85rem;
-  margin-bottom: 0.3rem;
-}
-
-.footer-section button {
-  background: rgba(255, 255, 255, 0.1);
-  color: #94a3b8;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 0.3rem 0.8rem;
-  border-radius: 30px;
-  cursor: pointer;
-  transition: all 0.3s;
-  font-size: 0.8rem;
-}
-.footer-section button:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: translateY(-2px);
-}
-
-.footer-bottom {
-  max-width: 1400px;
-  margin: 2rem auto 0;
-  padding-top: 1.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  text-align: center;
-  font-size: 0.75rem;
-  color: #64748b;
-}
-
-/* ========================================
-   17. WAITING CARD
-   ======================================== */
-.waiting-card.minimal {
-  max-width: 320px;
-  margin: 0 auto;
-  text-align: center;
-  padding: 2rem 1rem;
-}
-.waiting-icon {
-  font-size: 3rem;
-  margin-bottom: 0.5rem;
-}
-.waiting-card.minimal h3 {
-  color: #1e293b;
-  font-size: 1.3rem;
-  margin-bottom: 0.8rem;
-}
-.small-msg {
-  color: #221b0f;
-  font-size: 0.9rem;
-  margin-bottom: 1rem;
-  background: #fef9e7;
-  padding: 0.5rem 1rem;
-  border-radius: 30px;
-  display: inline-block;
-  font-weight: 500;
-}
-.amount-chip {
-  background: #e2e8f0;
-  padding: 0.6rem 1.2rem;
-  border-radius: 30px;
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: #0f172a;
-  margin-bottom: 1.5rem;
-  display: inline-block;
-}
-.home-btn.small {
-  color: white !important;
-  background: #2563eb;
-  border: none;
-  padding: 0.7rem 1.5rem;
-  border-radius: 30px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
-  width: 100%;
-  transition: all 0.3s;
-}
-.home-btn.small:hover {
-  background: #1d4ed8;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
-}
-
-/* ========================================
-   18. HOME PAGE DOCTOR STATUS BADGE (TOP RIGHT CORNER)
-   ======================================== */
-
-/* Make card position relative for absolute badge positioning */
-.home-doctor-card {
-  position: relative;
-}
-
-/* Status Badge Styles - Home Page Only */
-.home-doctor-status-badge {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  padding: 4px 10px;
-  font-size: 10px;
-  font-weight: 600;
-  border-radius: 20px;
-  z-index: 10;
-  font-family: monospace;
-  letter-spacing: 0.5px;
-}
-
-/* Active (Online) Badge */
-.home-doctor-status-badge.active {
-  background: #d1fae5;
-  color: #065f46;
-  border: 1px solid #a7f3d0;
-}
-
-/* Inactive (Offline) Badge */
-.home-doctor-status-badge.inactive {
-  background: #fee2e2;
-  color: #991b1b;
-  border: 1px solid #fecaca;
-}
-
-/* ========================================
-   VIEW ALL SLOTS BUTTON & MODAL
-   ======================================== */
-
-/* View All Slots Button - Simple Style (No Blue Background) */
-.view-all-slots-btn-primary {
-  background: none;
-  border: 1px solid #2563eb;
-  color: #2563eb;
-  padding: 5px 14px;
-  border-radius: 30px;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-  margin-left: 8px;
-  white-space: nowrap;
-}
-
-.view-all-slots-btn-primary:hover {
-  background: #eef2ff;
-  transform: translateY(-1px);
-}
-
-/* Old button (keep for compatibility) */
-.view-all-slots-btn {
-  background: none;
-  border: none;
-  color: #2563eb;
-  font-size: 11px;
-  font-weight: 500;
-  cursor: pointer;
-  margin-left: 8px;
-  padding: 2px 8px;
-  border-radius: 20px;
-  transition: all 0.2s;
-}
-
-.view-all-slots-btn:hover {
-  background: #eef2ff;
-  text-decoration: underline;
-}
-
-/* ========================================
-   SLOTS MODAL - FULLY RESPONSIVE
-   ======================================== */
-
-/* Modal Container */
 .slots-modal {
   max-width: 650px;
   width: 90%;
@@ -2363,7 +1214,6 @@ body {
   position: relative;
 }
 
-/* Modal Header - Fixed close button position */
 .slots-modal .modal-header {
   padding: 16px 20px;
   border-bottom: 1px solid #e2e8f0;
@@ -2403,20 +1253,17 @@ body {
   color: #1e293b;
 }
 
-/* Modal Body - Scrollable */
 .slots-modal .modal-body {
   padding: 20px;
   overflow-y: auto;
   flex: 1;
 }
 
-/* Slots Grid - Responsive */
 .slots-grid {
   display: grid;
   gap: 10px;
 }
 
-/* Slot Item - Clean Design */
 .slot-item {
   background: #eff6ff;
   border: 1px solid #bfdbfe;
@@ -2434,11 +1281,12 @@ body {
 .slot-item:hover {
   background: #2563eb;
   border-color: #2563eb;
+  color: white;
   transform: translateY(-2px);
 }
 
 /* ========================================
-   Email Modal - reuses .modal-content 
+   16. EMAIL MODAL
    ======================================== */
 .email-modal {
   max-width: 450px;
@@ -2462,75 +1310,135 @@ body {
   border-color: #2563eb;
 }
 
-
-/* Header Logo Responsive */
-
-@media (max-width: 768px) {
-  
-  .logo-section {
-  }
-  
-  .tagline { color: #3b82f6;  color: #3b82f6;  font-size: 0.75rem; color: #64748b; margin-left: 5px; 
-  }
+/* ========================================
+   17. FOOTER
+   ======================================== */
+.app-footer {
+  background: #0f172a;
+  color: #94a3b8;
+  padding: 2.5rem 1rem 1.5rem;
+  margin-top: 3rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  width: 100%;
 }
 
-@media (min-width: 769px) and (max-width: 1024px) {
+.footer-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 2rem;
+  padding: 0 1rem;
 }
 
-/* Force logo size */
-
-
-@media (max-width: 768px) {
+.footer-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
-@media (min-width: 769px) and (max-width: 1024px) {
+.footer-section h3 {
+  margin-bottom: 0.5rem;
+  font-size: 1.2rem;
+  font-weight: 600;
 }
 
-.logo-section img {
+.footer-section h4 {
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
 }
 
-@media (max-width: 768px) {
-  .logo-section img {
-  }
+.footer-section p {
+  line-height: 1.6;
+  font-size: 0.85rem;
+  margin-bottom: 0.3rem;
 }
 
-.logo-section img {
+.footer-section button {
+  background: rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.3rem 0.8rem;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 0.8rem;
 }
 
-@media (max-width: 768px) {
-  .logo-section img {
-  }
+.footer-section button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
 }
 
-/* Clean logo style */
-.logo {
-}
-
-.home-doctor-card .home-book-btn {
-}
-
-@media (min-width: 811px) and (max-width: 1024px) {
-  .home-doctor-card .home-book-btn {
-  }
+.footer-bottom {
+  max-width: 1400px;
+  margin: 2rem auto 0;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: center;
+  font-size: 0.75rem;
+  color: #64748b;
 }
 
 /* ========================================
-   FORCE BOOK BUTTON STYLE (DO NOT REMOVE)
+   18. WAITING CARD
    ======================================== */
-
-.home-doctor-card .home-book-btn {
+.waiting-card.minimal {
+  max-width: 320px;
+  margin: 0 auto;
+  text-align: center;
+  padding: 2rem 1rem;
 }
 
-.home-doctor-card .home-book-btn:hover {
+.waiting-icon {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
 }
 
-/* Override any problematic media query */
-@media (min-width: 811px) and (max-width: 1024px) {
-  .home-doctor-card .home-book-btn {
-  }
+.waiting-card.minimal h3 {
+  color: #1e293b;
+  font-size: 1.3rem;
+  margin-bottom: 0.8rem;
 }
 
-@media (max-width: 767px) {
-  .home-doctor-card .home-book-btn {
-  }
+.small-msg {
+  color: #221b0f;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  background: #fef9e7;
+  padding: 0.5rem 1rem;
+  border-radius: 30px;
+  display: inline-block;
+  font-weight: 500;
+}
+
+.amount-chip {
+  background: #e2e8f0;
+  padding: 0.6rem 1.2rem;
+  border-radius: 30px;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 1.5rem;
+  display: inline-block;
+}
+
+.home-btn.small {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 0.7rem 1.5rem;
+  border-radius: 30px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.3s;
+}
+
+.home-btn.small:hover {
+  background: #1d4ed8;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
 }

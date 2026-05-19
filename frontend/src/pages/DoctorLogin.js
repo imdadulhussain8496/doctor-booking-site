@@ -1,6 +1,5 @@
 // D:\Projects\DoctorBooking\frontend\src\pages\DoctorLogin.js
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import "./Doctor.css";
 
@@ -10,8 +9,7 @@ function DoctorLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const { doctorLogin } = useAuth(); // ← FIXED: Changed from "login" to "doctorLogin"
-  const navigate = useNavigate();
+  const { doctorLogin } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -23,11 +21,8 @@ function DoctorLogin() {
 
       console.log("🔐 Doctor login attempt:", email);
       console.log("Password length:", cleanedPassword.length);
-      console.log("doctorLogin function:", doctorLogin);
 
       const result = await doctorLogin(email.trim(), cleanedPassword);
-
-      console.log("Login result:", result);
 
       if (result.success) {
         console.log("✅ Success! Navigating to dashboard...");

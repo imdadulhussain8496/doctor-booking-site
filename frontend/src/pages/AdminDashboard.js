@@ -40,20 +40,17 @@ function AdminDashboard() {
   const [loadingRestricted, setLoadingRestricted] = useState(false);
 
   // ✅ NEW: Payment Enforcement Modal State
-  const [showPaymentEnforcementModal, setShowPaymentEnforcementModal] =
-    useState(false);
+  const [showPaymentEnforcementModal, setShowPaymentEnforcementModal] = useState(false);
 
-  // ✅ Auto-refresh state
-  const [lastRefresh, setLastRefresh] = useState(Date.now());
+  // NEW (sahi — industry standard)
+const [, setLastRefresh] = useState(Date.now());
 
   const [activeTab, setActiveTab] = useState("dashboard");
-
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // ✅ Doctor Management State
   const [showAddDoctorModal, setShowAddDoctorModal] = useState(false);
   const [showEditDoctorModal, setShowEditDoctorModal] = useState(false);
-  //const [selectedDoctor, setSelectedDoctor] = useState(null);
 
   const [newDoctor, setNewDoctor] = useState({
     name: "",
@@ -103,8 +100,6 @@ function AdminDashboard() {
     type: "",
   });
 
-  // api.js handles withCredentials and baseURL
-
   // ✅ Logout handler
   const handleLogout = () => {
     adminLogout();
@@ -112,52 +107,16 @@ function AdminDashboard() {
   };
 
   // ✅ Show notification function
-  const showNotification = (message, type = "success") => {
-    setNotification({ show: true, message, type });
-    setTimeout(
-      () => setNotification({ show: false, message: "", type: "" }),
-      3000,
-    );
-  };
-
+const showNotification = useCallback((message, type = "success") => {
+  setNotification({ show: true, message, type });
+  setTimeout(() => setNotification({ show: false, message: "", type: "" }), 3000);
+}, []);
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
   };
 
-  // ✅ Auto-refresh function
-  const refreshAllData = useCallback(async () => {
-    console.log("🔄 Auto-refreshing admin data...");
-    await Promise.all([
-      fetchDashboardData(false),
-      fetchCommissionReport(false),
-      fetchAllDoctors(false),
-      fetchCommissionDue(false),
-      fetchRestrictedDoctors(false),
-      fetchOverdueDoctors(false),
-    ]);
-    setLastRefresh(Date.now());
-  }, []);
-
-  // ✅ Auto-refresh every 30 seconds
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      refreshAllData();
-    }, 30000);
-    return () => clearInterval(intervalId);
-  }, [refreshAllData]);
-
-  // ✅ Initial data fetch
-  useEffect(() => {
-    fetchDashboardData();
-    fetchCommissionReport();
-    fetchAllDoctors();
-    fetchCommissionDue();
-    fetchRestrictedDoctors();
-    fetchOverdueDoctors();
-  }, []);
-
   // ✅ Fetch restricted doctors
-  const fetchRestrictedDoctors = async (showLoader = true) => {
+  const fetchRestrictedDoctors = useCallback(async (showLoader = true) => {
     if (showLoader) setLoadingRestricted(true);
     try {
       const response = await api.get("/api/admin/restricted-doctors");
@@ -169,10 +128,10 @@ function AdminDashboard() {
     } finally {
       if (showLoader) setLoadingRestricted(false);
     }
-  };
+  }, []);
 
   // ✅ Fetch overdue doctors
-  const fetchOverdueDoctors = async () => {
+  const fetchOverdueDoctors = useCallback(async () => {
     try {
       const response = await api.get("/api/admin/overdue-doctors");
       if (response.data.success) {
@@ -181,61 +140,10 @@ function AdminDashboard() {
     } catch (error) {
       console.error("❌ Error fetching overdue doctors:", error);
     }
-  };
-
-  // ✅ Unblock doctor
-  const handleUnblockDoctor = async (doctorId, doctorName) => {
-    if (!window.confirm(`Are you sure you want to unblock ${doctorName}?`)) {
-      return;
-    }
-
-    try {
-      const response = await api.post(`/api/admin/doctors/unblock/${doctorId}`);
-
-      if (response.data.success) {
-        showNotification(`✅ ${doctorName} unblocked successfully`, "success");
-        fetchRestrictedDoctors();
-        fetchAllDoctors();
-        fetchDashboardData();
-      }
-    } catch (error) {
-      console.error("❌ Error unblocking doctor:", error);
-      showNotification("Failed to unblock doctor", "error");
-    }
-  };
-
-  // ✅ Send manual reminder
-  const handleSendReminder = async (doctorId, doctorName, type) => {
-    const typeNames = {
-      gentle: "⏳ Gentle Reminder",
-      due: "⚠️ Due Date",
-      urgent: "🔴 Urgent",
-      final: "🚨 Final Warning",
-    };
-
-    if (!window.confirm(`Send ${typeNames[type]} to ${doctorName}?`)) {
-      return;
-    }
-
-    try {
-      const response = await api.post(
-        `/api/admin/send-reminder/${doctorId}/${type}`,
-      );
-
-      if (response.data.success) {
-        showNotification(
-          `✅ ${typeNames[type]} sent to ${doctorName}`,
-          "success",
-        );
-      }
-    } catch (error) {
-      console.error("❌ Error sending reminder:", error);
-      showNotification("Failed to send reminder", "error");
-    }
-  };
+  }, []);
 
   // ✅ Fetch commission due from all doctors
-  const fetchCommissionDue = async (showLoader = true) => {
+  const fetchCommissionDue = useCallback(async () => {
     try {
       const response = await api.get("/api/admin/commission-due");
       if (response.data.success) {
@@ -245,54 +153,14 @@ function AdminDashboard() {
     } catch (error) {
       console.error("❌ Error fetching commission due:", error);
     }
-  };
-
-  // ✅ Mark commission as paid
-  const handleMarkCommissionPaid = async (doctorId, amount) => {
-    const transactionId = paymentTransactionId[doctorId];
-
-    if (!transactionId) {
-      showNotification("Please enter transaction ID", "error");
-      return;
-    }
-
-    setProcessingPayment(true);
-    try {
-      const response = await api.post("/api/admin/commission/mark-paid", {
-        doctorId,
-        transactionId,
-        amount,
-      });
-
-      if (response.data.success) {
-        showNotification(
-          `✅ Commission paid for ${response.data.doctor.name}`,
-          "success",
-        );
-        await fetchCommissionDue();
-        await fetchDashboardData();
-        await fetchRestrictedDoctors();
-
-        setPaymentTransactionId((prev) => ({ ...prev, [doctorId]: "" }));
-      }
-    } catch (error) {
-      console.error("❌ Error marking commission as paid:", error);
-      showNotification(
-        error.response?.data?.message || "Failed to mark as paid",
-        "error",
-      );
-    } finally {
-      setProcessingPayment(false);
-    }
-  };
+  }, []);
 
   // ✅ Fetch all doctors with passwords
-  const fetchAllDoctors = async (showLoader = true) => {
+  const fetchAllDoctors = useCallback(async (showLoader = true) => {
     try {
       if (showLoader) setDataLoading(true);
       console.log("🔵 Fetching doctors...");
       const response = await api.get("/api/admin/doctors?limit=50");
-
       if (response.data.success) {
         const doctorsData = response.data.doctors;
         console.log(`✅ Fetched ${doctorsData.length} doctors`);
@@ -304,32 +172,17 @@ function AdminDashboard() {
     } finally {
       if (showLoader) setDataLoading(false);
     }
-  };
+  }, [showNotification]);
 
-  // ✅ Refresh doctors function
-  const refreshDoctors = async () => {
-    try {
-      setDataLoading(true);
-      await fetchAllDoctors(true);
-      showNotification("Doctors list refreshed", "success");
-    } catch (error) {
-      console.error("Error refreshing doctors:", error);
-      showNotification("Failed to refresh doctors", "error");
-    } finally {
-      setDataLoading(false);
-    }
-  };
-
-  // ✅ Fetch dashboard data
-  const fetchDashboardData = async (showLoader = true) => {
+  // ✅ Fetch dashboard data (FIX 4: removed unused doctorsRes)
+  const fetchDashboardData = useCallback(async (showLoader = true) => {
     try {
       if (showLoader) setDataLoading(true);
-      const [statsRes, appointmentsRes, doctorsRes] = await Promise.all([
+      const [statsRes, appointmentsRes] = await Promise.all([
         api.get("/api/admin/stats"),
         api.get("/api/admin/appointments"),
         api.get("/api/admin/doctors/stats"),
       ]);
-
       setStats(statsRes.data.stats);
       setAppointments(appointmentsRes.data.appointments);
     } catch (error) {
@@ -338,10 +191,10 @@ function AdminDashboard() {
     } finally {
       if (showLoader) setDataLoading(false);
     }
-  };
+  }, [showNotification]);
 
   // ✅ Fetch commission report
-  const fetchCommissionReport = async (showLoader = true) => {
+  const fetchCommissionReport = useCallback(async () => {
     try {
       const response = await api.get("/api/admin/commission/report", {
         params: {
@@ -353,10 +206,122 @@ function AdminDashboard() {
     } catch (error) {
       console.error("Error fetching commission report:", error);
     }
-  };
+  }, [commissionPeriod.month, commissionPeriod.year]);
+
+  // ✅ Auto-refresh function
+  const refreshAllData = useCallback(async () => {
+    console.log("🔄 Auto-refreshing admin data...");
+    await Promise.all([
+      fetchDashboardData(false),
+      fetchCommissionReport(),
+      fetchAllDoctors(false),
+      fetchCommissionDue(),
+      fetchRestrictedDoctors(false),
+      fetchOverdueDoctors(),
+    ]);
+    setLastRefresh(Date.now());
+  }, [fetchDashboardData, fetchCommissionReport, fetchAllDoctors, fetchCommissionDue, fetchRestrictedDoctors, fetchOverdueDoctors]);
+
+  // ✅ Auto-refresh every 30 seconds (FIX 3: added refreshAllData dependency)
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      refreshAllData();
+    }, 30000);
+    return () => clearInterval(intervalId);
+  }, [refreshAllData]);
+
+  // ✅ Initial data fetch (FIX 2: added all dependencies)
+  useEffect(() => {
+    fetchDashboardData();
+    fetchCommissionReport();
+    fetchAllDoctors();
+    fetchCommissionDue();
+    fetchRestrictedDoctors();
+    fetchOverdueDoctors();
+  }, [fetchDashboardData, fetchCommissionReport, fetchAllDoctors, fetchCommissionDue, fetchRestrictedDoctors, fetchOverdueDoctors]);
+
+  // ✅ Unblock doctor
+  const handleUnblockDoctor = useCallback(async (doctorId, doctorName) => {
+    if (!window.confirm(`Are you sure you want to unblock ${doctorName}?`)) return;
+    try {
+      const response = await api.post(`/api/admin/doctors/unblock/${doctorId}`);
+      if (response.data.success) {
+        showNotification(`✅ ${doctorName} unblocked successfully`, "success");
+        fetchRestrictedDoctors();
+        fetchAllDoctors();
+        fetchDashboardData();
+      }
+    } catch (error) {
+      console.error("❌ Error unblocking doctor:", error);
+      showNotification("Failed to unblock doctor", "error");
+    }
+  }, [fetchRestrictedDoctors, fetchAllDoctors, fetchDashboardData, showNotification]);
+
+  // ✅ Send manual reminder
+  const handleSendReminder = useCallback(async (doctorId, doctorName, type) => {
+    const typeNames = {
+      gentle: "⏳ Gentle Reminder",
+      due: "⚠️ Due Date",
+      urgent: "🔴 Urgent",
+      final: "🚨 Final Warning",
+    };
+    if (!window.confirm(`Send ${typeNames[type]} to ${doctorName}?`)) return;
+    try {
+      const response = await api.post(`/api/admin/send-reminder/${doctorId}/${type}`);
+      if (response.data.success) {
+        showNotification(`✅ ${typeNames[type]} sent to ${doctorName}`, "success");
+      }
+    } catch (error) {
+      console.error("❌ Error sending reminder:", error);
+      showNotification("Failed to send reminder", "error");
+    }
+  }, [showNotification]);
+
+  // ✅ Mark commission as paid
+  const handleMarkCommissionPaid = useCallback(async (doctorId, amount) => {
+    const transactionId = paymentTransactionId[doctorId];
+    if (!transactionId) {
+      showNotification("Please enter transaction ID", "error");
+      return;
+    }
+    setProcessingPayment(true);
+    try {
+      const response = await api.post("/api/admin/commission/mark-paid", {
+        doctorId,
+        transactionId,
+        amount,
+      });
+      if (response.data.success) {
+        showNotification(`✅ Commission paid for ${response.data.doctor.name}`, "success");
+        await fetchCommissionDue();
+        await fetchDashboardData();
+        await fetchRestrictedDoctors();
+        setPaymentTransactionId((prev) => ({ ...prev, [doctorId]: "" }));
+      }
+    } catch (error) {
+      console.error("❌ Error marking commission as paid:", error);
+      showNotification(error.response?.data?.message || "Failed to mark as paid", "error");
+    } finally {
+      setProcessingPayment(false);
+    }
+  }, [paymentTransactionId, fetchCommissionDue, fetchDashboardData, fetchRestrictedDoctors, showNotification]);
+
+  // ✅ Refresh doctors function
+  const refreshDoctors = useCallback(async () => {
+    try {
+      setDataLoading(true);
+      await fetchAllDoctors(true);
+      showNotification("Doctors list refreshed", "success");
+    } catch (error) {
+      console.error("Error refreshing doctors:", error);
+      showNotification("Failed to refresh doctors", "error");
+    } finally {
+      setDataLoading(false);
+    }
+  }, [fetchAllDoctors, showNotification]);
 
   // ✅ Handle filter
-  const handleFilter = async () => {
+  const handleFilter = useCallback(async () => {
     setDataLoading(true);
     try {
       const params = new URLSearchParams();
@@ -364,7 +329,6 @@ function AdminDashboard() {
       if (filter.status) params.append("status", filter.status);
       if (filter.startDate) params.append("startDate", filter.startDate);
       if (filter.endDate) params.append("endDate", filter.endDate);
-
       const response = await api.get(`/api/admin/appointments?${params}`);
       setAppointments(response.data.appointments);
       showNotification("Filters applied", "success");
@@ -374,22 +338,20 @@ function AdminDashboard() {
     } finally {
       setDataLoading(false);
     }
-  };
+  }, [filter, showNotification]);
 
   // ✅ Send login email
-  const sendLoginEmail = async (doctor) => {
+  const sendLoginEmail = useCallback(async (doctor) => {
     if (!doctor || !doctor.email) {
       showNotification("Doctor email not found!", "error");
       return;
     }
-
     try {
       const response = await api.post("/api/admin/send-doctor-email", {
         email: doctor.email,
         name: doctor.name,
         password: doctor.password || "doctor123",
       });
-
       if (response.data.success) {
         showNotification(`✅ Email sent to ${doctor.email}`, "success");
       } else {
@@ -399,25 +361,19 @@ function AdminDashboard() {
       console.error("Error sending email:", error);
       showNotification("Failed to send email", "error");
     }
-  };
+  }, [showNotification]);
 
   // ✅ Reset password
-  const resetPassword = async (doc) => {
+  const resetPassword = useCallback(async (doc) => {
     const newPassword = prompt(
-      `🔑 Reset password for ${doc.name}\n\n` +
-        `Enter new password (or leave empty for default 'doctor123'):`,
+      `🔑 Reset password for ${doc.name}\n\nEnter new password (or leave empty for default 'doctor123'):`,
       "doctor123",
     );
-
     if (newPassword === null) return;
-
     try {
-      console.log("Resetting password for:", doc.email);
-
       const response = await api.patch(`/api/admin/doctors/${doc._id}`, {
         password: newPassword || "doctor123",
       });
-
       if (response.data.success) {
         setResetResult({
           name: doc.name,
@@ -425,7 +381,6 @@ function AdminDashboard() {
           password: newPassword || "doctor123",
         });
         setShowPasswordResetModal(true);
-
         await fetchAllDoctors();
         showNotification("Password reset successful", "success");
       }
@@ -433,58 +388,42 @@ function AdminDashboard() {
       console.error("Error resetting password:", error);
       showNotification("Failed to reset password", "error");
     }
-  };
+  }, [fetchAllDoctors, showNotification]);
 
-  // ✅ Handle show password
-  const handleShowPassword = (doctor) => {
-    if (doctor.password) {
-      alert(`🔑 Password for ${doctor.name}\n\nPassword: ${doctor.password}`);
-    } else {
-      alert(`❌ Password not found for ${doctor.name}`);
-    }
-  };
+  // ✅ Handle show password (FIX 5: commented out, kept for reference)
+  // const handleShowPassword = (doctor) => {
+  //   if (doctor.password) {
+  //     alert(`🔑 Password for ${doctor.name}\n\nPassword: ${doctor.password}`);
+  //   } else {
+  //     alert(`❌ Password not found for ${doctor.name}`);
+  //   }
+  // };
 
   // ✅ Handle image upload for new doctor
-  const handleImageUpload = async (e) => {
+  const handleImageUpload = useCallback(async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
     const MAX_SIZE = 500 * 1024;
     const MIN_SIZE = 10 * 1024;
-
     if (file.size > MAX_SIZE) {
-      showNotification(
-        `Image too large! Maximum ${MAX_SIZE / 1024}KB. Your file: ${(file.size / 1024).toFixed(0)}KB`,
-        "error",
-      );
+      showNotification(`Image too large! Maximum ${MAX_SIZE / 1024}KB. Your file: ${(file.size / 1024).toFixed(0)}KB`, "error");
       e.target.value = "";
       return;
     }
-
     if (file.size < MIN_SIZE) {
-      showNotification(
-        `File too small! Minimum ${MIN_SIZE / 1024}KB. Your file: ${(file.size / 1024).toFixed(0)}KB`,
-        "error",
-      );
+      showNotification(`File too small! Minimum ${MIN_SIZE / 1024}KB. Your file: ${(file.size / 1024).toFixed(0)}KB`, "error");
       e.target.value = "";
       return;
     }
-
     setPreviewImage(URL.createObjectURL(file));
-
     const formData = new FormData();
     formData.append("image", file);
-
     try {
       setUploading(true);
       const response = await api.post("/api/upload/doctor-image", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-
-      setNewDoctor({
-        ...newDoctor,
-        imageUrl: response.data.imageUrl,
-      });
+      setNewDoctor((prev) => ({ ...prev, imageUrl: response.data.imageUrl }));
       showNotification("Image uploaded successfully", "success");
     } catch (error) {
       console.error("Upload failed:", error);
@@ -492,49 +431,33 @@ function AdminDashboard() {
     } finally {
       setUploading(false);
     }
-  };
+  }, [showNotification]);
 
-  // ✅ Handle image upload for edit doctor
-  const handleEditImageUpload = async (e) => {
+  // ✅ Handle edit image upload
+  const handleEditImageUpload = useCallback(async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
     const MAX_SIZE = 500 * 1024;
     const MIN_SIZE = 10 * 1024;
-
     if (file.size > MAX_SIZE) {
-      showNotification(
-        `Image too large! Maximum ${MAX_SIZE / 1024}KB. Your file: ${(file.size / 1024).toFixed(0)}KB`,
-        "error",
-      );
+      showNotification(`Image too large! Maximum ${MAX_SIZE / 1024}KB. Your file: ${(file.size / 1024).toFixed(0)}KB`, "error");
       e.target.value = "";
       return;
     }
-
     if (file.size < MIN_SIZE) {
-      showNotification(
-        `File too small! Minimum ${MIN_SIZE / 1024}KB. Your file: ${(file.size / 1024).toFixed(0)}KB`,
-        "error",
-      );
+      showNotification(`File too small! Minimum ${MIN_SIZE / 1024}KB. Your file: ${(file.size / 1024).toFixed(0)}KB`, "error");
       e.target.value = "";
       return;
     }
-
     setEditPreviewImage(URL.createObjectURL(file));
-
     const formData = new FormData();
     formData.append("image", file);
-
     try {
       setEditUploading(true);
       const response = await api.post("/api/upload/doctor-image", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-
-      setEditDoctorData({
-        ...editDoctorData,
-        imageUrl: response.data.imageUrl,
-      });
+      setEditDoctorData((prev) => ({ ...prev, imageUrl: response.data.imageUrl }));
       showNotification("Image uploaded successfully", "success");
     } catch (error) {
       console.error("Upload failed:", error);
@@ -542,10 +465,10 @@ function AdminDashboard() {
     } finally {
       setEditUploading(false);
     }
-  };
+  }, [showNotification]);
 
   // ✅ Handle add doctor
-  const handleAddDoctor = async () => {
+  const handleAddDoctor = useCallback(async () => {
     try {
       const doctorData = {
         ...newDoctor,
@@ -553,25 +476,12 @@ function AdminDashboard() {
           ? `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=${newDoctor.upiId}&pn=Doctor&cu=INR`
           : "",
       };
-
-      console.log("Adding doctor:", doctorData);
-
       const response = await api.post("/api/admin/doctors", doctorData);
-
       if (response.data.success) {
         showNotification(`✅ ${newDoctor.name} added successfully!`, "success");
-
-        if (
-          window.confirm(
-            `Do you want to send login details to ${newDoctor.email}?`,
-          )
-        ) {
-          await sendLoginEmail({
-            ...newDoctor,
-            password: response.data.password,
-          });
+        if (window.confirm(`Do you want to send login details to ${newDoctor.email}?`)) {
+          await sendLoginEmail({ ...newDoctor, password: response.data.password });
         }
-
         setShowAddDoctorModal(false);
         setNewDoctor({
           name: "",
@@ -589,46 +499,34 @@ function AdminDashboard() {
           address: "",
         });
         setPreviewImage(null);
-
         await fetchAllDoctors();
         await fetchDashboardData();
       }
     } catch (error) {
       console.error("Error adding doctor:", error);
-      showNotification(
-        error.response?.data?.message || "Failed to add doctor",
-        "error",
-      );
+      showNotification(error.response?.data?.message || "Failed to add doctor", "error");
     }
-  };
+  }, [newDoctor, fetchAllDoctors, fetchDashboardData, sendLoginEmail, showNotification]);
 
   // ✅ Handle edit click
-  const handleEditClick = (doctor) => {
+  const handleEditClick = useCallback((doctor) => {
     console.log("Editing doctor:", doctor);
-
-    const doctorId = doctor._id;
-    if (!doctorId) {
+    if (!doctor._id) {
       showNotification("Doctor ID not found", "error");
       return;
     }
-
     setEditDoctorData({ ...doctor });
     setEditPreviewImage(doctor.imageUrl || null);
     setShowEditDoctorModal(true);
-  };
+  }, [showNotification]);
 
   // ✅ Handle edit doctor
-  const handleEditDoctor = async () => {
+  const handleEditDoctor = useCallback(async () => {
     try {
-      const doctorId = editDoctorData._id;
-
-      if (!doctorId) {
+      if (!editDoctorData?._id) {
         showNotification("Doctor ID not found", "error");
         return;
       }
-
-      console.log("Updating doctor:", doctorId);
-
       const doctorData = {
         name: editDoctorData.name,
         email: editDoctorData.email,
@@ -643,78 +541,51 @@ function AdminDashboard() {
         clinicName: editDoctorData.clinicName || "",
         address: editDoctorData.address || "",
       };
-
-      const response = await api.patch(
-        `/api/admin/doctors/${doctorId}`,
-        doctorData,
-      );
-
+      const response = await api.patch(`/api/admin/doctors/${editDoctorData._id}`, doctorData);
       if (response.data.success) {
-        showNotification(
-          `✅ ${editDoctorData.name} updated successfully!`,
-          "success",
-        );
+        showNotification(`✅ ${editDoctorData.name} updated successfully!`, "success");
         setShowEditDoctorModal(false);
         setEditDoctorData(null);
         setEditPreviewImage(null);
-
         await fetchAllDoctors();
         await fetchDashboardData();
       }
     } catch (error) {
       console.error("Error updating doctor:", error);
-      showNotification(
-        error.response?.data?.message || "Failed to update doctor",
-        "error",
-      );
+      showNotification(error.response?.data?.message || "Failed to update doctor", "error");
     }
-  };
+  }, [editDoctorData, fetchAllDoctors, fetchDashboardData, showNotification]);
 
   // ✅ Handle delete doctor
-  const handleDeleteDoctor = async (doctor) => {
-    const doctorId = doctor._id;
-
-    if (!doctorId) {
+  const handleDeleteDoctor = useCallback(async (doctor) => {
+    if (!doctor._id) {
       showNotification("Doctor ID not found", "error");
       return;
     }
-
-    if (
-      window.confirm(
-        `Are you sure you want to delete ${doctor.name}? This action cannot be undone.`,
-      )
-    ) {
+    if (window.confirm(`Are you sure you want to delete ${doctor.name}? This action cannot be undone.`)) {
       try {
-        console.log("Deleting doctor:", doctorId);
-        await api.delete(`/api/admin/doctors/${doctorId}`);
-
+        await api.delete(`/api/admin/doctors/${doctor._id}`);
         showNotification("Doctor deleted successfully", "success");
-
         await fetchAllDoctors();
         await fetchDashboardData();
       } catch (error) {
         console.error("Error deleting doctor:", error);
-        showNotification(
-          error.response?.data?.message || "Failed to delete doctor",
-          "error",
-        );
+        showNotification(error.response?.data?.message || "Failed to delete doctor", "error");
       }
     }
-  };
+  }, [fetchAllDoctors, fetchDashboardData, showNotification]);
 
   // ✅ Handle view QR
-  const handleViewQR = (doctor) => {
+  const handleViewQR = useCallback((doctor) => {
     setSelectedDoctorQR(doctor);
     setShowQRModal(true);
-  };
+  }, []);
 
   // ✅ Calculate total commission
-  const calculateTotalCommission = () => {
+  const calculateTotalCommission = useCallback(() => {
     if (!appointments) return 0;
-    return appointments
-      .filter((apt) => apt.status === "completed")
-      .reduce((sum, apt) => sum + apt.amount * 0.01, 0);
-  };
+    return appointments.filter((apt) => apt.status === "completed").reduce((sum, apt) => sum + apt.amount * 0.01, 0);
+  }, [appointments]);
 
   // Handle logout
   const onLogout = () => {
@@ -734,11 +605,7 @@ function AdminDashboard() {
   return (
     <div className="admin-dashboard">
       {/* Notification */}
-      {notification.show && (
-        <div className={`notification ${notification.type}`}>
-          {notification.message}
-        </div>
-      )}
+      {notification.show && <div className={`notification ${notification.type}`}>{notification.message}</div>}
 
       <header className="admin-header">
         <div className="admin-header-left">
@@ -748,274 +615,121 @@ function AdminDashboard() {
 
         {/* Desktop Buttons */}
         <div className="admin-header-right">
-          <button
-            className="payment-enforcement-btn"
-            onClick={() => setShowPaymentEnforcementModal(true)}
-          >
-            <span>💰</span>
-            Payment Enforcement
+          <button className="payment-enforcement-btn" onClick={() => setShowPaymentEnforcementModal(true)}>
+            <span>💰</span> Payment Enforcement
             {(restrictedDoctors.length > 0 || overdueDoctors.length > 0) && (
-              <span className="notification-badge">
-                {restrictedDoctors.length + overdueDoctors.length}
-              </span>
+              <span className="notification-badge">{restrictedDoctors.length + overdueDoctors.length}</span>
             )}
           </button>
 
           {totalCommissionDue > 0 && (
-            <button
-              className="commission-due-btn"
-              onClick={() => setShowCommissionDueModal(true)}
-            >
-              <span>💰</span>
-              Due: ₹{totalCommissionDue}
+            <button className="commission-due-btn" onClick={() => setShowCommissionDueModal(true)}>
+              <span>💰</span> Due: ₹{totalCommissionDue}
             </button>
           )}
-          <button
-            className="commission-report-btn"
-            onClick={() => setShowCommissionModal(true)}
-          >
+          <button className="commission-report-btn" onClick={() => setShowCommissionModal(true)}>
             💰 Commission Report
           </button>
-          <button
-            onClick={onLogout}
-            className=" logout-btn"
-            style={{ color: "#dc2626" }}
-          >
+          <button onClick={onLogout} className="logout-btn" style={{ color: "#dc2626" }}>
             Logout
           </button>
         </div>
 
         {/* Mobile Menu Button */}
-        <button className="admin-mobile-menu-btn" onClick={toggleMobileMenu}>
-          ☰
-        </button>
+        <button className="admin-mobile-menu-btn" onClick={toggleMobileMenu}>☰</button>
       </header>
 
       {/* Mobile Menu Overlay */}
-      <div
-        className={`mobile-menu-overlay ${mobileMenuOpen ? "active" : ""}`}
-        onClick={toggleMobileMenu}
-      ></div>
+      <div className={`mobile-menu-overlay ${mobileMenuOpen ? "active" : ""}`} onClick={toggleMobileMenu}></div>
 
       {/* Mobile Menu Drawer */}
       <div className={`mobile-menu-drawer ${mobileMenuOpen ? "open" : ""}`}>
         <div className="mobile-menu-items">
-          <button className="mobile-menu-close-top" onClick={toggleMobileMenu}>
-            ✕
-          </button>
-
-          <button
-            className="mobile-menu-btn-item payment"
-            onClick={() => {
-              setShowPaymentEnforcementModal(true);
-              toggleMobileMenu();
-            }}
-          >
-            <span>💰</span>
-            Payment Enforcement
+          <button className="mobile-menu-close-top" onClick={toggleMobileMenu}>✕</button>
+          <button className="mobile-menu-btn-item payment" onClick={() => { setShowPaymentEnforcementModal(true); toggleMobileMenu(); }}>
+            <span>💰</span> Payment Enforcement
             {(restrictedDoctors.length > 0 || overdueDoctors.length > 0) && (
-              <span className="menu-notification-badge">
-                {restrictedDoctors.length + overdueDoctors.length}
-              </span>
+              <span className="menu-notification-badge">{restrictedDoctors.length + overdueDoctors.length}</span>
             )}
           </button>
-
-          <button
-            className="mobile-menu-btn-item due"
-            onClick={() => {
-              setShowCommissionDueModal(true);
-              toggleMobileMenu();
-            }}
-          >
-            <span>💰</span>
-            Commission Due: ₹{totalCommissionDue}
+          <button className="mobile-menu-btn-item due" onClick={() => { setShowCommissionDueModal(true); toggleMobileMenu(); }}>
+            <span>💰</span> Commission Due: ₹{totalCommissionDue}
           </button>
-
-          <button
-            className="mobile-menu-btn-item report"
-            onClick={() => {
-              setShowCommissionModal(true);
-              toggleMobileMenu();
-            }}
-          >
+          <button className="mobile-menu-btn-item report" onClick={() => { setShowCommissionModal(true); toggleMobileMenu(); }}>
             💰 Commission Report
           </button>
-
-          <button
-            className="mobile-menu-btn-item logout"
-            onClick={() => {
-              onLogout();
-              toggleMobileMenu();
-            }}
-          >
+          <button className="mobile-menu-btn-item logout" onClick={() => { onLogout(); toggleMobileMenu(); }}>
             🚪 Logout
           </button>
         </div>
       </div>
 
-      {/* ========== PAYMENT ENFORCEMENT MODAL ========== */}
+      {/* ========== ALL MODALS AND TABS REMAIN SAME ========== */}
+      {/* Payment Enforcement Modal */}
       {showPaymentEnforcementModal && (
-        <div
-          className="modal-overlay"
-          onClick={() => setShowPaymentEnforcementModal(false)}
-        >
-          <div
-            className="modal-content payment-enforcement-modal"
-            onClick={(e) => e.stopPropagation()}
-          >
+        <div className="modal-overlay" onClick={() => setShowPaymentEnforcementModal(false)}>
+          <div className="modal-content payment-enforcement-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>💰 Payment Enforcement</h2>
-              <button
-                className="close-btn"
-                onClick={() => setShowPaymentEnforcementModal(false)}
-              >
-                ✕
-              </button>
+              <button className="close-btn" onClick={() => setShowPaymentEnforcementModal(false)}>✕</button>
             </div>
-
             <div className="modal-body">
-              {/* Summary Cards */}
               <div className="enforcement-summary-grid">
                 <div className="summary-card restricted">
                   <span className="summary-icon">⛔</span>
                   <div className="summary-content">
                     <span className="summary-label">Restricted Doctors</span>
-                    <span className="summary-value">
-                      {stats?.restrictedDoctors || 0}
-                    </span>
+                    <span className="summary-value">{stats?.restrictedDoctors || 0}</span>
                   </div>
                 </div>
-
                 <div className="summary-card overdue">
                   <span className="summary-icon">⚠️</span>
                   <div className="summary-content">
                     <span className="summary-label">Overdue Doctors</span>
-                    <span className="summary-value">
-                      {stats?.overdueDoctors || 0}
-                    </span>
+                    <span className="summary-value">{stats?.overdueDoctors || 0}</span>
                   </div>
                 </div>
-
                 <div className="summary-card fees">
                   <span className="summary-icon">💰</span>
                   <div className="summary-content">
                     <span className="summary-label">Late Fees Collected</span>
-                    <span className="summary-value">
-                      ₹{stats?.totalLateFees || 0}
-                    </span>
+                    <span className="summary-value">₹{stats?.totalLateFees || 0}</span>
                   </div>
                 </div>
               </div>
-
-              {/* Restricted Doctors List */}
-              <div className="enforcement-section">
-                <h3>⛔ Restricted Accounts ({restrictedDoctors.length})</h3>
-              </div>
-
+              <div className="enforcement-section"><h3>⛔ Restricted Accounts ({restrictedDoctors.length})</h3></div>
               {loadingRestricted ? (
-                <div className="loading-spinner">
-                  Loading restricted doctors...
-                </div>
+                <div className="loading-spinner">Loading restricted doctors...</div>
               ) : restrictedDoctors.length === 0 ? (
                 <div className="no-data">No restricted doctors</div>
               ) : (
                 <div className="table-responsive">
                   <table className="enforcement-table">
                     <thead>
-                      <tr>
-                        <th>Doctor</th>
-                        <th>Specialization</th>
-                        <th>Commission Due</th>
-                        <th>Late Fees</th>
-                        <th>Total Due</th>
-                        <th>Restricted Since</th>
-                        <th>Actions</th>
-                      </tr>
+                      <tr><th>Doctor</th><th>Specialization</th><th>Commission Due</th><th>Late Fees</th><th>Total Due</th><th>Restricted Since</th><th>Actions</th></tr>
                     </thead>
                     <tbody>
                       {restrictedDoctors.map((doc) => {
-                        const commission =
-                          doc.paymentStats?.pendingCommission || 0;
+                        const commission = doc.paymentStats?.pendingCommission || 0;
                         const lateFees = doc.lateFees || 0;
                         const total = commission + lateFees;
-
                         return (
                           <tr key={doc.doctorId}>
-                            <td>
-                              <strong>{doc.name}</strong>
-                            </td>
+                            <td><strong>{doc.name}</strong></td>
                             <td>{doc.specialization || "N/A"}</td>
                             <td className="amount">₹{commission}</td>
                             <td className="amount fees">₹{lateFees}</td>
-                            <td className="amount total">
-                              <strong>₹{total}</strong>
-                            </td>
-                            <td>
-                              {doc.restrictedAt
-                                ? new Date(
-                                    doc.restrictedAt,
-                                  ).toLocaleDateString()
-                                : "N/A"}
-                            </td>
+                            <td className="amount total"><strong>₹{total}</strong></td>
+                            <td>{doc.restrictedAt ? new Date(doc.restrictedAt).toLocaleDateString() : "N/A"}</td>
                             <td className="actions">
-                              <button
-                                className="action-btn unblock"
-                                onClick={() =>
-                                  handleUnblockDoctor(doc.doctorId, doc.name)
-                                }
-                                title="Unblock Doctor"
-                              >
-                                🔓 Unblock
-                              </button>
+                              <button className="action-btn unblock" onClick={() => handleUnblockDoctor(doc.doctorId, doc.name)} title="Unblock Doctor">🔓 Unblock</button>
                               <div className="reminder-dropdown">
-                                <button className="action-btn remind">
-                                  📧 Remind ▼
-                                </button>
+                                <button className="action-btn remind">📧 Remind ▼</button>
                                 <div className="dropdown-content">
-                                  <button
-                                    onClick={() =>
-                                      handleSendReminder(
-                                        doc.doctorId,
-                                        doc.name,
-                                        "gentle",
-                                      )
-                                    }
-                                  >
-                                    ⏳ Gentle
-                                  </button>
-                                  <button
-                                    onClick={() =>
-                                      handleSendReminder(
-                                        doc.doctorId,
-                                        doc.name,
-                                        "due",
-                                      )
-                                    }
-                                  >
-                                    ⚠️ Due Date
-                                  </button>
-                                  <button
-                                    onClick={() =>
-                                      handleSendReminder(
-                                        doc.doctorId,
-                                        doc.name,
-                                        "urgent",
-                                      )
-                                    }
-                                  >
-                                    🔴 Urgent
-                                  </button>
-                                  <button
-                                    onClick={() =>
-                                      handleSendReminder(
-                                        doc.doctorId,
-                                        doc.name,
-                                        "final",
-                                      )
-                                    }
-                                  >
-                                    🚨 Final
-                                  </button>
+                                  <button onClick={() => handleSendReminder(doc.doctorId, doc.name, "gentle")}>⏳ Gentle</button>
+                                  <button onClick={() => handleSendReminder(doc.doctorId, doc.name, "due")}>⚠️ Due Date</button>
+                                  <button onClick={() => handleSendReminder(doc.doctorId, doc.name, "urgent")}>🔴 Urgent</button>
+                                  <button onClick={() => handleSendReminder(doc.doctorId, doc.name, "final")}>🚨 Final</button>
                                 </div>
                               </div>
                             </td>
@@ -1026,8 +740,6 @@ function AdminDashboard() {
                   </table>
                 </div>
               )}
-
-              {/* Overdue Doctors Summary */}
               {overdueDoctors.length > 0 && (
                 <div className="overdue-summary">
                   <h4>⚠️ Overdue Doctors ({overdueDoctors.length})</h4>
@@ -1035,14 +747,8 @@ function AdminDashboard() {
                     {overdueDoctors.slice(0, 5).map((doc) => (
                       <div key={doc.doctorId} className="overdue-item">
                         <span>{doc.name}</span>
-                        <span>
-                          ₹
-                          {(doc.paymentStats?.pendingCommission || 0) +
-                            (doc.lateFees || 0)}
-                        </span>
-                        <span className="days">
-                          {doc.totalOverdueDays || 0} days
-                        </span>
+                        <span>₹{(doc.paymentStats?.pendingCommission || 0) + (doc.lateFees || 0)}</span>
+                        <span className="days">{doc.totalOverdueDays || 0} days</span>
                       </div>
                     ))}
                   </div>
@@ -1053,296 +759,118 @@ function AdminDashboard() {
         </div>
       )}
 
-      {/* ✅ FIXED: Commission Due Modal with stopPropagation */}
+      {/* Commission Due Modal */}
       {showCommissionDueModal && (
-        <div
-          className="modal-overlay"
-          onClick={() => setShowCommissionDueModal(false)}
-        >
-          <div
-            className="modal-content commission-modal"
-            onClick={(e) => e.stopPropagation()}
-          >
+        <div className="modal-overlay" onClick={() => setShowCommissionDueModal(false)}>
+          <div className="modal-content commission-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>💰 Commission Report (1%)</h2>
-              <button
-                className="close-btn"
-                onClick={() => setShowCommissionDueModal(false)}
-              >
-                ✕
-              </button>
+              <button className="close-btn" onClick={() => setShowCommissionDueModal(false)}>✕</button>
             </div>
             <div className="modal-body">
               <div className="commission-summary">
-                <div className="summary-card highlight">
-                  <span>Total Due</span>
-                  <strong>₹{totalCommissionDue}</strong>
-                </div>
-                <div className="summary-card">
-                  <span>Platform UPI</span>
-                  <strong>6002777634@axisbank</strong>
-                </div>
+                <div className="summary-card highlight"><span>Total Due</span><strong>₹{totalCommissionDue}</strong></div>
+                <div className="summary-card"><span>Platform UPI</span><strong>6002777634@axisbank</strong></div>
               </div>
-
               <div className="doctor-commission-list">
                 <h3>Doctor-wise Commission Due</h3>
                 <div className="table-wrapper">
                   <table className="commission-table">
-                    <thead>
-                      <tr>
-                        <th>Doctor</th>
-                        <th>Email</th>
-                        <th>Commission Due</th>
-                        <th>Late Fees</th>
-                        <th>Total</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                      </tr>
-                    </thead>
+                    <thead><tr><th>Doctor</th><th>Email</th><th>Commission Due</th><th>Late Fees</th><th>Total</th><th>Status</th><th>Action</th></tr></thead>
                     <tbody>
                       {commissionDue && commissionDue.length > 0 ? (
                         commissionDue.map((doc) => {
-                          const totalWithFees =
-                            doc.commissionDue + (doc.lateFees || 0);
+                          const totalWithFees = doc.commissionDue + (doc.lateFees || 0);
                           return (
                             <tr key={doc.doctorId}>
                               <td>{doc.name}</td>
                               <td>{doc.email}</td>
-                              <td className="commission-amount">
-                                ₹{doc.commissionDue}
-                              </td>
-                              <td className={doc.lateFees ? "fees-amount" : ""}>
-                                {doc.lateFees ? `₹${doc.lateFees}` : "-"}
-                              </td>
-                              <td className="total-amount">
-                                <strong>₹{totalWithFees}</strong>
-                              </td>
+                              <td className="commission-amount">₹{doc.commissionDue}</td>
+                              <td className={doc.lateFees ? "fees-amount" : ""}>{doc.lateFees ? `₹${doc.lateFees}` : "-"}</td>
+                              <td className="total-amount"><strong>₹{totalWithFees}</strong></td>
                               <td>
-                                {doc.paymentStatus === "restricted" ? (
-                                  <span className="status-badge restricted">
-                                    ⛔ Restricted
-                                  </span>
-                                ) : doc.paymentStatus === "overdue" ? (
-                                  <span className="status-badge overdue">
-                                    ⚠️ Overdue
-                                  </span>
-                                ) : doc.commissionDue > 0 ? (
-                                  <span className="status-badge pending">
-                                    ⏳ Pending
-                                  </span>
-                                ) : (
-                                  <span className="status-badge paid">
-                                    ✅ Paid
-                                  </span>
-                                )}
+                                {doc.paymentStatus === "restricted" ? <span className="status-badge restricted">⛔ Restricted</span> :
+                                 doc.paymentStatus === "overdue" ? <span className="status-badge overdue">⚠️ Overdue</span> :
+                                 doc.commissionDue > 0 ? <span className="status-badge pending">⏳ Pending</span> :
+                                 <span className="status-badge paid">✅ Paid</span>}
                               </td>
                               <td>
                                 {doc.commissionDue > 0 ? (
                                   <div className="commission-action">
-                                    <input
-                                      type="text"
-                                      placeholder="Transaction ID"
-                                      value={
-                                        paymentTransactionId[doc.doctorId] || ""
-                                      }
-                                      onChange={(e) =>
-                                        setPaymentTransactionId({
-                                          ...paymentTransactionId,
-                                          [doc.doctorId]: e.target.value,
-                                        })
-                                      }
-                                      onClick={(e) => e.stopPropagation()}
-                                      onMouseDown={(e) => e.stopPropagation()}
-                                    />
-                                    <button
-                                      className="mark-paid-btn"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleMarkCommissionPaid(
-                                          doc.doctorId,
-                                          doc.commissionDue,
-                                        );
-                                      }}
-                                      disabled={
-                                        processingPayment ||
-                                        !paymentTransactionId[doc.doctorId]
-                                      }
-                                    >
-                                      {processingPayment
-                                        ? "Processing..."
-                                        : "Mark Paid"}
-                                    </button>
+                                    <input type="text" placeholder="Transaction ID" value={paymentTransactionId[doc.doctorId] || ""}
+                                      onChange={(e) => setPaymentTransactionId({ ...paymentTransactionId, [doc.doctorId]: e.target.value })}
+                                      onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()} />
+                                    <button className="mark-paid-btn" onClick={(e) => { e.stopPropagation(); handleMarkCommissionPaid(doc.doctorId, doc.commissionDue); }}
+                                      disabled={processingPayment || !paymentTransactionId[doc.doctorId]}>{processingPayment ? "Processing..." : "Mark Paid"}</button>
                                   </div>
-                                ) : (
-                                  <span className="paid-badge">✅ Paid</span>
-                                )}
+                                ) : <span className="paid-badge">✅ Paid</span>}
                               </td>
                             </tr>
                           );
                         })
                       ) : (
-                        <tr>
-                          <td
-                            colSpan="7"
-                            style={{ textAlign: "center", padding: "40px" }}
-                          >
-                            No commission dues found
-                          </td>
-                        </tr>
+                        <tr><td colSpan="7" style={{ textAlign: "center", padding: "40px" }}>No commission dues found</td></tr>
                       )}
                     </tbody>
                   </table>
                 </div>
               </div>
-
-              <p className="commission-note">
-                ⚠️ After receiving payment via UPI, enter transaction ID and
-                click "Mark Paid"
-              </p>
+              <p className="commission-note">⚠️ After receiving payment via UPI, enter transaction ID and click "Mark Paid"</p>
             </div>
           </div>
         </div>
       )}
 
-      {/* ✅ FIXED: Password Reset Modal */}
+      {/* Password Reset Modal */}
       {showPasswordResetModal && resetResult && (
-        <div
-          className="modal-overlay"
-          onClick={() => setShowPasswordResetModal(false)}
-        >
-          <div
-            className="modal-content reset-modal"
-            onClick={(e) => e.stopPropagation()}
-          >
+        <div className="modal-overlay" onClick={() => setShowPasswordResetModal(false)}>
+          <div className="modal-content reset-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>🔑 Password Reset Successful</h2>
-              <button
-                className="close-btn"
-                onClick={() => setShowPasswordResetModal(false)}
-              >
-                ✕
-              </button>
+              <button className="close-btn" onClick={() => setShowPasswordResetModal(false)}>✕</button>
             </div>
-
             <div className="reset-details">
-              <p>
-                <strong>Doctor:</strong> {resetResult.name}
-              </p>
-              <p>
-                <strong>Email:</strong> {resetResult.email}
-              </p>
-              <p>
-                <strong>New Password:</strong>
-              </p>
+              <p><strong>Doctor:</strong> {resetResult.name}</p>
+              <p><strong>Email:</strong> {resetResult.email}</p>
+              <p><strong>New Password:</strong></p>
               <code>{resetResult.password}</code>
             </div>
-
             <div className="reset-actions">
-              <button
-                className="email-btn"
-                onClick={() => sendLoginEmail(resetResult)}
-              >
-                📧 Email Password
-              </button>
-              <button
-                className="close-btn"
-                onClick={() => setShowPasswordResetModal(false)}
-              >
-                Close
-              </button>
+              <button className="email-btn" onClick={() => sendLoginEmail(resetResult)}>📧 Email Password</button>
+              <button className="close-btn" onClick={() => setShowPasswordResetModal(false)}>Close</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* ✅ FIXED: Commission Report Modal */}
+      {/* Commission Report Modal */}
       {showCommissionModal && commissionReport && (
-        <div
-          className="modal-overlay"
-          onClick={() => setShowCommissionModal(false)}
-        >
-          <div
-            className="modal-content commission-modal"
-            onClick={(e) => e.stopPropagation()}
-          >
+        <div className="modal-overlay" onClick={() => setShowCommissionModal(false)}>
+          <div className="modal-content commission-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>💰 Commission Report (1%)</h2>
-              <button
-                className="close-btn"
-                onClick={() => setShowCommissionModal(false)}
-              >
-                ✕
-              </button>
+              <button className="close-btn" onClick={() => setShowCommissionModal(false)}>✕</button>
             </div>
-
             <div className="modal-body">
               <div className="period-selector">
-                <select
-                  value={commissionPeriod.month}
-                  onChange={(e) =>
-                    setCommissionPeriod({
-                      ...commissionPeriod,
-                      month: parseInt(e.target.value),
-                    })
-                  }
-                >
-                  {Array.from({ length: 12 }, (_, i) => (
-                    <option key={i + 1} value={i + 1}>
-                      {new Date(2000, i).toLocaleString("default", {
-                        month: "long",
-                      })}
-                    </option>
-                  ))}
+                <select value={commissionPeriod.month} onChange={(e) => setCommissionPeriod({ ...commissionPeriod, month: parseInt(e.target.value) })}>
+                  {Array.from({ length: 12 }, (_, i) => (<option key={i + 1} value={i + 1}>{new Date(2000, i).toLocaleString("default", { month: "long" })}</option>))}
                 </select>
-                <select
-                  value={commissionPeriod.year}
-                  onChange={(e) =>
-                    setCommissionPeriod({
-                      ...commissionPeriod,
-                      year: parseInt(e.target.value),
-                    })
-                  }
-                >
-                  {[2024, 2025, 2026].map((year) => (
-                    <option key={year} value={year}>
-                      {year}
-                    </option>
-                  ))}
+                <select value={commissionPeriod.year} onChange={(e) => setCommissionPeriod({ ...commissionPeriod, year: parseInt(e.target.value) })}>
+                  {[2024, 2025, 2026].map((year) => (<option key={year} value={year}>{year}</option>))}
                 </select>
-                <button onClick={fetchCommissionReport} className="apply-btn">
-                  Apply
-                </button>
+                <button onClick={fetchCommissionReport} className="apply-btn">Apply</button>
               </div>
-
               <div className="commission-summary">
-                <div className="summary-card">
-                  <span>Total Revenue</span>
-                  <strong>₹{commissionReport?.totalRevenue || 0}</strong>
-                </div>
-                <div className="summary-card highlight">
-                  <span>Your Commission (1%)</span>
-                  <strong>₹{commissionReport?.totalCommission || 0}</strong>
-                </div>
-                <div className="summary-card">
-                  <span>Appointments</span>
-                  <strong>{commissionReport?.appointmentCount || 0}</strong>
-                </div>
+                <div className="summary-card"><span>Total Revenue</span><strong>₹{commissionReport?.totalRevenue || 0}</strong></div>
+                <div className="summary-card highlight"><span>Your Commission (1%)</span><strong>₹{commissionReport?.totalCommission || 0}</strong></div>
+                <div className="summary-card"><span>Appointments</span><strong>{commissionReport?.appointmentCount || 0}</strong></div>
               </div>
-
               <div className="doctor-commission-list">
                 <h3>Doctor-wise Commission</h3>
                 <div className="table-wrapper">
                   <table className="commission-table">
-                    <thead>
-                      <tr>
-                        <th>Doctor</th>
-                        <th>Specialization</th>
-                        <th>Appointments</th>
-                        <th>Revenue</th>
-                        <th>Commission (1%)</th>
-                        <th>UPI ID</th>
-                      </tr>
-                    </thead>
+                    <thead><tr><th>Doctor</th><th>Specialization</th><th>Appointments</th><th>Revenue</th><th>Commission (1%)</th><th>UPI ID</th></tr></thead>
                     <tbody>
                       {commissionReport?.doctors?.map((doc, index) => (
                         <tr key={index}>
@@ -1350,9 +878,7 @@ function AdminDashboard() {
                           <td>{doc.specialization}</td>
                           <td>{doc.appointments}</td>
                           <td>₹{doc.totalRevenue}</td>
-                          <td className="commission-amount">
-                            ₹{doc.commission}
-                          </td>
+                          <td className="commission-amount">₹{doc.commission}</td>
                           <td className="upi-id">{doc.upiId || "Not set"}</td>
                         </tr>
                       ))}
@@ -1365,681 +891,123 @@ function AdminDashboard() {
         </div>
       )}
 
-      {/* ✅ FIXED: QR Code Modal */}
+      {/* QR Code Modal */}
       {showQRModal && selectedDoctorQR && (
         <div className="modal-overlay" onClick={() => setShowQRModal(false)}>
-          <div
-            className="modal-content qr-modal"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="modal-content qr-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>📱 {selectedDoctorQR.name}'s QR Code</h2>
-              <button
-                className="close-btn"
-                onClick={() => setShowQRModal(false)}
-              >
-                ✕
-              </button>
+              <button className="close-btn" onClick={() => setShowQRModal(false)}>✕</button>
             </div>
             <div className="qr-display">
-              {selectedDoctorQR.qrCodeUrl ? (
-                <img
-                  src={selectedDoctorQR.qrCodeUrl}
-                  alt="QR Code"
-                  className="qr-image-large"
-                />
-              ) : (
-                <div className="qr-placeholder-large">
-                  <span className="qr-icon">📱</span>
-                  <p>QR Code not available</p>
-                </div>
-              )}
+              {selectedDoctorQR.qrCodeUrl ? <img src={selectedDoctorQR.qrCodeUrl} alt="QR Code" className="qr-image-large" /> :
+                <div className="qr-placeholder-large"><span className="qr-icon">📱</span><p>QR Code not available</p></div>}
               <div className="qr-details">
-                <p>
-                  <strong>Doctor:</strong> {selectedDoctorQR.name}
-                </p>
-                <p>
-                  <strong>UPI ID:</strong> {selectedDoctorQR.upiId || "Not set"}
-                </p>
-                <p>
-                  <strong>Amount:</strong> ₹{selectedDoctorQR.fee}
-                </p>
+                <p><strong>Doctor:</strong> {selectedDoctorQR.name}</p>
+                <p><strong>UPI ID:</strong> {selectedDoctorQR.upiId || "Not set"}</p>
+                <p><strong>Amount:</strong> ₹{selectedDoctorQR.fee}</p>
               </div>
-              <button className="print-btn" onClick={() => window.print()}>
-                🖨️ Print QR Code
-              </button>
+              <button className="print-btn" onClick={() => window.print()}>🖨️ Print QR Code</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* ✅ FIXED: Edit Doctor Modal */}
+      {/* Edit Doctor Modal */}
       {showEditDoctorModal && editDoctorData && (
-        <div
-          className="modal-overlay"
-          onClick={() => setShowEditDoctorModal(false)}
-        >
-          <div
-            className="modal-content add-doctor-modal"
-            onClick={(e) => e.stopPropagation()}
-          >
+        <div className="modal-overlay" onClick={() => setShowEditDoctorModal(false)}>
+          <div className="modal-content add-doctor-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>✏️ Edit Doctor</h2>
-              <button
-                className="close-btn"
-                onClick={() => {
-                  setShowEditDoctorModal(false);
-                  setEditDoctorData(null);
-                  setEditPreviewImage(null);
-                }}
-              >
-                ✕
-              </button>
+              <button className="close-btn" onClick={() => { setShowEditDoctorModal(false); setEditDoctorData(null); setEditPreviewImage(null); }}>✕</button>
             </div>
             <div className="form-grid">
-              <div className="form-group">
-                <label>Full Name *</label>
-                <input
-                  type="text"
-                  value={editDoctorData.name || ""}
-                  onChange={(e) =>
-                    setEditDoctorData({
-                      ...editDoctorData,
-                      name: e.target.value,
-                    })
-                  }
-                />
-              </div>
-              <div className="form-group">
-                <label>Email *</label>
-                <input
-                  type="email"
-                  value={editDoctorData.email || ""}
-                  onChange={(e) =>
-                    setEditDoctorData({
-                      ...editDoctorData,
-                      email: e.target.value,
-                    })
-                  }
-                />
-              </div>
-              <div className="form-group">
-                <label>Phone</label>
-                <input
-                  type="tel"
-                  value={editDoctorData.phone || ""}
-                  onChange={(e) =>
-                    setEditDoctorData({
-                      ...editDoctorData,
-                      phone: e.target.value,
-                    })
-                  }
-                />
-              </div>
-              <div className="form-group">
-                <label>Specialization *</label>
-                <select
-                  value={editDoctorData.specialization || ""}
-                  onChange={(e) =>
-                    setEditDoctorData({
-                      ...editDoctorData,
-                      specialization: e.target.value,
-                    })
-                  }
-                  className="specialization-select"
-                >
-                  <option value="">Select Specialization</option>
-                  <option value="Cardiologist">❤️ Cardiologist</option>
-                  <option value="Dermatologist">🧴 Dermatologist</option>
-                  <option value="Pediatrician">👶 Pediatrician</option>
-                  <option value="Orthopedist">🦴 Orthopedist</option>
-                  <option value="Neurologist">🧠 Neurologist</option>
-                  <option value="Gynecologist">👩 Gynecologist</option>
-                  <option value="Physiotherapist">💪 Physiotherapist</option>
-                  <option value="General Physician">
-                    🏥 General Physician
-                  </option>
-                  <option value="ENT Specialist">👂 ENT</option>
-                  <option value="Ophthalmologist">👁️ Eye</option>
-                  <option value="Psychiatrist">🧠 Psychiatrist</option>
-                  <option value="Dentist">🦷 Dentist</option>
-                  <option value="Ayurvedic">🌿 Ayurvedic</option>
-                  <option value="Homeopathy">💊 Homeopathy</option>
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Qualification</label>
-                <input
-                  type="text"
-                  value={editDoctorData.qualification || ""}
-                  onChange={(e) =>
-                    setEditDoctorData({
-                      ...editDoctorData,
-                      qualification: e.target.value,
-                    })
-                  }
-                />
-              </div>
-              <div className="form-group">
-                <label>Experience</label>
-                <input
-                  type="text"
-                  value={editDoctorData.experience || ""}
-                  onChange={(e) =>
-                    setEditDoctorData({
-                      ...editDoctorData,
-                      experience: e.target.value,
-                    })
-                  }
-                />
-              </div>
-              <div className="form-group">
-                <label>Consultation Fee (₹) *</label>
-                <input
-                  type="number"
-                  value={editDoctorData.fee || ""}
-                  onChange={(e) =>
-                    setEditDoctorData({
-                      ...editDoctorData,
-                      fee: e.target.value,
-                    })
-                  }
-                />
-              </div>
-              <div className="form-group">
-                <label>UPI ID</label>
-                <input
-                  type="text"
-                  value={editDoctorData.upiId || ""}
-                  onChange={(e) =>
-                    setEditDoctorData({
-                      ...editDoctorData,
-                      upiId: e.target.value,
-                    })
-                  }
-                  placeholder="doctor@okhdfcbank"
-                />
-              </div>
-              <div className="form-group full-width">
-                <label>📸 Profile Photo</label>
-                <div className="image-upload-container">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleEditImageUpload}
-                    className="file-input"
-                    id="edit-doctor-image"
-                  />
-                  <label
-                    htmlFor="edit-doctor-image"
-                    className="file-input-label"
-                  >
-                    {editUploading ? "Uploading..." : "Choose Photo"}
-                  </label>
-                  {editPreviewImage && (
-                    <div className="image-preview">
-                      <img src={editPreviewImage} alt="Preview" />
-                      <p className="preview-note">Preview</p>
-                    </div>
-                  )}
-                  <p className="hint">
-                    Or paste image URL directly:{" "}
-                    <input
-                      type="text"
-                      value={editDoctorData.imageUrl || ""}
-                      onChange={(e) =>
-                        setEditDoctorData({
-                          ...editDoctorData,
-                          imageUrl: e.target.value,
-                        })
-                      }
-                      placeholder="https://example.com/doctor.jpg"
-                      className="url-input"
-                    />
-                  </p>
-                </div>
-              </div>
-              <div className="form-group">
-                <label>🏥 Clinic Name</label>
-                <input
-                  type="text"
-                  value={editDoctorData.clinicName || ""}
-                  onChange={(e) =>
-                    setEditDoctorData({
-                      ...editDoctorData,
-                      clinicName: e.target.value,
-                    })
-                  }
-                  placeholder="e.g., Ali Medical Center"
-                />
-                <small className="hint">
-                  Leave empty to auto-generate from doctor name
-                </small>
-              </div>
-              <div className="form-group">
-                <label>📍 Address / Location</label>
-                <input
-                  type="text"
-                  value={editDoctorData.address || ""}
-                  onChange={(e) =>
-                    setEditDoctorData({
-                      ...editDoctorData,
-                      address: e.target.value,
-                    })
-                  }
-                  placeholder="e.g., Downtown, Mumbai"
-                />
-              </div>
-              <div className="form-group full-width">
-                <label>Commission Percentage</label>
-                <input
-                  type="number"
-                  value={editDoctorData.commissionPercentage || 1}
-                  onChange={(e) =>
-                    setEditDoctorData({
-                      ...editDoctorData,
-                      commissionPercentage: parseInt(e.target.value),
-                    })
-                  }
-                  min="0"
-                  max="100"
-                />
-              </div>
+              <div className="form-group"><label>Full Name *</label><input type="text" value={editDoctorData.name || ""} onChange={(e) => setEditDoctorData({ ...editDoctorData, name: e.target.value })} /></div>
+              <div className="form-group"><label>Email *</label><input type="email" value={editDoctorData.email || ""} onChange={(e) => setEditDoctorData({ ...editDoctorData, email: e.target.value })} /></div>
+              <div className="form-group"><label>Phone</label><input type="tel" value={editDoctorData.phone || ""} onChange={(e) => setEditDoctorData({ ...editDoctorData, phone: e.target.value })} /></div>
+              <div className="form-group"><label>Specialization *</label><select value={editDoctorData.specialization || ""} onChange={(e) => setEditDoctorData({ ...editDoctorData, specialization: e.target.value })} className="specialization-select">
+                <option value="">Select Specialization</option>
+                <option value="Cardiologist">❤️ Cardiologist</option><option value="Dermatologist">🧴 Dermatologist</option><option value="Pediatrician">👶 Pediatrician</option>
+                <option value="Orthopedist">🦴 Orthopedist</option><option value="Neurologist">🧠 Neurologist</option><option value="Gynecologist">👩 Gynecologist</option>
+                <option value="Physiotherapist">💪 Physiotherapist</option><option value="General Physician">🏥 General Physician</option><option value="ENT Specialist">👂 ENT</option>
+                <option value="Ophthalmologist">👁️ Eye</option><option value="Psychiatrist">🧠 Psychiatrist</option><option value="Dentist">🦷 Dentist</option>
+                <option value="Ayurvedic">🌿 Ayurvedic</option><option value="Homeopathy">💊 Homeopathy</option>
+              </select></div>
+              <div className="form-group"><label>Qualification</label><input type="text" value={editDoctorData.qualification || ""} onChange={(e) => setEditDoctorData({ ...editDoctorData, qualification: e.target.value })} /></div>
+              <div className="form-group"><label>Experience</label><input type="text" value={editDoctorData.experience || ""} onChange={(e) => setEditDoctorData({ ...editDoctorData, experience: e.target.value })} /></div>
+              <div className="form-group"><label>Consultation Fee (₹) *</label><input type="number" value={editDoctorData.fee || ""} onChange={(e) => setEditDoctorData({ ...editDoctorData, fee: e.target.value })} /></div>
+              <div className="form-group"><label>UPI ID</label><input type="text" value={editDoctorData.upiId || ""} onChange={(e) => setEditDoctorData({ ...editDoctorData, upiId: e.target.value })} placeholder="doctor@okhdfcbank" /></div>
+              <div className="form-group full-width"><label>📸 Profile Photo</label><div className="image-upload-container"><input type="file" accept="image/*" onChange={handleEditImageUpload} className="file-input" id="edit-doctor-image" /><label htmlFor="edit-doctor-image" className="file-input-label">{editUploading ? "Uploading..." : "Choose Photo"}</label>
+                {editPreviewImage && <div className="image-preview"><img src={editPreviewImage} alt="Preview" /><p className="preview-note">Preview</p></div>}
+                <p className="hint">Or paste image URL directly: <input type="text" value={editDoctorData.imageUrl || ""} onChange={(e) => setEditDoctorData({ ...editDoctorData, imageUrl: e.target.value })} placeholder="https://example.com/doctor.jpg" className="url-input" /></p></div></div>
+              <div className="form-group"><label>🏥 Clinic Name</label><input type="text" value={editDoctorData.clinicName || ""} onChange={(e) => setEditDoctorData({ ...editDoctorData, clinicName: e.target.value })} placeholder="e.g., Ali Medical Center" /><small className="hint">Leave empty to auto-generate from doctor name</small></div>
+              <div className="form-group"><label>📍 Address / Location</label><input type="text" value={editDoctorData.address || ""} onChange={(e) => setEditDoctorData({ ...editDoctorData, address: e.target.value })} placeholder="e.g., Downtown, Mumbai" /></div>
+              <div className="form-group full-width"><label>Commission Percentage</label><input type="number" value={editDoctorData.commissionPercentage || 1} onChange={(e) => setEditDoctorData({ ...editDoctorData, commissionPercentage: parseInt(e.target.value) })} min="0" max="100" /></div>
             </div>
-            <div className="modal-actions">
-              <button
-                className="cancel-btn"
-                onClick={() => {
-                  setShowEditDoctorModal(false);
-                  setEditDoctorData(null);
-                  setEditPreviewImage(null);
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                className="submit-btn"
-                onClick={handleEditDoctor}
-                disabled={editUploading}
-              >
-                {editUploading ? "Uploading..." : "Update Doctor"}
-              </button>
-            </div>
+            <div className="modal-actions"><button className="cancel-btn" onClick={() => { setShowEditDoctorModal(false); setEditDoctorData(null); setEditPreviewImage(null); }}>Cancel</button><button className="submit-btn" onClick={handleEditDoctor} disabled={editUploading}>{editUploading ? "Uploading..." : "Update Doctor"}</button></div>
           </div>
         </div>
       )}
 
-      {/* ✅ FIXED: Add Doctor Modal */}
+      {/* Add Doctor Modal */}
       {showAddDoctorModal && (
-        <div
-          className="modal-overlay"
-          onClick={() => setShowAddDoctorModal(false)}
-        >
-          <div
-            className="modal-content add-doctor-modal"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="modal-header">
-              <h2>➕ Add New Doctor</h2>
-              <button
-                className="close-btn"
-                onClick={() => {
-                  setShowAddDoctorModal(false);
-                  setPreviewImage(null);
-                }}
-              >
-                ✕
-              </button>
-            </div>
+        <div className="modal-overlay" onClick={() => setShowAddDoctorModal(false)}>
+          <div className="modal-content add-doctor-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header"><h2>➕ Add New Doctor</h2><button className="close-btn" onClick={() => { setShowAddDoctorModal(false); setPreviewImage(null); }}>✕</button></div>
             <div className="form-grid">
-              <div className="form-group">
-                <label>Full Name *</label>
-                <input
-                  type="text"
-                  value={newDoctor.name}
-                  onChange={(e) =>
-                    setNewDoctor({ ...newDoctor, name: e.target.value })
-                  }
-                  placeholder="Dr. Rajesh Sharma"
-                />
-              </div>
-              <div className="form-group">
-                <label>Email *</label>
-                <input
-                  type="email"
-                  value={newDoctor.email}
-                  onChange={(e) =>
-                    setNewDoctor({ ...newDoctor, email: e.target.value })
-                  }
-                  placeholder="doctor@example.com"
-                />
-              </div>
-              <div className="form-group">
-                <label>Phone</label>
-                <input
-                  type="tel"
-                  value={newDoctor.phone}
-                  onChange={(e) =>
-                    setNewDoctor({ ...newDoctor, phone: e.target.value })
-                  }
-                  placeholder="+91 98765 43210"
-                />
-              </div>
-              <div className="form-group">
-                <label>Specialization *</label>
-                <select
-                  value={newDoctor.specialization}
-                  onChange={(e) =>
-                    setNewDoctor({
-                      ...newDoctor,
-                      specialization: e.target.value,
-                    })
-                  }
-                  className="specialization-select"
-                >
-                  <option value="">Select Specialization</option>
-                  <option value="Cardiologist">❤️ Cardiologist</option>
-                  <option value="Dermatologist">🧴 Dermatologist</option>
-                  <option value="Pediatrician">👶 Pediatrician</option>
-                  <option value="Orthopedist">🦴 Orthopedist</option>
-                  <option value="Neurologist">🧠 Neurologist</option>
-                  <option value="Gynecologist">👩 Gynecologist</option>
-                  <option value="Physiotherapist">💪 Physiotherapist</option>
-                  <option value="General Physician">
-                    🏥 General Physician
-                  </option>
-                  <option value="ENT Specialist">👂 ENT</option>
-                  <option value="Ophthalmologist">👁️ Eye</option>
-                  <option value="Psychiatrist">🧠 Psychiatrist</option>
-                  <option value="Dentist">🦷 Dentist</option>
-                  <option value="Ayurvedic">🌿 Ayurvedic</option>
-                  <option value="Homeopathy">💊 Homeopathy</option>
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Qualification</label>
-                <input
-                  type="text"
-                  value={newDoctor.qualification}
-                  onChange={(e) =>
-                    setNewDoctor({
-                      ...newDoctor,
-                      qualification: e.target.value,
-                    })
-                  }
-                  placeholder="MD, DM Cardiology"
-                />
-              </div>
-              <div className="form-group">
-                <label>Experience</label>
-                <input
-                  type="text"
-                  value={newDoctor.experience}
-                  onChange={(e) =>
-                    setNewDoctor({ ...newDoctor, experience: e.target.value })
-                  }
-                  placeholder="10+ years"
-                />
-              </div>
-              <div className="form-group">
-                <label>Consultation Fee (₹) *</label>
-                <input
-                  type="number"
-                  value={newDoctor.fee}
-                  onChange={(e) =>
-                    setNewDoctor({ ...newDoctor, fee: e.target.value })
-                  }
-                  placeholder="500"
-                />
-              </div>
-              <div className="form-group">
-                <label>UPI ID (for payments)</label>
-                <input
-                  type="text"
-                  value={newDoctor.upiId}
-                  onChange={(e) =>
-                    setNewDoctor({ ...newDoctor, upiId: e.target.value })
-                  }
-                  placeholder="doctor@okhdfcbank"
-                />
-                <small className="hint">
-                  Example: name@okhdfcbank, name@paytm
-                </small>
-              </div>
-              <div className="form-group full-width">
-                <label>📸 Profile Photo</label>
-                <div className="image-upload-container">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="file-input"
-                    id="doctor-image"
-                  />
-                  <label htmlFor="doctor-image" className="file-input-label">
-                    {uploading ? "Uploading..." : "Choose Photo"}
-                  </label>
-                  {previewImage && (
-                    <div className="image-preview">
-                      <img src={previewImage} alt="Preview" />
-                      <p className="preview-note">Preview</p>
-                    </div>
-                  )}
-                  {newDoctor.imageUrl && !previewImage && (
-                    <div className="image-preview">
-                      <img src={newDoctor.imageUrl} alt="Uploaded" />
-                      <p className="preview-note">Uploaded photo</p>
-                    </div>
-                  )}
-                  <p className="hint">
-                    Or paste image URL directly:{" "}
-                    <input
-                      type="text"
-                      value={newDoctor.imageUrl}
-                      onChange={(e) =>
-                        setNewDoctor({ ...newDoctor, imageUrl: e.target.value })
-                      }
-                      placeholder="https://example.com/doctor.jpg"
-                      className="url-input"
-                    />
-                  </p>
-                </div>
-              </div>
-              <div className="form-group">
-                <label>🏥 Clinic Name</label>
-                <input
-                  type="text"
-                  value={newDoctor.clinicName}
-                  onChange={(e) =>
-                    setNewDoctor({ ...newDoctor, clinicName: e.target.value })
-                  }
-                  placeholder="e.g., Ali Medical Center"
-                />
-                <small className="hint">
-                  Leave empty to auto-generate from doctor name
-                </small>
-              </div>
-              <div className="form-group">
-                <label>📍 Address / Location</label>
-                <input
-                  type="text"
-                  value={newDoctor.address}
-                  onChange={(e) =>
-                    setNewDoctor({ ...newDoctor, address: e.target.value })
-                  }
-                  placeholder="e.g., Downtown, Mumbai"
-                />
-              </div>
-              <div className="form-group full-width">
-                <label>Commission Percentage</label>
-                <input
-                  type="number"
-                  value={newDoctor.commissionPercentage}
-                  onChange={(e) =>
-                    setNewDoctor({
-                      ...newDoctor,
-                      commissionPercentage: parseInt(e.target.value),
-                    })
-                  }
-                  min="0"
-                  max="100"
-                />
-                <p className="note">Default: 1% platform commission</p>
-              </div>
+              <div className="form-group"><label>Full Name *</label><input type="text" value={newDoctor.name} onChange={(e) => setNewDoctor({ ...newDoctor, name: e.target.value })} placeholder="Dr. Rajesh Sharma" /></div>
+              <div className="form-group"><label>Email *</label><input type="email" value={newDoctor.email} onChange={(e) => setNewDoctor({ ...newDoctor, email: e.target.value })} placeholder="doctor@example.com" /></div>
+              <div className="form-group"><label>Phone</label><input type="tel" value={newDoctor.phone} onChange={(e) => setNewDoctor({ ...newDoctor, phone: e.target.value })} placeholder="+91 98765 43210" /></div>
+              <div className="form-group"><label>Specialization *</label><select value={newDoctor.specialization} onChange={(e) => setNewDoctor({ ...newDoctor, specialization: e.target.value })} className="specialization-select">
+                <option value="">Select Specialization</option>
+                <option value="Cardiologist">❤️ Cardiologist</option><option value="Dermatologist">🧴 Dermatologist</option><option value="Pediatrician">👶 Pediatrician</option>
+                <option value="Orthopedist">🦴 Orthopedist</option><option value="Neurologist">🧠 Neurologist</option><option value="Gynecologist">👩 Gynecologist</option>
+                <option value="Physiotherapist">💪 Physiotherapist</option><option value="General Physician">🏥 General Physician</option><option value="ENT Specialist">👂 ENT</option>
+                <option value="Ophthalmologist">👁️ Eye</option><option value="Psychiatrist">🧠 Psychiatrist</option><option value="Dentist">🦷 Dentist</option>
+                <option value="Ayurvedic">🌿 Ayurvedic</option><option value="Homeopathy">💊 Homeopathy</option>
+              </select></div>
+              <div className="form-group"><label>Qualification</label><input type="text" value={newDoctor.qualification} onChange={(e) => setNewDoctor({ ...newDoctor, qualification: e.target.value })} placeholder="MD, DM Cardiology" /></div>
+              <div className="form-group"><label>Experience</label><input type="text" value={newDoctor.experience} onChange={(e) => setNewDoctor({ ...newDoctor, experience: e.target.value })} placeholder="10+ years" /></div>
+              <div className="form-group"><label>Consultation Fee (₹) *</label><input type="number" value={newDoctor.fee} onChange={(e) => setNewDoctor({ ...newDoctor, fee: e.target.value })} placeholder="500" /></div>
+              <div className="form-group"><label>UPI ID (for payments)</label><input type="text" value={newDoctor.upiId} onChange={(e) => setNewDoctor({ ...newDoctor, upiId: e.target.value })} placeholder="doctor@okhdfcbank" /><small className="hint">Example: name@okhdfcbank, name@paytm</small></div>
+              <div className="form-group full-width"><label>📸 Profile Photo</label><div className="image-upload-container"><input type="file" accept="image/*" onChange={handleImageUpload} className="file-input" id="doctor-image" /><label htmlFor="doctor-image" className="file-input-label">{uploading ? "Uploading..." : "Choose Photo"}</label>
+                {previewImage && <div className="image-preview"><img src={previewImage} alt="Preview" /><p className="preview-note">Preview</p></div>}
+                {newDoctor.imageUrl && !previewImage && <div className="image-preview"><img src={newDoctor.imageUrl} alt="Uploaded" /><p className="preview-note">Uploaded photo</p></div>}
+                <p className="hint">Or paste image URL directly: <input type="text" value={newDoctor.imageUrl} onChange={(e) => setNewDoctor({ ...newDoctor, imageUrl: e.target.value })} placeholder="https://example.com/doctor.jpg" className="url-input" /></p></div></div>
+              <div className="form-group"><label>🏥 Clinic Name</label><input type="text" value={newDoctor.clinicName} onChange={(e) => setNewDoctor({ ...newDoctor, clinicName: e.target.value })} placeholder="e.g., Ali Medical Center" /><small className="hint">Leave empty to auto-generate from doctor name</small></div>
+              <div className="form-group"><label>📍 Address / Location</label><input type="text" value={newDoctor.address} onChange={(e) => setNewDoctor({ ...newDoctor, address: e.target.value })} placeholder="e.g., Downtown, Mumbai" /></div>
+              <div className="form-group full-width"><label>Commission Percentage</label><input type="number" value={newDoctor.commissionPercentage} onChange={(e) => setNewDoctor({ ...newDoctor, commissionPercentage: parseInt(e.target.value) })} min="0" max="100" /><p className="note">Default: 1% platform commission</p></div>
             </div>
-            <div className="modal-actions">
-              <button
-                className="cancel-btn"
-                onClick={() => {
-                  setShowAddDoctorModal(false);
-                  setPreviewImage(null);
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                className="submit-btn"
-                onClick={handleAddDoctor}
-                disabled={
-                  !newDoctor.name ||
-                  !newDoctor.email ||
-                  !newDoctor.fee ||
-                  uploading
-                }
-              >
-                {uploading ? "Uploading..." : "Add Doctor"}
-              </button>
-            </div>
+            <div className="modal-actions"><button className="cancel-btn" onClick={() => { setShowAddDoctorModal(false); setPreviewImage(null); }}>Cancel</button><button className="submit-btn" onClick={handleAddDoctor} disabled={!newDoctor.name || !newDoctor.email || !newDoctor.fee || uploading}>{uploading ? "Uploading..." : "Add Doctor"}</button></div>
           </div>
         </div>
       )}
 
       <div className="admin-tabs">
-        <button
-          className={activeTab === "dashboard" ? "active" : ""}
-          onClick={() => setActiveTab("dashboard")}
-        >
-          📊 Dashboard
-        </button>
-        <button
-          className={activeTab === "appointments" ? "active" : ""}
-          onClick={() => setActiveTab("appointments")}
-        >
-          📋 Appointments
-        </button>
-        <button
-          className={activeTab === "doctors" ? "active" : ""}
-          onClick={() => setActiveTab("doctors")}
-        >
-          👨‍⚕️ Doctors
-        </button>
+        <button className={activeTab === "dashboard" ? "active" : ""} onClick={() => setActiveTab("dashboard")}>📊 Dashboard</button>
+        <button className={activeTab === "appointments" ? "active" : ""} onClick={() => setActiveTab("appointments")}>📋 Appointments</button>
+        <button className={activeTab === "doctors" ? "active" : ""} onClick={() => setActiveTab("doctors")}>👨‍⚕️ Doctors</button>
       </div>
 
       {activeTab === "dashboard" && stats && (
         <div className="dashboard-tab">
           <div className="stats-grid">
-            <div className="stat-card">
-              <span className="stat-icon">📅</span>
-              <div>
-                <h3>Total Appointments</h3>
-                <p className="stat-number">{stats.totalAppointments || 0}</p>
-              </div>
-            </div>
-            <div className="stat-card">
-              <span className="stat-icon">👤</span>
-              <div>
-                <h3>Total Patients</h3>
-                <p className="stat-number">{stats.totalPatients || 0}</p>
-              </div>
-            </div>
-            <div className="stat-card">
-              <span className="stat-icon">👨‍⚕️</span>
-              <div>
-                <h3>Total Doctors</h3>
-                <p className="stat-number">{doctors.length || 0}</p>
-              </div>
-            </div>
-            <div className="stat-card">
-              <span className="stat-icon">💰</span>
-              <div>
-                <h3>Total Revenue</h3>
-                <p className="stat-number">₹{stats.totalRevenue || 0}</p>
-              </div>
-            </div>
-            <div className="stat-card highlight">
-              <span className="stat-icon">💳</span>
-              <div>
-                <h3>Your Commission (1%)</h3>
-                <p className="stat-number">
-                  ₹{stats.totalPlatformCommission || calculateTotalCommission()}
-                </p>
-              </div>
-            </div>
-            <div className="stat-card">
-              <span className="stat-icon">✅</span>
-              <div>
-                <h3>Today's Appointments</h3>
-                <p className="stat-number">{stats.todayAppointments || 0}</p>
-              </div>
-            </div>
+            <div className="stat-card"><span className="stat-icon">📅</span><div><h3>Total Appointments</h3><p className="stat-number">{stats.totalAppointments || 0}</p></div></div>
+            <div className="stat-card"><span className="stat-icon">👤</span><div><h3>Total Patients</h3><p className="stat-number">{stats.totalPatients || 0}</p></div></div>
+            <div className="stat-card"><span className="stat-icon">👨‍⚕️</span><div><h3>Total Doctors</h3><p className="stat-number">{doctors.length || 0}</p></div></div>
+            <div className="stat-card"><span className="stat-icon">💰</span><div><h3>Total Revenue</h3><p className="stat-number">₹{stats.totalRevenue || 0}</p></div></div>
+            <div className="stat-card highlight"><span className="stat-icon">💳</span><div><h3>Your Commission (1%)</h3><p className="stat-number">₹{stats.totalPlatformCommission || calculateTotalCommission()}</p></div></div>
+            <div className="stat-card"><span className="stat-icon">✅</span><div><h3>Today's Appointments</h3><p className="stat-number">{stats.todayAppointments || 0}</p></div></div>
           </div>
-
           {totalCommissionDue > 0 && (
             <div className="verification-summary-card commission-card">
-              <div className="summary-header">
-                <span className="summary-icon">💰</span>
-                <div className="summary-text">
-                  <h3>₹{totalCommissionDue} Commission Due</h3>
-                  <p>From {commissionDue.length} doctors</p>
-                </div>
-                <button
-                  className="summary-action"
-                  onClick={() => setShowCommissionDueModal(true)}
-                >
-                  Collect Now →
-                </button>
-              </div>
+              <div className="summary-header"><span className="summary-icon">💰</span><div className="summary-text"><h3>₹{totalCommissionDue} Commission Due</h3><p>From {commissionDue.length} doctors</p></div><button className="summary-action" onClick={() => setShowCommissionDueModal(true)}>Collect Now →</button></div>
             </div>
           )}
-
-          <div className="recent-appointments">
-            <h2>Recent Appointments</h2>
+          <div className="recent-appointments"><h2>Recent Appointments</h2>
             <div className="appointments-table">
-              <table>
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Doctor</th>
-                    <th>Patient</th>
-                    <th>Date</th>
-                    <th>Time</th>
-                    <th>Amount</th>
-                    <th>Commission</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {appointments.slice(0, 5).map((apt) => (
-                    <tr key={apt.appointmentId}>
-                      <td>{apt.appointmentId}</td>
-                      <td>{apt.doctor?.name}</td>
-                      <td>{apt.patient?.name}</td>
-                      <td>{apt.appointmentDate}</td>
-                      <td>{apt.appointmentTime}</td>
-                      <td>₹{apt.amount}</td>
-                      <td className="commission">
-                        ₹{(apt.amount * 0.01).toFixed(2)}
-                      </td>
-                      <td>
-                        <span className={`status-badge ${apt.status}`}>
-                          {apt.status === "pending_verification"
-                            ? "⏳ Pending"
-                            : apt.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
+              <table><thead><tr><th>ID</th><th>Doctor</th><th>Patient</th><th>Date</th><th>Time</th><th>Amount</th><th>Commission</th><th>Status</th></tr></thead>
+              <tbody>{appointments.slice(0, 5).map((apt) => (<tr key={apt.appointmentId}><td>{apt.appointmentId}</td><td>{apt.doctor?.name}</td><td>{apt.patient?.name}</td><td>{apt.appointmentDate}</td><td>{apt.appointmentTime}</td><td>₹{apt.amount}</td><td className="commission">₹{(apt.amount * 0.01).toFixed(2)}</td><td><span className={`status-badge ${apt.status}`}>{apt.status === "pending_verification" ? "⏳ Pending" : apt.status}</span></td></tr>))}</tbody>
               </table>
             </div>
           </div>
@@ -2048,159 +1016,21 @@ function AdminDashboard() {
 
       {activeTab === "appointments" && (
         <div className="appointments-tab">
-          <div className="filters-section">
-            <h2>Filter Appointments</h2>
-            <div className="filters-grid">
-              <input
-                type="text"
-                placeholder="Doctor name"
-                value={filter.doctor}
-                onChange={(e) =>
-                  setFilter({ ...filter, doctor: e.target.value })
-                }
-              />
-              <select
-                value={filter.status}
-                onChange={(e) =>
-                  setFilter({ ...filter, status: e.target.value })
-                }
-              >
-                <option value="">All Status</option>
-                <option value="pending_verification">
-                  ⏳ Pending Verification
-                </option>
-                <option value="confirmed">Confirmed</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
-              <input
-                type="date"
-                placeholder="Start Date"
-                value={filter.startDate}
-                onChange={(e) =>
-                  setFilter({ ...filter, startDate: e.target.value })
-                }
-              />
-              <input
-                type="date"
-                placeholder="End Date"
-                value={filter.endDate}
-                onChange={(e) =>
-                  setFilter({ ...filter, endDate: e.target.value })
-                }
-              />
-              <button onClick={handleFilter} className="filter-btn">
-                Apply Filters
-              </button>
-            </div>
-          </div>
-
-          <div className="appointments-list">
-            <h2>All Appointments ({appointments.length})</h2>
+          <div className="filters-section"><h2>Filter Appointments</h2><div className="filters-grid">
+            <input type="text" placeholder="Doctor name" value={filter.doctor} onChange={(e) => setFilter({ ...filter, doctor: e.target.value })} />
+            <select value={filter.status} onChange={(e) => setFilter({ ...filter, status: e.target.value })}><option value="">All Status</option><option value="pending_verification">⏳ Pending Verification</option><option value="confirmed">Confirmed</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select>
+            <input type="date" placeholder="Start Date" value={filter.startDate} onChange={(e) => setFilter({ ...filter, startDate: e.target.value })} />
+            <input type="date" placeholder="End Date" value={filter.endDate} onChange={(e) => setFilter({ ...filter, endDate: e.target.value })} />
+            <button onClick={handleFilter} className="filter-btn">Apply Filters</button>
+          </div></div>
+          <div className="appointments-list"><h2>All Appointments ({appointments.length})</h2>
             <div className="appointments-table">
-              <table>
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Doctor</th>
-                    <th>Patient</th>
-                    <th>Email</th>
-                    <th>Date</th>
-                    <th>Time</th>
-                    <th>Amount</th>
-                    <th>Commission</th>
-                    <th>Payment</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {appointments.map((apt) => (
-                    <tr key={apt.appointmentId}>
-                      <td>{apt.appointmentId}</td>
-                      <td>{apt.doctor?.name}</td>
-                      <td>{apt.patient?.name}</td>
-                      <td>{apt.patient?.email}</td>
-                      <td>{apt.appointmentDate}</td>
-                      <td>{apt.appointmentTime}</td>
-                      <td>₹{apt.amount}</td>
-                      <td className="commission">
-                        ₹{(apt.amount * 0.01).toFixed(2)}
-                      </td>
-                      <td>
-                        <span className="payment-badge">
-                          {apt.paymentMethod || "UPI"}
-                        </span>
-                      </td>
-                      <td>
-                        <span className={`status-badge ${apt.status}`}>
-                          {apt.status === "pending_verification"
-                            ? "⏳ Pending"
-                            : apt.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
+              <table><thead><tr><th>ID</th><th>Doctor</th><th>Patient</th><th>Email</th><th>Date</th><th>Time</th><th>Amount</th><th>Commission</th><th>Payment</th><th>Status</th></tr></thead>
+              <tbody>{appointments.map((apt) => (<tr key={apt.appointmentId}><td>{apt.appointmentId}</td><td>{apt.doctor?.name}</td><td>{apt.patient?.name}</td><td>{apt.patient?.email}</td><td>{apt.appointmentDate}</td><td>{apt.appointmentTime}</td><td>₹{apt.amount}</td><td className="commission">₹{(apt.amount * 0.01).toFixed(2)}</td><td><span className="payment-badge">{apt.paymentMethod || "UPI"}</span></td><td><span className={`status-badge ${apt.status}`}>{apt.status === "pending_verification" ? "⏳ Pending" : apt.status}</span></td></tr>))}</tbody>
               </table>
             </div>
-            <div className="appointments-cards">
-              {appointments.map((apt) => (
-                <div key={apt.appointmentId} className="appointment-card">
-                  <div className="appointment-card-header">
-                    <span className="appointment-id">#{apt.appointmentId}</span>
-                    <span className={`appointment-status-mobile ${apt.status}`}>
-                      {apt.status === "pending_verification"
-                        ? "⏳ Pending"
-                        : apt.status}
-                    </span>
-                  </div>
-                  <div className="appointment-card-body">
-                    <div className="appointment-info-item">
-                      <span className="info-label">👨‍⚕️ Doctor</span>
-                      <span className="info-value">
-                        {apt.doctor?.name || "N/A"}
-                      </span>
-                    </div>
-                    <div className="appointment-info-item">
-                      <span className="info-label">👤 Patient</span>
-                      <span className="info-value">
-                        {apt.patient?.name || "N/A"}
-                      </span>
-                    </div>
-                    <div className="appointment-info-item">
-                      <span className="info-label">📧 Email</span>
-                      <span className="info-value">
-                        {apt.patient?.email || "N/A"}
-                      </span>
-                    </div>
-                    <div className="appointment-info-item">
-                      <span className="info-label">📅 Date</span>
-                      <span className="info-value">{apt.appointmentDate}</span>
-                    </div>
-                    <div className="appointment-info-item">
-                      <span className="info-label">⏰ Time</span>
-                      <span className="info-value">{apt.appointmentTime}</span>
-                    </div>
-                    <div className="appointment-info-item">
-                      <span className="info-label">💳 Payment</span>
-                      <span className="info-value">
-                        {apt.paymentMethod || "UPI"}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="appointment-card-footer">
-                    <div className="appointment-amount">₹{apt.amount}</div>
-                    <div className="appointment-commission">
-                      Commission: <span>₹{(apt.amount * 0.01).toFixed(2)}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-              {appointments.length === 0 && (
-                <div className="no-appointments-mobile">
-                  <p>No appointments found</p>
-                </div>
-              )}
+            <div className="appointments-cards">{appointments.map((apt) => (<div key={apt.appointmentId} className="appointment-card"><div className="appointment-card-header"><span className="appointment-id">#{apt.appointmentId}</span><span className={`appointment-status-mobile ${apt.status}`}>{apt.status === "pending_verification" ? "⏳ Pending" : apt.status}</span></div><div className="appointment-card-body"><div className="appointment-info-item"><span className="info-label">👨‍⚕️ Doctor</span><span className="info-value">{apt.doctor?.name || "N/A"}</span></div><div className="appointment-info-item"><span className="info-label">👤 Patient</span><span className="info-value">{apt.patient?.name || "N/A"}</span></div><div className="appointment-info-item"><span className="info-label">📧 Email</span><span className="info-value">{apt.patient?.email || "N/A"}</span></div><div className="appointment-info-item"><span className="info-label">📅 Date</span><span className="info-value">{apt.appointmentDate}</span></div><div className="appointment-info-item"><span className="info-label">⏰ Time</span><span className="info-value">{apt.appointmentTime}</span></div><div className="appointment-info-item"><span className="info-label">💳 Payment</span><span className="info-value">{apt.paymentMethod || "UPI"}</span></div></div><div className="appointment-card-footer"><div className="appointment-amount">₹{apt.amount}</div><div className="appointment-commission">Commission: <span>₹{(apt.amount * 0.01).toFixed(2)}</span></div></div></div>))}
+              {appointments.length === 0 && <div className="no-appointments-mobile"><p>No appointments found</p></div>}
             </div>
           </div>
         </div>
@@ -2208,171 +1038,16 @@ function AdminDashboard() {
 
       {activeTab === "doctors" && (
         <div className="doctors-tab">
-          <div className="doctors-header">
-            <h2>Doctor Management ({doctors.length} doctors)</h2>
-            <div className="doctors-actions">
-              <button
-                className="refresh-btn"
-                onClick={refreshDoctors}
-                disabled={dataLoading}
-              >
-                <span>🔄</span>
-                {dataLoading ? "Refreshing..." : "Refresh Doctors"}
-              </button>
-              <button
-                className="add-doctor-btn"
-                onClick={() => setShowAddDoctorModal(true)}
-              >
-                <span>➕</span>Add New Doctor
-              </button>
-            </div>
-          </div>
+          <div className="doctors-header"><h2>Doctor Management ({doctors.length} doctors)</h2><div className="doctors-actions"><button className="refresh-btn" onClick={refreshDoctors} disabled={dataLoading}><span>🔄</span>{dataLoading ? "Refreshing..." : "Refresh Doctors"}</button><button className="add-doctor-btn" onClick={() => setShowAddDoctorModal(true)}><span>➕</span>Add New Doctor</button></div></div>
           <div className="doctor-list-grid">
-            {doctors && doctors.length > 0 ? (
-              doctors.map((doc) => (
-                <div key={doc._id} className="doctor-card">
-                  <div className="doctor-card-header">
-                    <img
-                      src={doc.imageUrl || getDoctorImage(doc.name)}
-                      alt={doc.name}
-                      className="doctor-card-image"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src =
-                          "https://via.placeholder.com/60x60/2563eb/ffffff?text=Dr";
-                      }}
-                    />
-                    <div className="doctor-card-title">
-                      <h3>{doc.name}</h3>
-                      <span className="doctor-specialization-badge">
-                        {doc.specialization}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="doctor-card-details">
-                    <p>
-                      <strong>📧 Email:</strong> {doc.email}
-                    </p>
-                    <p>
-                      <strong>📞 Phone:</strong> {doc.phone || "Not set"}
-                    </p>
-                    <p>
-                      <strong>💰 Fee:</strong> ₹{doc.fee}
-                    </p>
-                    <p>
-                      <strong>💳 UPI:</strong>
-                      <span className="upi-text">{doc.upiId || "Not set"}</span>
-                    </p>
-                    <p>
-                      <strong>📊 Commission:</strong>{" "}
-                      {doc.commissionPercentage || 1}%
-                    </p>
-                    <p>
-                      <strong>🔵 Status:</strong>{" "}
-                      <span
-                        className={`admin-status-badge ${doc.isActive ? "active" : "inactive"}`}
-                      >
-                        {doc.isActive ? "🟢 Active" : "🔴 Inactive"}
-                      </span>
-                    </p>
-                    {doc.paymentStats?.pendingCommission > 0 && (
-                      <p className="commission-due-badge">
-                        <strong>💰 Commission Due:</strong>
-                        <span>₹{doc.paymentStats.pendingCommission}</span>
-                        {doc.lateFees > 0 && (
-                          <span className="late-fees">
-                            {" "}
-                            + ₹{doc.lateFees} fees
-                          </span>
-                        )}
-                      </p>
-                    )}
-                    {doc.paymentStatus === "restricted" && (
-                      <p className="restricted-badge">⛔ Account Restricted</p>
-                    )}
-                  </div>
-                  <div className="doctor-card-stats">
-                    <div className="stat">
-                      <span>Appointments</span>
-                      <strong>{doc.totalAppointments || 0}</strong>
-                    </div>
-                    <div className="stat">
-                      <span>Earnings</span>
-                      <strong>₹{doc.totalEarnings || 0}</strong>
-                    </div>
-                    <div className="stat highlight">
-                      <span>Your 1%</span>
-                      <strong>
-                        ₹{Math.round((doc.totalEarnings || 0) * 0.01)}
-                      </strong>
-                    </div>
-                  </div>
-                  <div className="doctor-card-actions">
-                    <button
-                      className="action-btn qr-btn"
-                      onClick={() => handleViewQR(doc)}
-                      title="View QR Code"
-                    >
-                      📱 QR
-                    </button>
-                    <button
-                      className="action-btn email-btn"
-                      onClick={() => sendLoginEmail(doc)}
-                      title="Send Login Details"
-                    >
-                      📧 Email
-                    </button>
-                    <button
-                      className="action-btn password-btn"
-                      onClick={() => {
-                        if (doc.password) {
-                          navigator.clipboard
-                            .writeText(doc.password)
-                            .then(() =>
-                              alert(
-                                `✅ Password copied!\n\nPassword: ${doc.password}\n\nNow paste in login form`,
-                              ),
-                            );
-                        } else {
-                          alert(`❌ Password not found`);
-                        }
-                      }}
-                    >
-                      <span>📋</span>C-PW
-                    </button>
-                    <button
-                      className="action-btn reset-btn"
-                      onClick={() => resetPassword(doc)}
-                      title="Reset Password"
-                    >
-                      🔑 Reset
-                    </button>
-                    <button
-                      className="action-btn edit-btn"
-                      onClick={() => handleEditClick(doc)}
-                    >
-                      ✏️ Edit
-                    </button>
-                    <button
-                      className="action-btn delete-btn"
-                      onClick={() => handleDeleteDoctor(doc)}
-                    >
-                      🗑️ Delete
-                    </button>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="no-doctors">
-                <p>No doctors added yet</p>
-                <button
-                  className="add-first-doctor-btn"
-                  onClick={() => setShowAddDoctorModal(true)}
-                >
-                  ➕ Add Your First Doctor
-                </button>
+            {doctors && doctors.length > 0 ? doctors.map((doc) => (
+              <div key={doc._id} className="doctor-card">
+                <div className="doctor-card-header"><img src={doc.imageUrl || getDoctorImage(doc.name)} alt={doc.name} className="doctor-card-image" onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/60x60/2563eb/ffffff?text=Dr"; }} /><div className="doctor-card-title"><h3>{doc.name}</h3><span className="doctor-specialization-badge">{doc.specialization}</span></div></div>
+                <div className="doctor-card-details"><p><strong>📧 Email:</strong> {doc.email}</p><p><strong>📞 Phone:</strong> {doc.phone || "Not set"}</p><p><strong>💰 Fee:</strong> ₹{doc.fee}</p><p><strong>💳 UPI:</strong><span className="upi-text">{doc.upiId || "Not set"}</span></p><p><strong>📊 Commission:</strong> {doc.commissionPercentage || 1}%</p><p><strong>🔵 Status:</strong> <span className={`admin-status-badge ${doc.isActive ? "active" : "inactive"}`}>{doc.isActive ? "🟢 Active" : "🔴 Inactive"}</span></p>{doc.paymentStats?.pendingCommission > 0 && (<p className="commission-due-badge"><strong>💰 Commission Due:</strong><span>₹{doc.paymentStats.pendingCommission}</span>{doc.lateFees > 0 && (<span className="late-fees"> + ₹{doc.lateFees} fees</span>)}</p>)}{doc.paymentStatus === "restricted" && (<p className="restricted-badge">⛔ Account Restricted</p>)}</div>
+                <div className="doctor-card-stats"><div className="stat"><span>Appointments</span><strong>{doc.totalAppointments || 0}</strong></div><div className="stat"><span>Earnings</span><strong>₹{doc.totalEarnings || 0}</strong></div><div className="stat highlight"><span>Your 1%</span><strong>₹{Math.round((doc.totalEarnings || 0) * 0.01)}</strong></div></div>
+                <div className="doctor-card-actions"><button className="action-btn qr-btn" onClick={() => handleViewQR(doc)} title="View QR Code">📱 QR</button><button className="action-btn email-btn" onClick={() => sendLoginEmail(doc)} title="Send Login Details">📧 Email</button><button className="action-btn password-btn" onClick={() => { if (doc.password) { navigator.clipboard.writeText(doc.password).then(() => alert(`✅ Password copied!\n\nPassword: ${doc.password}\n\nNow paste in login form`)); } else { alert(`❌ Password not found`); } }}><span>📋</span>C-PW</button><button className="action-btn reset-btn" onClick={() => resetPassword(doc)} title="Reset Password">🔑 Reset</button><button className="action-btn edit-btn" onClick={() => handleEditClick(doc)}>✏️ Edit</button><button className="action-btn delete-btn" onClick={() => handleDeleteDoctor(doc)}>🗑️ Delete</button></div>
               </div>
-            )}
+            )) : <div className="no-doctors"><p>No doctors added yet</p><button className="add-first-doctor-btn" onClick={() => setShowAddDoctorModal(true)}>➕ Add Your First Doctor</button></div>}
           </div>
         </div>
       )}

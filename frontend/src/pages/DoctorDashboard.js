@@ -1,15 +1,13 @@
 // D:\Projects\DoctorBooking\frontend\src\pages\DoctorDashboard.js
-/* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable no-unused-vars */
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import api from "../api/axios";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import "./Doctor.css";
 
 function DoctorDashboard() {
-  const { doctor, logout, loading } = useAuth(); // ← ADD THIS LINE (MOST IMPORTANT)
-  const navigate = useNavigate(); // ← ADD THIS LINE
+  const { doctor, logout, loading } = useAuth();
+  const navigate = useNavigate();
   const doctorId = doctor?.id || doctor?.doctorId || doctor?._id;
 
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -24,7 +22,6 @@ function DoctorDashboard() {
     todayAppointments: 0,
     upcomingCount: 0,
   });
-  const [upiId, setUpiId] = useState(doctor?.upiId || "");
   const [showPaymentHistoryModal, setShowPaymentHistoryModal] = useState(false);
   const [showPayCommissionModal, setShowPayCommissionModal] = useState(false);
   const [showPaymentQR, setShowPaymentQR] = useState(false);
@@ -34,7 +31,6 @@ function DoctorDashboard() {
   const [medicalRecords, setMedicalRecords] = useState([]);
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterDate, setFilterDate] = useState("");
-  const [lastUpdated, setLastUpdated] = useState(new Date());
   const [showNotification, setShowNotification] = useState({
     show: false,
     message: "",
@@ -82,96 +78,17 @@ function DoctorDashboard() {
     end: "14:00",
   });
 
-  // 🆕 Status Toggle States
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [isActive, setIsActive] = useState(doctor?.isActive ?? true);
 
-  // Set axios defaults for cookies
   api.defaults.withCredentials = true;
-  // baseURL removed - using .env instead
-  console.log(
-    "✅ DoctorDashboard API Base URL set to:",
-    api.defaults.baseURL,
-  );
+  console.log("✅ DoctorDashboard API Base URL set to:", api.defaults.baseURL);
 
-  useEffect(() => {
-    if (!loading && !doctor) {
-      navigate("/doctor-login");
-    }
-  }, [doctor, loading, navigate]);
+  // ============================================
+  // ALL FETCH FUNCTIONS WITH useCallback
+  // ============================================
 
-  useEffect(() => {
-    if (doctor && doctorId) {
-      console.log("🔍 Doctor from context:", doctor);
-      console.log("🔍 doctor.isActive value:", doctor?.isActive);
-
-      fetchAllData();
-      fetchAvailability();
-      fetchPaymentHistory();
-      fetchDoctorLogo();
-      fetchMedicalRecords();
-      setTempUpiId(doctor?.upiId || "");
-      setUpiId(doctor?.upiId || "");
-      setIsActive(doctor?.isActive ?? true);
-    }
-  }, [doctor, doctorId]);
-
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (showSettingsMenu && !e.target.closest(".settings-menu-container")) {
-        setShowSettingsMenu(false);
-      }
-    };
-    document.addEventListener("click", handleClickOutside);
-    return () => document.removeEventListener("click", handleClickOutside);
-  }, [showSettingsMenu]);
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-      navigate("/doctor-login");
-    } catch (error) {
-      console.error("Logout error:", error);
-    }
-  };
-
-  // Save doctor active status (saves whatever is selected in modal)
-  const saveDoctorStatus = async () => {
-    setProcessingPayment(true);
-
-    try {
-      console.log(`💾 Saving status: ${isActive ? "Active" : "Inactive"}`);
-
-      const response = await api.patch(
-        `/api/doctor/toggle-status/${doctorId}`,
-        { isActive: isActive },
-      );
-
-      if (response.data.success) {
-        if (doctor) doctor.isActive = isActive;
-
-        localStorage.setItem("statusChanged", Date.now().toString());
-
-        showNotificationMsg(
-          isActive
-            ? "✅ You are now Active - Patients can book appointments"
-            : "🔴 You are now Inactive - Patients cannot book appointments",
-          "success",
-        );
-        setShowStatusModal(false);
-      } else {
-        showNotificationMsg("❌ Failed to update status", "error");
-      }
-    } catch (error) {
-      console.error("Error saving status:", error);
-      showNotificationMsg("❌ Failed to update status", "error");
-    } finally {
-      setProcessingPayment(false);
-    }
-  };
-
-  // ✅ FIXED: Fetch doctor logo - NO localhost prefix
-  const fetchDoctorLogo = async () => {
+  const fetchDoctorLogo = useCallback(async () => {
     if (!doctorId) return;
     try {
       const response = await api.get(`/api/doctor/logo/${doctorId}`);
@@ -181,115 +98,9 @@ function DoctorDashboard() {
     } catch (error) {
       console.error("Error fetching logo:", error);
     }
-  };
+  }, [doctorId]);
 
-  // ✅ FIXED: Upload doctor logo - NO localhost prefix
-  const uploadDoctorLogo = async () => {
-    console.log("🚀 Upload function called");
-    console.log("Selected file:", selectedLogoFile);
-
-    if (!selectedLogoFile) {
-      showNotificationMsg("Please select an image file", "error");
-      return;
-    }
-
-    setUploadingLogo(true);
-    const formData = new FormData();
-    formData.append("logo", selectedLogoFile);
-
-    try {
-      console.log(
-        "📤 Sending upload request to:",
-        `/api/doctor/upload-logo/${doctorId}`,
-      );
-      const response = await api.post(
-        `/api/doctor/upload-logo/${doctorId}`,
-        formData,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        },
-      );
-
-      console.log("📥 Upload response:", response.data);
-
-      if (response.data.success) {
-        setDoctorLogo(response.data.logoUrl + "?t=" + Date.now());
-        showNotificationMsg("✅ Logo updated successfully!", "success");
-        setShowLogoModal(false);
-        setSelectedLogoFile(null);
-        setLogoPreview(null);
-      }
-    } catch (error) {
-      console.error("❌ Upload error:", error);
-      showNotificationMsg(
-        error.response?.data?.message || "❌ Failed to upload logo",
-        "error",
-      );
-    } finally {
-      setUploadingLogo(false);
-    }
-  };
-
-  // ✅ FIXED: Helper function to get logo source
-  const getLogoSrc = () => {
-    const logo = doctorLogo || doctor?.logoUrl;
-    if (logo && logo.startsWith("https://res.cloudinary.com")) {
-      return logo;
-    }
-    return "https://img.icons8.com/color/96/000000/doctor-male.png";
-  };
-
-  const updateUpiId = async () => {
-    console.log("🚀 Update UPI called");
-    if (!tempUpiId) {
-      showNotificationMsg("Please enter UPI ID", "error");
-      return;
-    }
-    setUpdatingUpi(true);
-    try {
-      const response = await api.patch(`/api/doctor/${doctorId}/upi`, {
-        upiId: tempUpiId,
-      });
-      if (response.data.success) {
-        doctor.upiId = tempUpiId;
-        setUpiId(tempUpiId);
-        showNotificationMsg("✅ UPI ID updated successfully!", "success");
-        setShowUpiSettingsModal(false);
-      }
-    } catch (error) {
-      console.error("Update error:", error);
-      showNotificationMsg("❌ Failed to update UPI ID", "error");
-    } finally {
-      setUpdatingUpi(false);
-    }
-  };
-
-  const fetchAllData = async () => {
-    setDataLoading(true);
-    await Promise.all([
-      fetchAppointments(),
-      fetchStats(),
-      fetchCommission(),
-      fetchPatients(),
-      fetchMedicalRecords(),
-    ]);
-    setDataLoading(false);
-  };
-
-  const fetchPaymentHistory = async () => {
-    try {
-      const response = await api.get(
-        `/api/doctor/payment-history/${doctorId}`,
-      );
-      if (response.data.success) {
-        setPaymentHistory(response.data.payments || []);
-      }
-    } catch (error) {
-      console.error("Error fetching payment history:", error);
-    }
-  };
-
-  const fetchAppointments = async () => {
+  const fetchAppointments = useCallback(async () => {
     try {
       const response = await api.get(`/api/doctor/appointments/${doctorId}`);
       if (response.data.success) {
@@ -298,9 +109,9 @@ function DoctorDashboard() {
     } catch (error) {
       console.error("Error fetching appointments:", error);
     }
-  };
+  }, [doctorId]);
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       const response = await api.get(`/api/doctor/dashboard/${doctorId}`);
       if (response.data.success) {
@@ -316,9 +127,9 @@ function DoctorDashboard() {
     } catch (error) {
       console.error("Error fetching stats:", error);
     }
-  };
+  }, [doctorId]);
 
-  const fetchCommission = async () => {
+  const fetchCommission = useCallback(async () => {
     try {
       const response = await api.get(`/api/doctor/${doctorId}/commission`);
       if (response.data.success) {
@@ -327,9 +138,9 @@ function DoctorDashboard() {
     } catch (error) {
       console.error("Error fetching commission:", error);
     }
-  };
+  }, [doctorId]);
 
-  const fetchPatients = async () => {
+  const fetchPatients = useCallback(async () => {
     try {
       const response = await api.get(`/api/doctor/patients/${doctorId}`);
       if (response.data.success) {
@@ -338,9 +149,9 @@ function DoctorDashboard() {
     } catch (error) {
       console.error("Error fetching patients:", error);
     }
-  };
+  }, [doctorId]);
 
-  const fetchMedicalRecords = async () => {
+  const fetchMedicalRecords = useCallback(async () => {
     try {
       const response = await api.get(`/api/upload/doctor/${doctorId}`);
       if (response.data.success) {
@@ -349,124 +160,20 @@ function DoctorDashboard() {
     } catch (error) {
       console.error("Error fetching medical records:", error);
     }
-  };
+  }, [doctorId]);
 
-  const uploadMedicalRecord = async () => {
-    let patientEmail, patientName, patientPhone;
-
-    // Check if patient is already selected from Patients tab
-    if (selectedPatientEmail) {
-      // Use selected patient from state
-      patientEmail = selectedPatientEmail;
-      patientName = selectedPatientName;
-      patientPhone = "";
-    } else {
-      // Get from dropdown
-      const patientSelect = document.getElementById("patientSelect");
-      const patientValue = patientSelect?.value;
-
-      if (!patientValue) {
-        showNotificationMsg("Please select a patient", "error");
-        return;
-      }
-
-      let patientData;
-      try {
-        patientData = JSON.parse(patientValue);
-      } catch (e) {
-        showNotificationMsg("Invalid patient selection", "error");
-        return;
-      }
-
-      patientEmail = patientData.email;
-      patientName = patientData.name;
-      patientPhone = patientData.phone || "";
-    }
-
-    const title = document.getElementById("recordTitle")?.value;
-    const fileType = document.getElementById("fileType")?.value;
-    const description = document.getElementById("recordDesc")?.value;
-    const file = document.getElementById("recordFile")?.files[0];
-
-    if (!title) {
-      showNotificationMsg("Please enter record title", "error");
-      return;
-    }
-    if (!file) {
-      showNotificationMsg("Please select a file", "error");
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append("patientEmail", patientEmail);
-    formData.append("patientName", patientName);
-    formData.append("patientPhone", patientPhone);
-    formData.append("doctorName", doctor?.name || "");
-    formData.append("doctorId", doctorId);
-    formData.append("doctorEmail", doctor?.email || "");
-    formData.append("fileType", fileType);
-    formData.append("title", title);
-    formData.append("description", description || "");
-    formData.append("file", file);
-
+  const fetchPaymentHistory = useCallback(async () => {
     try {
-      const response = await api.post("/api/upload/upload", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-
+      const response = await api.get(`/api/doctor/payment-history/${doctorId}`);
       if (response.data.success) {
-        showNotificationMsg(
-          "✅ Medical record uploaded successfully!",
-          "success",
-        );
-
-        // Clear form fields
-        if (!selectedPatientEmail) {
-          document.getElementById("patientSelect").value = "";
-        }
-        document.getElementById("recordTitle").value = "";
-        document.getElementById("recordDesc").value = "";
-        document.getElementById("recordFile").value = "";
-
-        fetchMedicalRecords();
+        setPaymentHistory(response.data.payments || []);
       }
     } catch (error) {
-      console.error("Upload error:", error);
-      showNotificationMsg(
-        error.response?.data?.message || "❌ Failed to upload record",
-        "error",
-      );
+      console.error("Error fetching payment history:", error);
     }
-  };
+  }, [doctorId]);
 
-  // ============================================
-  // ✅ DELETE MEDICAL RECORD FUNCTION
-  // ============================================
-  const deleteRecord = async (recordId) => {
-    if (
-      !window.confirm(
-        "⚠️ Are you sure you want to delete this medical record?\n\nThis action cannot be undone!",
-      )
-    ) {
-      return;
-    }
-
-    try {
-      const response = await api.delete(`/api/upload/record/${recordId}`);
-      if (response.data.success) {
-        showNotificationMsg(
-          "✅ Medical record deleted successfully",
-          "success",
-        );
-        fetchMedicalRecords(); // Refresh the list
-      }
-    } catch (error) {
-      console.error("Delete error:", error);
-      showNotificationMsg("❌ Failed to delete record", "error");
-    }
-  };
-
-  const fetchAvailability = async () => {
+  const fetchAvailability = useCallback(async () => {
     try {
       const response = await api.get(`/api/availability/${doctorId}`);
       if (response.data.success) {
@@ -506,6 +213,274 @@ function DoctorDashboard() {
     } catch (error) {
       console.log("Availability API not ready, using default schedule");
     }
+  }, [doctorId]);
+
+  const fetchAllData = useCallback(async () => {
+    setDataLoading(true);
+    await Promise.all([
+      fetchAppointments(),
+      fetchStats(),
+      fetchCommission(),
+      fetchPatients(),
+      fetchMedicalRecords(),
+    ]);
+    setDataLoading(false);
+  }, [
+    fetchAppointments,
+    fetchStats,
+    fetchCommission,
+    fetchPatients,
+    fetchMedicalRecords,
+  ]);
+
+  // ============================================
+  // EFFECTS
+  // ============================================
+
+  useEffect(() => {
+    if (!loading && !doctor) {
+      navigate("/doctor-login");
+    }
+  }, [doctor, loading, navigate]);
+
+  useEffect(() => {
+    if (doctor && doctorId) {
+      console.log("🔍 Doctor from context:", doctor);
+      console.log("🔍 doctor.isActive value:", doctor?.isActive);
+
+      fetchAllData();
+      fetchAvailability();
+      fetchPaymentHistory();
+      fetchDoctorLogo();
+      fetchMedicalRecords();
+      setTempUpiId(doctor?.upiId || "");
+      setIsActive(doctor?.isActive ?? true);
+    }
+  }, [
+    doctor,
+    doctorId,
+    fetchAllData,
+    fetchAvailability,
+    fetchPaymentHistory,
+    fetchDoctorLogo,
+    fetchMedicalRecords,
+  ]);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (showSettingsMenu && !e.target.closest(".settings-menu-container")) {
+        setShowSettingsMenu(false);
+      }
+    };
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, [showSettingsMenu]);
+
+  // ============================================
+  // HANDLERS
+  // ============================================
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate("/doctor-login");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
+
+  const saveDoctorStatus = async () => {
+    setProcessingPayment(true);
+    try {
+      console.log(`💾 Saving status: ${isActive ? "Active" : "Inactive"}`);
+      const response = await api.patch(
+        `/api/doctor/toggle-status/${doctorId}`,
+        { isActive },
+      );
+      if (response.data.success) {
+        if (doctor) doctor.isActive = isActive;
+        localStorage.setItem("statusChanged", Date.now().toString());
+        showNotificationMsg(
+          isActive
+            ? "✅ You are now Active - Patients can book appointments"
+            : "🔴 You are now Inactive - Patients cannot book appointments",
+          "success",
+        );
+        setShowStatusModal(false);
+      } else {
+        showNotificationMsg("❌ Failed to update status", "error");
+      }
+    } catch (error) {
+      console.error("Error saving status:", error);
+      showNotificationMsg("❌ Failed to update status", "error");
+    } finally {
+      setProcessingPayment(false);
+    }
+  };
+
+  const uploadDoctorLogo = async () => {
+    if (!selectedLogoFile) {
+      showNotificationMsg("Please select an image file", "error");
+      return;
+    }
+    setUploadingLogo(true);
+    const formData = new FormData();
+    formData.append("logo", selectedLogoFile);
+    try {
+      const response = await api.post(
+        `/api/doctor/upload-logo/${doctorId}`,
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        },
+      );
+      if (response.data.success) {
+        setDoctorLogo(response.data.logoUrl + "?t=" + Date.now());
+        showNotificationMsg("✅ Logo updated successfully!", "success");
+        setShowLogoModal(false);
+        setSelectedLogoFile(null);
+        setLogoPreview(null);
+      }
+    } catch (error) {
+      console.error("Upload error:", error);
+      showNotificationMsg(
+        error.response?.data?.message || "❌ Failed to upload logo",
+        "error",
+      );
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
+
+  const getLogoSrc = () => {
+    const logo = doctorLogo || doctor?.logoUrl;
+    if (logo && logo.startsWith("https://res.cloudinary.com")) {
+      return logo;
+    }
+    return "https://img.icons8.com/color/96/000000/doctor-male.png";
+  };
+
+  const updateUpiId = async () => {
+    if (!tempUpiId) {
+      showNotificationMsg("Please enter UPI ID", "error");
+      return;
+    }
+    setUpdatingUpi(true);
+    try {
+      const response = await api.patch(`/api/doctor/${doctorId}/upi`, {
+        upiId: tempUpiId,
+      });
+      if (response.data.success) {
+        if (doctor) doctor.upiId = tempUpiId;
+        showNotificationMsg("✅ UPI ID updated successfully!", "success");
+        setShowUpiSettingsModal(false);
+      }
+    } catch (error) {
+      console.error("Update error:", error);
+      showNotificationMsg("❌ Failed to update UPI ID", "error");
+    } finally {
+      setUpdatingUpi(false);
+    }
+  };
+
+  const uploadMedicalRecord = async () => {
+    let patientEmail, patientName, patientPhone;
+    if (selectedPatientEmail) {
+      patientEmail = selectedPatientEmail;
+      patientName = selectedPatientName;
+      patientPhone = "";
+    } else {
+      const patientSelect = document.getElementById("patientSelect");
+      const patientValue = patientSelect?.value;
+      if (!patientValue) {
+        showNotificationMsg("Please select a patient", "error");
+        return;
+      }
+      let patientData;
+      try {
+        patientData = JSON.parse(patientValue);
+      } catch (e) {
+        showNotificationMsg("Invalid patient selection", "error");
+        return;
+      }
+      patientEmail = patientData.email;
+      patientName = patientData.name;
+      patientPhone = patientData.phone || "";
+    }
+
+    const title = document.getElementById("recordTitle")?.value;
+    const fileType = document.getElementById("fileType")?.value;
+    const description = document.getElementById("recordDesc")?.value;
+    const file = document.getElementById("recordFile")?.files[0];
+
+    if (!title) {
+      showNotificationMsg("Please enter record title", "error");
+      return;
+    }
+    if (!file) {
+      showNotificationMsg("Please select a file", "error");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("patientEmail", patientEmail);
+    formData.append("patientName", patientName);
+    formData.append("patientPhone", patientPhone);
+    formData.append("doctorName", doctor?.name || "");
+    formData.append("doctorId", doctorId);
+    formData.append("doctorEmail", doctor?.email || "");
+    formData.append("fileType", fileType);
+    formData.append("title", title);
+    formData.append("description", description || "");
+    formData.append("file", file);
+
+    try {
+      const response = await api.post("/api/upload/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      if (response.data.success) {
+        showNotificationMsg(
+          "✅ Medical record uploaded successfully!",
+          "success",
+        );
+        if (!selectedPatientEmail) {
+          document.getElementById("patientSelect").value = "";
+        }
+        document.getElementById("recordTitle").value = "";
+        document.getElementById("recordDesc").value = "";
+        document.getElementById("recordFile").value = "";
+        fetchMedicalRecords();
+      }
+    } catch (error) {
+      console.error("Upload error:", error);
+      showNotificationMsg(
+        error.response?.data?.message || "❌ Failed to upload record",
+        "error",
+      );
+    }
+  };
+
+  const deleteRecord = async (recordId) => {
+    if (
+      !window.confirm(
+        "⚠️ Are you sure you want to delete this medical record?\n\nThis action cannot be undone!",
+      )
+    ) {
+      return;
+    }
+    try {
+      const response = await api.delete(`/api/upload/record/${recordId}`);
+      if (response.data.success) {
+        showNotificationMsg(
+          "✅ Medical record deleted successfully",
+          "success",
+        );
+        fetchMedicalRecords();
+      }
+    } catch (error) {
+      console.error("Delete error:", error);
+      showNotificationMsg("❌ Failed to delete record", "error");
+    }
   };
 
   const updateAvailability = async () => {
@@ -520,11 +495,9 @@ function DoctorDashboard() {
         saturday: 6,
       };
       const weeklySchedule = [];
-
       for (const [dayName, data] of Object.entries(availability)) {
         const day = daysMap[dayName];
         if (day !== undefined) {
-          // Create breaks array if lunch is enabled
           const breaks = [];
           if (lunchBreak.enabled && data.enabled) {
             breaks.push({
@@ -533,24 +506,19 @@ function DoctorDashboard() {
               reason: "Lunch",
             });
           }
-
           weeklySchedule.push({
             day,
             isAvailable: data.enabled,
             timeRanges: data.enabled
               ? [{ start: data.start, end: data.end }]
               : [],
-            breaks: breaks, // ← Sending breaks to backend
+            breaks,
           });
         }
       }
-
-      console.log("📤 Saving schedule with breaks:", weeklySchedule);
-
       const response = await api.put(`/api/availability/${doctorId}/weekly`, {
         weeklySchedule,
       });
-
       if (response.data.success) {
         showNotificationMsg(
           "✅ Availability updated with lunch break!",
@@ -566,13 +534,12 @@ function DoctorDashboard() {
   const verifyPayment = async (appointmentId) => {
     try {
       const response = await api.post(`/api/doctor/verify/${appointmentId}`, {
-        doctorId: doctorId,
+        doctorId,
       });
       if (response.data.success) {
         showNotificationMsg("✅ Payment verified successfully!", "success");
         fetchAppointments();
         fetchStats();
-        setLastUpdated(new Date());
       } else {
         showNotificationMsg(
           response.data.message || "❌ Verification failed",
@@ -598,7 +565,6 @@ function DoctorDashboard() {
         showNotificationMsg("✅ Appointment marked as completed!", "success");
         fetchAppointments();
         fetchStats();
-        setLastUpdated(new Date());
       }
     } catch (error) {
       console.error("Error completing appointment:", error);
@@ -615,7 +581,6 @@ function DoctorDashboard() {
         showNotificationMsg("❌ Appointment rejected!", "error");
         fetchAppointments();
         fetchStats();
-        setLastUpdated(new Date());
       }
     } catch (error) {
       console.error("Error rejecting appointment:", error);
@@ -631,7 +596,7 @@ function DoctorDashboard() {
     setProcessingPayment(true);
     try {
       const response = await api.post(`/api/doctor/pay-commission`, {
-        doctorId: doctorId,
+        doctorId,
         amount: commissionData?.due || 0,
         transactionId: paymentTransactionId,
       });
@@ -644,7 +609,6 @@ function DoctorDashboard() {
         setShowPayCommissionModal(false);
         fetchCommission();
         fetchPaymentHistory();
-        setLastUpdated(new Date());
       } else {
         showNotificationMsg(
           response.data.message || "❌ Payment failed",
@@ -730,10 +694,9 @@ function DoctorDashboard() {
     return true;
   });
 
-  // Filter patients based on search query
   const filteredPatients = patients.filter((patient) => {
-    if (!searchQuery.trim()) return true; // ← add .trim() here
-    const query = searchQuery.trim().toLowerCase(); // ← add .trim() here
+    if (!searchQuery.trim()) return true;
+    const query = searchQuery.trim().toLowerCase();
     return (
       patient.name?.toLowerCase().includes(query) ||
       patient.email?.toLowerCase().includes(query) ||
@@ -741,7 +704,6 @@ function DoctorDashboard() {
     );
   });
 
-  // Filter records based on selected patient
   const filteredRecords = selectedPatientEmail
     ? medicalRecords.filter(
         (record) => record.patientEmail === selectedPatientEmail,
@@ -859,7 +821,6 @@ function DoctorDashboard() {
           ))}
         </div>
 
-        {/* Footer - Settings Menu and Logout */}
         <div className="sidebar-footer">
           {commissionData?.due > 0 && (
             <button
@@ -870,7 +831,6 @@ function DoctorDashboard() {
             </button>
           )}
 
-          {/* Settings Menu Container */}
           <div className="settings-menu-container">
             <button
               className="sidebar-btn sidebar-btn-settings"
@@ -882,7 +842,6 @@ function DoctorDashboard() {
               ⚙️ Settings
             </button>
 
-            {/* Settings Dropdown Menu */}
             {showSettingsMenu && (
               <div className="settings-dropdown-menu">
                 <div
@@ -905,7 +864,6 @@ function DoctorDashboard() {
                   <span className="menu-icon">💳</span>
                   <span>UPI Payment Settings</span>
                 </div>
-                {/* 🆕 Status Toggle Menu Item */}
                 <div
                   className="settings-menu-item"
                   onClick={() => {
@@ -993,10 +951,8 @@ function DoctorDashboard() {
                     onChange={(e) => {
                       const file = e.target.files[0];
                       if (file) {
-                        // ✅ SIZE VALIDATION
-                        const MAX_SIZE = 200 * 1024; // 200KB
-                        const MIN_SIZE = 5 * 1024; // 5KB
-
+                        const MAX_SIZE = 200 * 1024;
+                        const MIN_SIZE = 5 * 1024;
                         if (file.size > MAX_SIZE) {
                           showNotificationMsg(
                             `Logo too large! Maximum ${MAX_SIZE / 1024}KB. Your file: ${(file.size / 1024).toFixed(0)}KB`,
@@ -1005,7 +961,6 @@ function DoctorDashboard() {
                           e.target.value = "";
                           return;
                         }
-
                         if (file.size < MIN_SIZE) {
                           showNotificationMsg(
                             `File too small! Minimum ${MIN_SIZE / 1024}KB. Your file: ${(file.size / 1024).toFixed(0)}KB`,
@@ -1014,7 +969,6 @@ function DoctorDashboard() {
                           e.target.value = "";
                           return;
                         }
-
                         setSelectedLogoFile(file);
                         const reader = new FileReader();
                         reader.onloadend = () => setLogoPreview(reader.result);
@@ -1108,7 +1062,6 @@ function DoctorDashboard() {
                     {doctor?.upiId || "Not Set"}
                   </div>
                 </div>
-
                 <div className="upi-update-settings">
                   <label className="settings-label">New UPI ID:</label>
                   <input
@@ -1151,8 +1104,6 @@ function DoctorDashboard() {
                     {updatingUpi ? "Updating..." : "💳 Update UPI ID"}
                   </button>
                 </div>
-
-                {/* QR Code Preview */}
                 <div
                   className="qr-preview-section"
                   style={{ marginTop: "20px", textAlign: "center" }}
@@ -1182,7 +1133,7 @@ function DoctorDashboard() {
           </div>
         )}
 
-        {/* 🆕 STATUS MODAL */}
+        {/* STATUS MODAL */}
         {showStatusModal && (
           <div
             className="modal-overlay"
@@ -1205,7 +1156,7 @@ function DoctorDashboard() {
                 <div className="status-options">
                   <div
                     className={`status-option ${isActive === true ? "active" : ""}`}
-                    onClick={() => setIsActive(true)} // ← ADD THIS LINE
+                    onClick={() => setIsActive(true)}
                   >
                     <div className="status-option-icon">🟢</div>
                     <div className="status-option-content">
@@ -1216,10 +1167,9 @@ function DoctorDashboard() {
                     </div>
                     {isActive === true && <div className="status-check">✓</div>}
                   </div>
-
                   <div
                     className={`status-option ${isActive === false ? "active" : ""}`}
-                    onClick={() => setIsActive(false)} // ← ADD THIS LINE
+                    onClick={() => setIsActive(false)}
                   >
                     <div className="status-option-icon">🔴</div>
                     <div className="status-option-content">
@@ -1231,7 +1181,6 @@ function DoctorDashboard() {
                     )}
                   </div>
                 </div>
-
                 <div className="status-note">
                   <p>ℹ️ When Inactive:</p>
                   <ul>
@@ -1240,7 +1189,6 @@ function DoctorDashboard() {
                     <li>Existing appointments remain active</li>
                   </ul>
                 </div>
-
                 <button className="save-status-btn" onClick={saveDoctorStatus}>
                   Save Status
                 </button>
@@ -1249,7 +1197,7 @@ function DoctorDashboard() {
           </div>
         )}
 
-        {/* Pay Commission Modal */}
+        {/* PAY COMMISSION MODAL */}
         {showPayCommissionModal && (
           <div
             className="modal-overlay"
@@ -1334,7 +1282,7 @@ function DoctorDashboard() {
           </div>
         )}
 
-        {/* Payment History Modal */}
+        {/* PAYMENT HISTORY MODAL */}
         {showPaymentHistoryModal && (
           <div
             className="modal-overlay"
@@ -1447,7 +1395,7 @@ function DoctorDashboard() {
               <div className="today-summary">
                 <div className="today-stat">
                   <span className="label">Today's Appointments</span>
-                  <span className="value">{stats.todayAppointments}</span>
+                  <span className="value">{todayAppointments.length}</span>
                 </div>
                 <div className="today-stat">
                   <span className="label">Upcoming</span>
@@ -1799,8 +1747,6 @@ function DoctorDashboard() {
         {activeTab === "patients" && (
           <div className="patients-tab">
             <h2>My Patients</h2>
-
-            {/* Search Bar */}
             <div className="patient-search-section">
               <input
                 type="text"
@@ -1818,8 +1764,6 @@ function DoctorDashboard() {
                 </button>
               )}
             </div>
-
-            {/* Patients List */}
             {filteredPatients.length === 0 ? (
               <div className="no-data">
                 {searchQuery ? "No patients found" : "No patients yet"}
@@ -1928,8 +1872,6 @@ function DoctorDashboard() {
                 </div>
               ))}
             </div>
-
-            {/* 🆕 LUNCH BREAK SECTION */}
             <div
               style={{
                 marginTop: "20px",
@@ -1997,7 +1939,6 @@ function DoctorDashboard() {
                 </div>
               )}
             </div>
-
             <button
               className="save-availability-btn"
               onClick={updateAvailability}
@@ -2010,7 +1951,6 @@ function DoctorDashboard() {
         {/* MEDICAL RECORDS TAB */}
         {activeTab === "records" && (
           <div className="records-tab">
-            {/* Selected Patient Banner */}
             {selectedPatientEmail && (
               <div className="selected-patient-banner">
                 <span>
@@ -2027,16 +1967,11 @@ function DoctorDashboard() {
                 </button>
               </div>
             )}
-
             <h2>📁 Medical Records</h2>
-
-            {/* Upload Form Section */}
             <div className="upload-record-section">
               <h3>📤 Upload New Medical Record</h3>
               <div className="upload-form-grid">
-                {/* Patient Selection - CONDITIONAL */}
                 {selectedPatientEmail ? (
-                  // Case 1: Patient already selected from Patients tab
                   <div className="form-group">
                     <label>Patient *</label>
                     <input
@@ -2051,7 +1986,6 @@ function DoctorDashboard() {
                     </small>
                   </div>
                 ) : (
-                  // Case 2: No patient selected - show dropdown
                   <div className="form-group">
                     <label>Select Patient *</label>
                     <select id="patientSelect" className="patient-select">
@@ -2071,7 +2005,6 @@ function DoctorDashboard() {
                     </select>
                   </div>
                 )}
-
                 <div className="form-group">
                   <label>Record Title *</label>
                   <input
@@ -2080,7 +2013,6 @@ function DoctorDashboard() {
                     placeholder="e.g., Blood Report, Chest X-Ray"
                   />
                 </div>
-
                 <div className="form-group">
                   <label>File Type *</label>
                   <select id="fileType">
@@ -2098,7 +2030,6 @@ function DoctorDashboard() {
                     <option value="other">📄 Other</option>
                   </select>
                 </div>
-
                 <div className="form-group">
                   <label>Description (Optional)</label>
                   <textarea
@@ -2107,7 +2038,6 @@ function DoctorDashboard() {
                     placeholder="Additional notes about this record..."
                   ></textarea>
                 </div>
-
                 <div className="form-group">
                   <label>Upload File *</label>
                   <input
@@ -2133,7 +2063,6 @@ function DoctorDashboard() {
                     ✅ Allowed: JPEG, PNG, GIF, WebP, PDF
                   </span>
                 </div>
-
                 <button
                   className="upload-record-btn"
                   onClick={uploadMedicalRecord}
@@ -2142,8 +2071,6 @@ function DoctorDashboard() {
                 </button>
               </div>
             </div>
-
-            {/* Existing Records List */}
             <h3>📁 Existing Records ({filteredRecords.length})</h3>
             {filteredRecords.length === 0 ? (
               <div className="no-data">
@@ -2155,7 +2082,6 @@ function DoctorDashboard() {
               <div className="records-grid">
                 {filteredRecords.map((record) => (
                   <div key={record._id} className="record-card">
-                    {/* Header with Icon and Title */}
                     <div className="record-header">
                       <div className="record-icon">
                         {record.fileType === "xray" && "🩻"}
@@ -2181,8 +2107,6 @@ function DoctorDashboard() {
                         </span>
                       </div>
                     </div>
-
-                    {/* Record Info */}
                     <div className="record-info">
                       <div className="record-patient">
                         <span className="label">👤 Patient:</span>
@@ -2204,8 +2128,6 @@ function DoctorDashboard() {
                         </span>
                       </div>
                     </div>
-
-                    {/* Actions */}
                     <div className="record-actions">
                       <a
                         href={record.fileUrl}
