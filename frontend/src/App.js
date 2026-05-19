@@ -2,7 +2,6 @@
 import DoctorCard from "./components/DoctorCard";
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import "./App.css";
-import "./mobile.css";
 import api from "./api/axios";
 import { AuthProvider } from "./context/AuthContext";
 
