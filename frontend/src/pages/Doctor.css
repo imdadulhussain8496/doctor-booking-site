@@ -112,19 +112,19 @@
 }
 
 .doctor-login-btn {
+display: flex;
+  align-items: center;
+  gap: 12px;
   width: 100%;
-  padding: 14px;
-  background: #059669;
-  color: white;
+  padding: 12px 0;
   border: none;
-  border-radius: 12px;
-  font-size: 16px;
-  font-weight: 600;
+  background: none;
   cursor: pointer;
-  transition: all 0.3s;
-  margin-top: 10px;
+  font-size: 14px;
+  color: #334155;
+  text-align: left;
+  border-bottom: 1px solid #f1f5f9;
 }
-
 .doctor-login-btn:hover {
   background: #047857;
   transform: translateY(-2px);
