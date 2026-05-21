@@ -48,7 +48,7 @@ function DoctorLogin() {
       <div className="doctor-login-card">
         <div className="doctor-login-header">
           <span className="doctor-icon">👨‍⚕️</span>
-          <h1>Doctor Online</h1>
+          <h1>Doctor Appointment</h1>
           <p>Doctor Portal</p>
         </div>
 
