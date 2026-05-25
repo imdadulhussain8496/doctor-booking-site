@@ -91,7 +91,7 @@ function DoctorDashboard() {
   const fetchDoctorLogo = useCallback(async () => {
     if (!doctorId) return;
     try {
-      const response = await api.get(`/api/doctor/logo/${doctorId}`);
+      const response = await api.get(`/doctor/logo/${doctorId}`);
       if (response.data.success && response.data.logoUrl) {
         setDoctorLogo(response.data.logoUrl + "?t=" + Date.now());
       }
@@ -102,7 +102,7 @@ function DoctorDashboard() {
 
   const fetchAppointments = useCallback(async () => {
     try {
-      const response = await api.get(`/api/doctor/appointments/${doctorId}`);
+      const response = await api.get(`/doctor/appointments/${doctorId}`);
       if (response.data.success) {
         setAppointments(response.data.appointments);
       }
@@ -113,7 +113,7 @@ function DoctorDashboard() {
 
   const fetchStats = useCallback(async () => {
     try {
-      const response = await api.get(`/api/doctor/dashboard/${doctorId}`);
+      const response = await api.get(`/doctor/dashboard/${doctorId}`);
       if (response.data.success) {
         setStats({
           totalAppointments: response.data.stats.totalAppointments || 0,
@@ -131,7 +131,7 @@ function DoctorDashboard() {
 
   const fetchCommission = useCallback(async () => {
     try {
-      const response = await api.get(`/api/doctor/${doctorId}/commission`);
+      const response = await api.get(`/doctor/${doctorId}/commission`);
       if (response.data.success) {
         setCommissionData(response.data);
       }
@@ -142,7 +142,7 @@ function DoctorDashboard() {
 
   const fetchPatients = useCallback(async () => {
     try {
-      const response = await api.get(`/api/doctor/patients/${doctorId}`);
+      const response = await api.get(`/doctor/patients/${doctorId}`);
       if (response.data.success) {
         setPatients(response.data.patients);
       }
@@ -153,7 +153,7 @@ function DoctorDashboard() {
 
   const fetchMedicalRecords = useCallback(async () => {
     try {
-      const response = await api.get(`/api/upload/doctor/${doctorId}`);
+      const response = await api.get(`/upload/doctor/${doctorId}`);
       if (response.data.success) {
         setMedicalRecords(response.data.records);
       }
@@ -164,7 +164,7 @@ function DoctorDashboard() {
 
   const fetchPaymentHistory = useCallback(async () => {
     try {
-      const response = await api.get(`/api/doctor/payment-history/${doctorId}`);
+      const response = await api.get(`/doctor/payment-history/${doctorId}`);
       if (response.data.success) {
         setPaymentHistory(response.data.payments || []);
       }
@@ -175,7 +175,7 @@ function DoctorDashboard() {
 
   const fetchAvailability = useCallback(async () => {
     try {
-      const response = await api.get(`/api/availability/${doctorId}`);
+      const response = await api.get(`/availability/${doctorId}`);
       if (response.data.success) {
         const apiAvailability = response.data.availability;
         if (apiAvailability && apiAvailability.weeklySchedule) {
@@ -294,7 +294,7 @@ function DoctorDashboard() {
     try {
       console.log(`💾 Saving status: ${isActive ? "Active" : "Inactive"}`);
       const response = await api.patch(
-        `/api/doctor/toggle-status/${doctorId}`,
+        `/doctor/toggle-status/${doctorId}`,
         { isActive },
       );
       if (response.data.success) {
@@ -328,7 +328,7 @@ function DoctorDashboard() {
     formData.append("logo", selectedLogoFile);
     try {
       const response = await api.post(
-        `/api/doctor/upload-logo/${doctorId}`,
+        `/doctor/upload-logo/${doctorId}`,
         formData,
         {
           headers: { "Content-Type": "multipart/form-data" },
@@ -367,7 +367,7 @@ function DoctorDashboard() {
     }
     setUpdatingUpi(true);
     try {
-      const response = await api.patch(`/api/doctor/${doctorId}/upi`, {
+      const response = await api.patch(`/doctor/${doctorId}/upi`, {
         upiId: tempUpiId,
       });
       if (response.data.success) {
@@ -435,7 +435,7 @@ function DoctorDashboard() {
     formData.append("file", file);
 
     try {
-      const response = await api.post("/api/upload/upload", formData, {
+      const response = await api.post("/upload/upload", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       if (response.data.success) {
@@ -469,7 +469,7 @@ function DoctorDashboard() {
       return;
     }
     try {
-      const response = await api.delete(`/api/upload/record/${recordId}`);
+      const response = await api.delete(`/upload/record/${recordId}`);
       if (response.data.success) {
         showNotificationMsg(
           "✅ Medical record deleted successfully",
@@ -516,7 +516,7 @@ function DoctorDashboard() {
           });
         }
       }
-      const response = await api.put(`/api/availability/${doctorId}/weekly`, {
+      const response = await api.put(`/availability/${doctorId}/weekly`, {
         weeklySchedule,
       });
       if (response.data.success) {
@@ -533,7 +533,7 @@ function DoctorDashboard() {
 
   const verifyPayment = async (appointmentId) => {
     try {
-      const response = await api.post(`/api/doctor/verify/${appointmentId}`, {
+      const response = await api.post(`/doctor/verify/${appointmentId}`, {
         doctorId,
       });
       if (response.data.success) {
@@ -558,7 +558,7 @@ function DoctorDashboard() {
   const completeAppointment = async (appointmentId) => {
     try {
       const response = await api.patch(
-        `/api/doctor/appointments/${appointmentId}`,
+        `/doctor/appointments/${appointmentId}`,
         { status: "completed" },
       );
       if (response.data.success) {
@@ -576,7 +576,7 @@ function DoctorDashboard() {
     if (!window.confirm("Are you sure you want to reject this appointment?"))
       return;
     try {
-      const response = await api.patch(`/api/doctor/reject/${appointmentId}`);
+      const response = await api.patch(`/doctor/reject/${appointmentId}`);
       if (response.data.success) {
         showNotificationMsg("❌ Appointment rejected!", "error");
         fetchAppointments();
@@ -595,7 +595,7 @@ function DoctorDashboard() {
     }
     setProcessingPayment(true);
     try {
-      const response = await api.post(`/api/doctor/pay-commission`, {
+      const response = await api.post(`/doctor/pay-commission`, {
         doctorId,
         amount: commissionData?.due || 0,
         transactionId: paymentTransactionId,
@@ -634,7 +634,7 @@ function DoctorDashboard() {
         params.append("status", filterStatus);
       if (filterDate) params.append("date", filterDate);
       const response = await api.get(
-        `/api/doctor/appointments/${doctorId}?${params}`,
+        `/doctor/appointments/${doctorId}?${params}`,
       );
       if (response.data.success) {
         setAppointments(response.data.appointments);

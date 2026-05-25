@@ -1,16 +1,6 @@
 import axios from 'axios';
 
-const getBaseURL = () => {
-  if (window.location.hostname === 'staging.drappointment24.com') {
-    return 'https://staging.drappointment24.com/api';
-  }
-  if (window.location.hostname === 'drappointment24.com') {
-    return 'https://drappointment24.com/api';
-  }
-  return 'http://localhost:5000';
-};
-
-const API_BASE_URL = getBaseURL();
+const API_BASE_URL = 'https://drappointment24.com/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,

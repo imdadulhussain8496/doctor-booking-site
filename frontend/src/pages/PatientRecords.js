@@ -20,7 +20,7 @@ function PatientRecords() {
     if (!email) return;
     try {
       console.log("📄 Fetching medical records for email:", email);
-      const response = await api.get(`/api/upload/patient/${email}`);
+      const response = await api.get(`/upload/patient/${email}`);
       setRecords(response.data.records || []);
       if (response.data.records?.length > 0) {
         setPatientInfo({
@@ -37,7 +37,7 @@ function PatientRecords() {
     if (!email) return;
     try {
       const response = await api.get(
-        `/api/appointments/${encodeURIComponent(email)}`,
+        `/appointments/${encodeURIComponent(email)}`,
       );
       setAppointments(response.data.appointments || []);
       if (!patientInfo && response.data.appointments?.length > 0) {

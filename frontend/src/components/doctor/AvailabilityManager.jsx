@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import api from '../api/axios';
+import api from '../axios';
 import './AvailabilityManager.css';
 
 const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -21,7 +21,7 @@ function AvailabilityManager({ doctorId }) {
   const fetchAvailability = useCallback(async () => {
     if (!doctorId) return;
     try {
-      const response = await api.get(`/api/availability/${doctorId}`);
+      const response = await api.get(`/availability/${doctorId}`);
       setAvailability(response.data.availability);
       setExceptions(response.data.availability?.exceptions || []);
     } catch (error) {
@@ -118,7 +118,7 @@ function AvailabilityManager({ doctorId }) {
   const handleSave = useCallback(async () => {
     if (!availability) return;
     try {
-      await api.put(`/api/availability/${doctorId}/weekly`, {
+      await api.put(`/availability/${doctorId}/weekly`, {
         weeklySchedule: availability.weeklySchedule
       });
       setEditing(false);
@@ -132,7 +132,7 @@ function AvailabilityManager({ doctorId }) {
 
   const handleAddException = useCallback(async () => {
     try {
-      await api.post(`/api/availability/${doctorId}/exception`, newException);
+      await api.post(`/availability/${doctorId}/exception`, newException);
       setShowExceptionModal(false);
       setNewException({ date: '', reason: 'leave', isAvailable: false, timeRanges: [] });
       fetchAvailability();

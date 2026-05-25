@@ -97,7 +97,7 @@ function FileUpload({ patientEmail, patientName, patientPhone, doctorName, docto
         formData.append('isPrivate', isPrivate);
 
         try {
-            const response = await axios.post('http://localhost:5000/api/upload/upload', formData, {
+            const response = await axios.post('http://localhost:5000/upload/upload', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 },

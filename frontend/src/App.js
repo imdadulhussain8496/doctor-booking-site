@@ -135,7 +135,7 @@ function App() {
       }
 
       const response = await api.get(
-        `/api/availability/${doctor.doctorId || doctor.id}/slots/${dateToFetch}`,
+        `/availability/${doctor.doctorId || doctor.id}/slots/${dateToFetch}`,
       );
 
       if (response.data.success && response.data.slots) {
@@ -182,8 +182,7 @@ function App() {
 
   const fetchDoctors = useCallback(async () => {
     try {
-      const API_BASE = process.env.REACT_APP_API_URL?.replace("/api", "") || "";
-      const response = await api.get(`${API_BASE}/api/doctors`);
+      const response = await api.get(`/doctors`);
 
       let doctors = Array.isArray(response.data) ? response.data : [];
 
@@ -207,7 +206,7 @@ function App() {
             const todayStr = today.toISOString().split("T")[0];
             const currentTime = today.getHours() * 60 + today.getMinutes();
 
-            const availabilityUrl = `${API_BASE}/api/availability/${doctor.doctorId || doctor._id}/slots/${todayStr}`;
+            const availabilityUrl = `/availability/${doctor.doctorId || doctor._id}/slots/${todayStr}`;
             let slotsRes = await api.get(availabilityUrl);
             let targetDate = "Today";
             let futureSlots = [];
@@ -230,7 +229,7 @@ function App() {
               tomorrow.setDate(tomorrow.getDate() + 1);
               const tomorrowStr = tomorrow.toISOString().split("T")[0];
 
-              const tomorrowUrl = `${API_BASE}/api/availability/${doctor.doctorId || doctor._id}/slots/${tomorrowStr}`;
+              const tomorrowUrl = `/availability/${doctor.doctorId || doctor._id}/slots/${tomorrowStr}`;
               slotsRes = await api.get(tomorrowUrl);
               targetDate = "Tomorrow";
 
@@ -264,11 +263,11 @@ function App() {
       );
 
       setDbDoctors(doctorsWithRealSlots);
-      setLoadingDoctors(false); // ← ADD THIS LINE
+      setLoadingDoctors(false);
     } catch (error) {
       console.error("Error fetching doctors:", error);
       setDbDoctors(fallbackDoctors);
-      setLoadingDoctors(false); // ← ADD THIS LINE
+      setLoadingDoctors(false);
     }
   }, [fallbackDoctors]);
 
@@ -314,7 +313,7 @@ function App() {
       if (selectedDoctor && bookingDetails.date) {
         setLoadingSlots(true);
         try {
-          const response = await api.get(`/api/available-slots`, {
+          const response = await api.get(`/available-slots`, {
             params: {
               doctorName: selectedDoctor.name,
               date: bookingDetails.date,
@@ -397,7 +396,7 @@ function App() {
 
     setLoading(true);
     try {
-      const response = await api.get(`/api/appointments/${email}`);
+      const response = await api.get(`/appointments/${email}`);
       if (
         response.data.success &&
         response.data.appointments &&
@@ -419,7 +418,7 @@ function App() {
   const handlePaymentDone = async () => {
     setLoading(true);
     try {
-      const checkSlotResponse = await api.get(`/api/available-slots`, {
+      const checkSlotResponse = await api.get(`/available-slots`, {
         params: { doctorName: selectedDoctor.name, date: bookingDetails.date },
       });
 
@@ -452,7 +451,7 @@ function App() {
         paymentStatus: "pending",
       };
 
-      const response = await api.post("/api/appointments", appointmentData);
+      const response = await api.post("/appointments", appointmentData);
       if (response.data.success) {
         setPaymentConfirmed(true);
         setStep(4);
@@ -465,7 +464,7 @@ function App() {
           "❌ This time slot was just booked! Please select a different time.",
         );
         if (selectedDoctor && bookingDetails.date) {
-          const response = await api.get(`/api/available-slots`, {
+          const response = await api.get(`/available-slots`, {
             params: {
               doctorName: selectedDoctor.name,
               date: bookingDetails.date,

@@ -18,12 +18,12 @@ export const AuthProvider = ({ children }) => {
 
   const checkDoctorAuth = useCallback(async () => {
     try {
-      const response = await api.get("/api/doctor/me");
+      const response = await api.get("/doctor/me");
       if (response.data.success) {
         const doctorData = response.data.doctor;
         try {
           const logoResponse = await api.get(
-            `/api/doctor/logo/${doctorData.id || doctorData.doctorId}`,
+            `/doctor/logo/${doctorData.id || doctorData.doctorId}`,
           );
           if (logoResponse.data.success) {
             doctorData.logoUrl = logoResponse.data.logoUrl;
@@ -43,7 +43,7 @@ export const AuthProvider = ({ children }) => {
 
   const checkAdminAuth = useCallback(async () => {
     try {
-      const response = await api.get("/api/admin/verify");
+      const response = await api.get("/admin/verify");
       if (response.data.success) {
         setAdmin(response.data.admin);
       }
@@ -72,7 +72,7 @@ export const AuthProvider = ({ children }) => {
   const doctorLogin = useCallback(async (email, password) => {
     try {
       const response = await api.post(
-        "/api/doctor/login",
+        "/doctor/login",
         { email, password },
         { withCredentials: true },
       );
@@ -80,7 +80,7 @@ export const AuthProvider = ({ children }) => {
         const doctorData = response.data.doctor;
         try {
           const logoResponse = await api.get(
-            `/api/doctor/logo/${doctorData.id || doctorData.doctorId}`,
+            `/doctor/logo/${doctorData.id || doctorData.doctorId}`,
             { withCredentials: true },
           );
           if (logoResponse.data.success) {
@@ -104,7 +104,7 @@ export const AuthProvider = ({ children }) => {
 
   const doctorLogout = useCallback(async () => {
     try {
-      await api.post("/api/doctor/logout");
+      await api.post("/doctor/logout");
     } catch (error) {
       console.error("Logout error:", error);
     }
@@ -114,7 +114,7 @@ export const AuthProvider = ({ children }) => {
   const adminLogin = useCallback(async (username, password) => {
     try {
       const response = await api.post(
-        "/api/admin/login",
+        "/admin/login",
         { username, password },
         { withCredentials: true },
       );
@@ -133,7 +133,7 @@ export const AuthProvider = ({ children }) => {
 
   const adminLogout = useCallback(async () => {
     try {
-      await api.post("/api/admin/logout");
+      await api.post("/admin/logout");
     } catch (error) {
       console.error("Logout error:", error);
     }

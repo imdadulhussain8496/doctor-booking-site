@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import api from '../api/axios';
+import api from '../axios';
 import './PaymentHistory.css';
 
 const PaymentHistory = ({ doctorId, isAdmin = false }) => {

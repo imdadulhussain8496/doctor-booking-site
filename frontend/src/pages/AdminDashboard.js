@@ -119,7 +119,7 @@ const showNotification = useCallback((message, type = "success") => {
   const fetchRestrictedDoctors = useCallback(async (showLoader = true) => {
     if (showLoader) setLoadingRestricted(true);
     try {
-      const response = await api.get("/api/admin/restricted-doctors");
+      const response = await api.get("/admin/restricted-doctors");
       if (response.data.success) {
         setRestrictedDoctors(response.data.doctors);
       }
@@ -133,7 +133,7 @@ const showNotification = useCallback((message, type = "success") => {
   // ✅ Fetch overdue doctors
   const fetchOverdueDoctors = useCallback(async () => {
     try {
-      const response = await api.get("/api/admin/overdue-doctors");
+      const response = await api.get("/admin/overdue-doctors");
       if (response.data.success) {
         setOverdueDoctors(response.data.doctors);
       }
@@ -145,7 +145,7 @@ const showNotification = useCallback((message, type = "success") => {
   // ✅ Fetch commission due from all doctors
   const fetchCommissionDue = useCallback(async () => {
     try {
-      const response = await api.get("/api/admin/commission-due");
+      const response = await api.get("/admin/commission-due");
       if (response.data.success) {
         setCommissionDue(response.data.doctors);
         setTotalCommissionDue(response.data.totalDue);
@@ -160,7 +160,7 @@ const showNotification = useCallback((message, type = "success") => {
     try {
       if (showLoader) setDataLoading(true);
       console.log("🔵 Fetching doctors...");
-      const response = await api.get("/api/admin/doctors?limit=50");
+      const response = await api.get("/admin/doctors?limit=50");
       if (response.data.success) {
         const doctorsData = response.data.doctors;
         console.log(`✅ Fetched ${doctorsData.length} doctors`);
@@ -179,9 +179,9 @@ const showNotification = useCallback((message, type = "success") => {
     try {
       if (showLoader) setDataLoading(true);
       const [statsRes, appointmentsRes] = await Promise.all([
-        api.get("/api/admin/stats"),
-        api.get("/api/admin/appointments"),
-        api.get("/api/admin/doctors/stats"),
+        api.get("/admin/stats"),
+        api.get("/admin/appointments"),
+        api.get("/admin/doctors/stats"),
       ]);
       setStats(statsRes.data.stats);
       setAppointments(appointmentsRes.data.appointments);
@@ -196,7 +196,7 @@ const showNotification = useCallback((message, type = "success") => {
   // ✅ Fetch commission report
   const fetchCommissionReport = useCallback(async () => {
     try {
-      const response = await api.get("/api/admin/commission/report", {
+      const response = await api.get("/admin/commission/report", {
         params: {
           month: commissionPeriod.month,
           year: commissionPeriod.year,
@@ -244,7 +244,7 @@ const showNotification = useCallback((message, type = "success") => {
   const handleUnblockDoctor = useCallback(async (doctorId, doctorName) => {
     if (!window.confirm(`Are you sure you want to unblock ${doctorName}?`)) return;
     try {
-      const response = await api.post(`/api/admin/doctors/unblock/${doctorId}`);
+      const response = await api.post(`/admin/doctors/unblock/${doctorId}`);
       if (response.data.success) {
         showNotification(`✅ ${doctorName} unblocked successfully`, "success");
         fetchRestrictedDoctors();
@@ -267,7 +267,7 @@ const showNotification = useCallback((message, type = "success") => {
     };
     if (!window.confirm(`Send ${typeNames[type]} to ${doctorName}?`)) return;
     try {
-      const response = await api.post(`/api/admin/send-reminder/${doctorId}/${type}`);
+      const response = await api.post(`/admin/send-reminder/${doctorId}/${type}`);
       if (response.data.success) {
         showNotification(`✅ ${typeNames[type]} sent to ${doctorName}`, "success");
       }
@@ -286,7 +286,7 @@ const showNotification = useCallback((message, type = "success") => {
     }
     setProcessingPayment(true);
     try {
-      const response = await api.post("/api/admin/commission/mark-paid", {
+      const response = await api.post("/admin/commission/mark-paid", {
         doctorId,
         transactionId,
         amount,
@@ -329,7 +329,7 @@ const showNotification = useCallback((message, type = "success") => {
       if (filter.status) params.append("status", filter.status);
       if (filter.startDate) params.append("startDate", filter.startDate);
       if (filter.endDate) params.append("endDate", filter.endDate);
-      const response = await api.get(`/api/admin/appointments?${params}`);
+      const response = await api.get(`/admin/appointments?${params}`);
       setAppointments(response.data.appointments);
       showNotification("Filters applied", "success");
     } catch (error) {
@@ -347,7 +347,7 @@ const showNotification = useCallback((message, type = "success") => {
       return;
     }
     try {
-      const response = await api.post("/api/admin/send-doctor-email", {
+      const response = await api.post("/admin/send-doctor-email", {
         email: doctor.email,
         name: doctor.name,
         password: doctor.password || "doctor123",
@@ -371,7 +371,7 @@ const showNotification = useCallback((message, type = "success") => {
     );
     if (newPassword === null) return;
     try {
-      const response = await api.patch(`/api/admin/doctors/${doc._id}`, {
+      const response = await api.patch(`/admin/doctors/${doc._id}`, {
         password: newPassword || "doctor123",
       });
       if (response.data.success) {
@@ -420,7 +420,7 @@ const showNotification = useCallback((message, type = "success") => {
     formData.append("image", file);
     try {
       setUploading(true);
-      const response = await api.post("/api/upload/doctor-image", formData, {
+      const response = await api.post("/upload/doctor-image", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       setNewDoctor((prev) => ({ ...prev, imageUrl: response.data.imageUrl }));
@@ -454,7 +454,7 @@ const showNotification = useCallback((message, type = "success") => {
     formData.append("image", file);
     try {
       setEditUploading(true);
-      const response = await api.post("/api/upload/doctor-image", formData, {
+      const response = await api.post("/upload/doctor-image", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       setEditDoctorData((prev) => ({ ...prev, imageUrl: response.data.imageUrl }));
@@ -476,7 +476,7 @@ const showNotification = useCallback((message, type = "success") => {
           ? `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=${newDoctor.upiId}&pn=Doctor&cu=INR`
           : "",
       };
-      const response = await api.post("/api/admin/doctors", doctorData);
+      const response = await api.post("/admin/doctors", doctorData);
       if (response.data.success) {
         showNotification(`✅ ${newDoctor.name} added successfully!`, "success");
         if (window.confirm(`Do you want to send login details to ${newDoctor.email}?`)) {
@@ -541,7 +541,7 @@ const showNotification = useCallback((message, type = "success") => {
         clinicName: editDoctorData.clinicName || "",
         address: editDoctorData.address || "",
       };
-      const response = await api.patch(`/api/admin/doctors/${editDoctorData._id}`, doctorData);
+      const response = await api.patch(`/admin/doctors/${editDoctorData._id}`, doctorData);
       if (response.data.success) {
         showNotification(`✅ ${editDoctorData.name} updated successfully!`, "success");
         setShowEditDoctorModal(false);
@@ -564,7 +564,7 @@ const showNotification = useCallback((message, type = "success") => {
     }
     if (window.confirm(`Are you sure you want to delete ${doctor.name}? This action cannot be undone.`)) {
       try {
-        await api.delete(`/api/admin/doctors/${doctor._id}`);
+        await api.delete(`/admin/doctors/${doctor._id}`);
         showNotification("Doctor deleted successfully", "success");
         await fetchAllDoctors();
         await fetchDashboardData();
